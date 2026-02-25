@@ -111,6 +111,9 @@ export default function AdminProductsPage() {
         price: number;
         category_id: string;
         image_url?: string | null;
+        gallery?: string[] | null;
+        description?: string | null;
+        specs?: { name: string; value: string }[] | null;
     }) {
         if (selectedProduct) {
             const { error } = await supabase

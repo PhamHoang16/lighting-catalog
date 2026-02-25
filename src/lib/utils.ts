@@ -41,3 +41,24 @@ export function formatDate(dateString: string): string {
         year: "numeric",
     });
 }
+
+/**
+ * Format thời gian tương đối (relative time) theo tiếng Việt.
+ * Ví dụ: "Vừa xong", "5 phút trước", "2 giờ trước"
+ */
+export function timeAgo(dateString: string): string {
+    const now = Date.now();
+    const then = new Date(dateString).getTime();
+    const diffSec = Math.floor((now - then) / 1000);
+
+    if (diffSec < 60) return "Vừa xong";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin} phút trước`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour} giờ trước`;
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffDay < 30) return `${diffDay} ngày trước`;
+    const diffMonth = Math.floor(diffDay / 30);
+    if (diffMonth < 12) return `${diffMonth} tháng trước`;
+    return `${Math.floor(diffMonth / 12)} năm trước`;
+}

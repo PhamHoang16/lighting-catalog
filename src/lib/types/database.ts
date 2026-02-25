@@ -31,6 +31,9 @@ export interface Database {
                     slug: string;
                     price: number;
                     image_url: string | null;
+                    gallery: string[] | null;
+                    description: string | null;
+                    specs: SpecItem[] | null;
                     category_id: string;
                     created_at: string;
                 };
@@ -40,6 +43,9 @@ export interface Database {
                     slug: string;
                     price: number;
                     image_url?: string | null;
+                    gallery?: string[] | null;
+                    description?: string | null;
+                    specs?: SpecItem[] | null;
                     category_id: string;
                     created_at?: string;
                 };
@@ -49,6 +55,9 @@ export interface Database {
                     slug?: string;
                     price?: number;
                     image_url?: string | null;
+                    gallery?: string[] | null;
+                    description?: string | null;
+                    specs?: SpecItem[] | null;
                     category_id?: string;
                     created_at?: string;
                 };
@@ -106,6 +115,12 @@ export type QuoteRequestUpdate = Database["public"]["Tables"]["quote_requests"][
 export type ProductWithCategory = Product & {
     categories: { name: string } | null;
 };
+
+// ── Spec Item (lưu trong JSONB `specs`) ─────────────────────────
+export interface SpecItem {
+    name: string;
+    value: string;
+}
 
 // ── Quote Item (lưu trong JSONB `items`) ────────────────────────
 export interface QuoteItem {

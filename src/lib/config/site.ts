@@ -12,7 +12,7 @@ export const siteConfig = {
         zaloHref: "https://zalo.me/0909123456",
         facebook: "https://www.facebook.com/lightingcatalog",
         email: "hoangpham1618@gmail.com",
-        address: "123 Đường Nguyễn Văn Linh, Quận 7, TP. Hồ Chí Minh",
+        address: "48 P. Văn Trì, Minh Khai, Bắc Từ Liêm, Hà Nội, Việt Nam",
         workingHours: "Thứ 2 - Thứ 7: 8:00 - 18:00",
     },
 

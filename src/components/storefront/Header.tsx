@@ -3,6 +3,7 @@ import { Phone } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { createClient } from "@/lib/supabase/server";
 import MobileMenu from "@/components/storefront/MobileMenu";
+import CartHeaderIcon from "@/components/storefront/CartHeaderIcon";
 
 // Server Component — fetch categories trực tiếp
 async function getCategories() {
@@ -106,8 +107,10 @@ export default async function StorefrontHeader() {
                     <NavLink href="/lien-he">Liên hệ</NavLink>
                 </nav>
 
-                {/* Right — Hotline CTA + Mobile menu */}
-                <div className="flex items-center gap-3">
+                {/* Right — Cart + Hotline CTA + Mobile menu */}
+                <div className="flex items-center gap-2">
+                    <CartHeaderIcon />
+
                     <a
                         href={siteConfig.contact.hotlineHref}
                         className="hidden items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/25 transition-all hover:from-amber-600 hover:to-orange-700 hover:shadow-lg sm:flex"

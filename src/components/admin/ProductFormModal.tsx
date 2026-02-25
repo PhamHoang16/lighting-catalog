@@ -103,8 +103,12 @@ export default function ProductFormModal({
 
     // ── Auto slug ───────────────────────────────────────────────
     useEffect(() => {
-        if (!isEdit || (isEdit && name !== editingProduct?.name)) {
+        if (!isEdit) {
+            // Create mode: always generate from name
             setSlug(name ? toSlug(name) : "");
+        } else if (name && name !== editingProduct?.name) {
+            // Edit mode: only re-generate when name actually changed to a non-empty value
+            setSlug(toSlug(name));
         }
     }, [name, isEdit, editingProduct?.name]);
 
@@ -163,6 +167,9 @@ export default function ProductFormModal({
         const numericPrice = parseFloat(price);
         if (isNaN(numericPrice) || numericPrice < 0) return;
 
+        // Safety: ensure slug is never empty
+        const finalSlug = slug || toSlug(name.trim()) || editingProduct?.slug || `product-${Date.now()}`;
+
         setLoading(true);
         try {
             // 1. Upload images
@@ -184,7 +191,7 @@ export default function ProductFormModal({
             // 3. Build payload
             const payload: ProductPayload = {
                 name: name.trim(),
-                slug,
+                slug: finalSlug,
                 price: numericPrice,
                 category_id: categoryId,
                 image_url: finalThumbUrl,

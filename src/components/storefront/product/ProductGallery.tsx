@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { ImageOff, ZoomIn } from "lucide-react";
+import { useState, useCallback } from "react";
+import {
+    ImageOff,
+    ZoomIn,
+    ChevronLeft,
+    ChevronRight,
+    X,
+} from "lucide-react";
 
 interface ProductGalleryProps {
     mainImage: string | null;
@@ -14,7 +20,6 @@ export default function ProductGallery({
     gallery,
     productName,
 }: ProductGalleryProps) {
-    // Combine all images
     const allImages: string[] = [];
     if (mainImage) allImages.push(mainImage);
     if (gallery) allImages.push(...gallery);
@@ -25,9 +30,21 @@ export default function ProductGallery({
 
     const activeImage = allImages[activeIndex] ?? null;
 
-    function handleImgError(index: number) {
+    const handleImgError = useCallback((index: number) => {
         setImgErrors((prev) => new Set(prev).add(index));
-    }
+    }, []);
+
+    const goTo = useCallback(
+        (dir: -1 | 1) => {
+            setActiveIndex((prev) => {
+                const next = prev + dir;
+                if (next < 0) return allImages.length - 1;
+                if (next >= allImages.length) return 0;
+                return next;
+            });
+        },
+        [allImages.length]
+    );
 
     // ── No images ─────────────────────────────────────────────
     if (allImages.length === 0) {
@@ -49,12 +66,12 @@ export default function ProductGallery({
                     className="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200 bg-white"
                     onClick={() => setLightboxOpen(true)}
                 >
-                    <div className="aspect-square">
+                    <div className="aspect-[4/3]">
                         {activeImage && !imgErrors.has(activeIndex) ? (
                             <img
                                 src={activeImage}
                                 alt={productName}
-                                className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                                className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
                             />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -68,6 +85,37 @@ export default function ProductGallery({
                         <ZoomIn className="h-3.5 w-3.5" />
                         Phóng to
                     </div>
+
+                    {/* Nav arrows on main image */}
+                    {allImages.length > 1 && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(-1);
+                                }}
+                                className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all hover:bg-white group-hover:opacity-100"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(1);
+                                }}
+                                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all hover:bg-white group-hover:opacity-100"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </>
+                    )}
+
+                    {/* Image counter */}
+                    {allImages.length > 1 && (
+                        <div className="absolute left-3 bottom-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                            {activeIndex + 1} / {allImages.length}
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Thumbnails ───────────────────────────────────── */}
@@ -77,9 +125,9 @@ export default function ProductGallery({
                             <button
                                 key={idx}
                                 onClick={() => setActiveIndex(idx)}
-                                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${idx === activeIndex
-                                        ? "border-amber-500 shadow-md shadow-amber-500/20"
-                                        : "border-gray-200 hover:border-gray-300"
+                                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${idx === activeIndex
+                                    ? "border-amber-500 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/10"
+                                    : "border-gray-200 hover:border-gray-300"
                                     }`}
                             >
                                 {!imgErrors.has(idx) ? (
@@ -103,34 +151,69 @@ export default function ProductGallery({
             {/* ── Lightbox ─────────────────────────────────────── */}
             {lightboxOpen && activeImage && (
                 <div
-                    className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm"
                     onClick={() => setLightboxOpen(false)}
                 >
-                    <div className="relative max-h-[90vh] max-w-4xl">
+                    {/* Close */}
+                    <button
+                        onClick={() => setLightboxOpen(false)}
+                        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+
+                    {/* Image */}
+                    <div className="relative max-h-[85vh] max-w-5xl px-4">
                         <img
                             src={activeImage}
                             alt={productName}
-                            className="max-h-[90vh] rounded-lg object-contain"
+                            className="max-h-[85vh] rounded-lg object-contain"
+                            onClick={(e) => e.stopPropagation()}
                         />
-                        {/* Navigation dots */}
-                        {allImages.length > 1 && (
-                            <div className="absolute -bottom-10 left-1/2 flex -translate-x-1/2 gap-2">
-                                {allImages.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveIndex(idx);
-                                        }}
-                                        className={`h-2 w-2 rounded-full transition-all ${idx === activeIndex
-                                                ? "w-6 bg-amber-500"
-                                                : "bg-white/50 hover:bg-white/80"
-                                            }`}
-                                    />
-                                ))}
-                            </div>
-                        )}
                     </div>
+
+                    {/* Prev/Next arrows */}
+                    {allImages.length > 1 && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(-1);
+                                }}
+                                className="absolute left-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                            >
+                                <ChevronLeft className="h-6 w-6" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(1);
+                                }}
+                                className="absolute right-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                            >
+                                <ChevronRight className="h-6 w-6" />
+                            </button>
+                        </>
+                    )}
+
+                    {/* Dots */}
+                    {allImages.length > 1 && (
+                        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+                            {allImages.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveIndex(idx);
+                                    }}
+                                    className={`h-2 rounded-full transition-all ${idx === activeIndex
+                                        ? "w-6 bg-amber-500"
+                                        : "w-2 bg-white/40 hover:bg-white/70"
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </>

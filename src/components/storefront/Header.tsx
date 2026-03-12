@@ -2,27 +2,30 @@ import Link from "next/link";
 import { Phone } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { createClient } from "@/lib/supabase/server";
+import { buildCategoryTree } from "@/lib/utils";
 import MobileMenu from "@/components/storefront/MobileMenu";
 import CartHeaderIcon from "@/components/storefront/CartHeaderIcon";
+import HeaderSearchBar from "@/components/storefront/HeaderSearchBar";
 
 // Server Component — fetch categories trực tiếp
 async function getCategories() {
     const supabase = await createClient();
     const { data } = await supabase
         .from("categories")
-        .select("id, name, slug")
+        .select("*")
         .order("name", { ascending: true });
     return data ?? [];
 }
 
 export default async function StorefrontHeader() {
     const categories = await getCategories();
+    const tree = buildCategoryTree(categories);
 
     return (
         <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md">
             {/* ── Top bar — thông tin liên hệ ────────────────────── */}
             <div className="border-b border-gray-100 bg-gray-900 text-gray-300">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-xs sm:px-6">
+                <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-1.5 text-xs sm:px-6">
                     <span className="hidden sm:inline">
                         {siteConfig.contact.workingHours}
                     </span>
@@ -44,7 +47,7 @@ export default async function StorefrontHeader() {
             </div>
 
             {/* ── Main nav ───────────────────────────────────────── */}
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+            <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-3 sm:px-6">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 shadow-md shadow-amber-500/25">
@@ -56,6 +59,11 @@ export default async function StorefrontHeader() {
                         </span>
                     </div>
                 </Link>
+
+                {/* Search Bar */}
+                <div className="hidden flex-1 sm:flex items-center justify-start lg:justify-center mx-4">
+                    <HeaderSearchBar />
+                </div>
 
                 {/* Desktop Nav */}
                 <nav className="hidden items-center gap-1 lg:flex">
@@ -91,14 +99,24 @@ export default async function StorefrontHeader() {
                             {categories.length > 0 && (
                                 <div className="mx-3 my-1 border-t border-gray-100" />
                             )}
-                            {categories.map((cat) => (
-                                <Link
-                                    key={cat.id}
-                                    href={`/danh-muc/${cat.slug}`}
-                                    className="block px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-700"
-                                >
-                                    {cat.name}
-                                </Link>
+                            {tree.map((parent) => (
+                                <div key={parent.id}>
+                                    <Link
+                                        href={`/danh-muc/${parent.slug}`}
+                                        className="block px-4 py-2 text-sm font-semibold text-gray-900 transition-colors hover:bg-amber-50 hover:text-amber-700"
+                                    >
+                                        {parent.name}
+                                    </Link>
+                                    {parent.children.map((child) => (
+                                        <Link
+                                            key={child.id}
+                                            href={`/danh-muc/${child.slug}`}
+                                            className="block px-4 py-1.5 pl-7 text-sm text-gray-500 transition-colors hover:bg-amber-50 hover:text-amber-700"
+                                        >
+                                            {child.name}
+                                        </Link>
+                                    ))}
+                                </div>
                             ))}
                         </div>
                     </div>

@@ -24,7 +24,7 @@ export default function Hero() {
             />
 
             {/* ── Content ────────────────────────────────────────── */}
-            <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
+            <div className="relative mx-auto max-w-[1440px] px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
                 <div className="max-w-2xl">
                     {/* Badge */}
                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-sm font-medium text-amber-400">

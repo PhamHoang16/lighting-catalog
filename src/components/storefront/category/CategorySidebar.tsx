@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Filter, X, FolderOpen, Layers } from "lucide-react";
-import type { Category } from "@/lib/types/database";
+import { Filter, X, FolderOpen, Layers, ChevronDown, ChevronRight } from "lucide-react";
+import { buildCategoryTree } from "@/lib/utils";
+import type { Category, CategoryWithChildren } from "@/lib/types/database";
 
 interface CategorySidebarProps {
     categories: Category[];
@@ -15,6 +16,7 @@ export default function CategorySidebar({
     activeSlug,
 }: CategorySidebarProps) {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const tree = buildCategoryTree(categories);
 
     const content = (
         <nav className="space-y-1">
@@ -33,14 +35,12 @@ export default function CategorySidebar({
                 Danh mục
             </p>
 
-            {categories.map((cat) => (
-                <SidebarLink
+            {tree.map((cat) => (
+                <CategoryNode
                     key={cat.id}
-                    href={`/danh-muc/${cat.slug}`}
-                    label={cat.name}
-                    icon={<FolderOpen className="h-4 w-4" />}
-                    active={activeSlug === cat.slug}
-                    onClick={() => setMobileOpen(false)}
+                    category={cat}
+                    activeSlug={activeSlug}
+                    onNavigate={() => setMobileOpen(false)}
                 />
             ))}
         </nav>
@@ -77,13 +77,10 @@ export default function CategorySidebar({
             {/* ── Mobile Drawer ────────────────────────────────── */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-[60] lg:hidden">
-                    {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         onClick={() => setMobileOpen(false)}
                     />
-
-                    {/* Drawer panel */}
                     <div className="absolute bottom-0 left-0 right-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-base font-bold text-gray-900">
@@ -101,6 +98,71 @@ export default function CategorySidebar({
                 </div>
             )}
         </>
+    );
+}
+
+// ── Category node with expandable children ──────────────────────
+function CategoryNode({
+    category,
+    activeSlug,
+    onNavigate,
+}: {
+    category: CategoryWithChildren;
+    activeSlug?: string | null;
+    onNavigate: () => void;
+}) {
+    const hasChildren = category.children.length > 0;
+    const isActive = activeSlug === category.slug;
+    const hasActiveChild = hasChildren && category.children.some(
+        (c) => c.slug === activeSlug || c.children.some((cc) => cc.slug === activeSlug)
+    );
+    const [expanded, setExpanded] = useState(hasActiveChild);
+
+    return (
+        <div>
+            <div className="flex items-center">
+                <Link
+                    href={`/danh-muc/${category.slug}`}
+                    onClick={onNavigate}
+                    className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${isActive
+                        ? "bg-amber-50 text-amber-700 shadow-sm"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
+                >
+                    <span className={isActive ? "text-amber-500" : "text-gray-400"}>
+                        <FolderOpen className="h-4 w-4" />
+                    </span>
+                    {category.name}
+                </Link>
+
+                {hasChildren && (
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                    >
+                        {expanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                        ) : (
+                            <ChevronRight className="h-4 w-4" />
+                        )}
+                    </button>
+                )}
+            </div>
+
+            {/* Children */}
+            {hasChildren && expanded && (
+                <div className="ml-4 border-l border-gray-100 pl-2">
+                    {category.children.map((child) => (
+                        <CategoryNode
+                            key={child.id}
+                            category={child}
+                            activeSlug={activeSlug}
+                            onNavigate={onNavigate}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -123,8 +185,8 @@ function SidebarLink({
             href={href}
             onClick={onClick}
             className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${active
-                    ? "bg-amber-50 text-amber-700 shadow-sm"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-amber-50 text-amber-700 shadow-sm"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
         >
             <span className={active ? "text-amber-500" : "text-gray-400"}>

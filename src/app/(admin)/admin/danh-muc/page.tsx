@@ -5,7 +5,7 @@ import { Plus, Loader2, FolderTree, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import CategoryTable from "@/components/admin/CategoryTable";
-import CategoryFormModal from "@/components/admin/CategoryFormModal";
+import CategoryFormModal, { type CategoryFormData } from "@/components/admin/CategoryFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Category } from "@/lib/types/database";
 
@@ -32,7 +32,7 @@ export default function AdminCategoriesPage() {
         const { data, error } = await supabase
             .from("categories")
             .select("*")
-            .order("created_at", { ascending: false });
+            .order("name", { ascending: true });
 
         if (error) {
             toast("Không thể tải danh mục: " + error.message, "error");
@@ -48,10 +48,16 @@ export default function AdminCategoriesPage() {
     }, []);
 
     // ── Create ──────────────────────────────────────────────────
-    async function handleCreate(formData: { name: string; slug: string }) {
+    async function handleCreate(formData: CategoryFormData) {
         const { error } = await supabase
             .from("categories")
-            .insert({ name: formData.name, slug: formData.slug });
+            .insert({
+                name: formData.name,
+                slug: formData.slug,
+                parent_id: formData.parent_id,
+                image_url: formData.image_url,
+                description: formData.description,
+            });
 
         if (error) {
             if (error.code === "23505") {
@@ -59,7 +65,7 @@ export default function AdminCategoriesPage() {
             } else {
                 toast("Lỗi khi thêm danh mục: " + error.message, "error");
             }
-            throw error; // prevent modal close
+            throw error;
         }
 
         toast("Đã thêm danh mục thành công!", "success");
@@ -68,12 +74,18 @@ export default function AdminCategoriesPage() {
     }
 
     // ── Update ──────────────────────────────────────────────────
-    async function handleUpdate(formData: { name: string; slug: string }) {
+    async function handleUpdate(formData: CategoryFormData) {
         if (!editingCategory) return;
 
         const { error } = await supabase
             .from("categories")
-            .update({ name: formData.name, slug: formData.slug })
+            .update({
+                name: formData.name,
+                slug: formData.slug,
+                parent_id: formData.parent_id,
+                image_url: formData.image_url,
+                description: formData.description,
+            })
             .eq("id", editingCategory.id);
 
         if (error) {
@@ -190,6 +202,7 @@ export default function AdminCategoriesPage() {
                 }}
                 onSubmit={editingCategory ? handleUpdate : handleCreate}
                 editingCategory={editingCategory}
+                allCategories={categories}
             />
 
             {/* Delete Confirm Dialog */}

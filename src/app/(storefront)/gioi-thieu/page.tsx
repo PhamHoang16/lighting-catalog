@@ -59,7 +59,7 @@ export default function AboutPage() {
             {/* ── Hero ──────────────────────────────────────────── */}
             <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(245,158,11,0.08),transparent_50%)]" />
-                <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
+                <div className="relative mx-auto max-w-[1440px] px-4 py-20 sm:px-6 sm:py-28">
                     <div className="max-w-2xl">
                         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-4 py-1.5 text-sm font-medium text-amber-400">
                             <Lightbulb className="h-4 w-4" />
@@ -83,7 +83,7 @@ export default function AboutPage() {
 
             {/* ── Stats ─────────────────────────────────────────── */}
             <section className="border-b border-gray-100">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
                     <div className="grid grid-cols-2 divide-x divide-gray-100 lg:grid-cols-4">
                         {STATS.map((stat) => (
                             <div key={stat.label} className="px-4 py-10 text-center sm:px-8">
@@ -100,7 +100,7 @@ export default function AboutPage() {
             </section>
 
             {/* ── Mission ───────────────────────────────────────── */}
-            <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+            <section className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 lg:py-20">
                 <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
                     {/* Left — text */}
                     <div>
@@ -152,7 +152,7 @@ export default function AboutPage() {
 
             {/* ── CTA ───────────────────────────────────────────── */}
             <section className="bg-gradient-to-r from-gray-900 to-gray-800">
-                <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6">
+                <div className="mx-auto max-w-[1440px] px-4 py-16 text-center sm:px-6">
                     <h2 className="text-2xl font-bold text-white sm:text-3xl">
                         Sẵn sàng cho dự án tiếp theo?
                     </h2>

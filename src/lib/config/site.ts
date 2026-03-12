@@ -1,7 +1,7 @@
 export const siteConfig = {
     name: "Lighting Catalog",
     description:
-        "Hệ thống trưng bày sản phẩm chiếu sáng chuyên nghiệp. Nhận báo giá và tư vấn miễn phí.",
+        "Hệ thống trưng bày sản phẩm chiếu sáng chuyên nghiệp. Đặt hàng trực tuyến và tư vấn miễn phí.",
     url: "https://lighting-catalog.vn",
 
     // ── Thông tin liên hệ (hardcode) ──────────────────────────────
@@ -20,7 +20,7 @@ export const siteConfig = {
     seo: {
         title: "Lighting Catalog - Giải pháp chiếu sáng chuyên nghiệp",
         description:
-            "Khám phá bộ sưu tập đèn chiếu sáng đa dạng. Nhận báo giá và tư vấn miễn phí từ đội ngũ chuyên gia.",
+            "Khám phá bộ sưu tập đèn chiếu sáng đa dạng. Đặt hàng trực tuyến và tư vấn miễn phí từ đội ngũ chuyên gia.",
         keywords: [
             "đèn chiếu sáng",
             "đèn LED",

@@ -7,7 +7,9 @@ import {
     LayoutDashboard,
     Package,
     FolderTree,
+    Tag,
     FileText,
+    Images,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,8 +36,18 @@ const navItems = [
         icon: FolderTree,
     },
     {
-        label: "Yêu cầu báo giá",
-        href: "/admin/yeu-cau-bao-gia",
+        label: "Thương hiệu",
+        href: "/admin/thuong-hieu",
+        icon: Tag,
+    },
+    {
+        label: "Banner",
+        href: "/admin/banner",
+        icon: Images,
+    },
+    {
+        label: "Đơn hàng",
+        href: "/admin/don-hang",
         icon: FileText,
     },
 ];

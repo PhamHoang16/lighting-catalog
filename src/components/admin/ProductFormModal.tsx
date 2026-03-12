@@ -10,7 +10,8 @@ import ImageUploader from "./product-form/ImageUploader";
 import type { PendingImage } from "./product-form/ImageUploader";
 import SpecsEditor from "./product-form/SpecsEditor";
 import RichTextEditor from "./product-form/RichTextEditor";
-import type { Product, Category, SpecItem } from "@/lib/types/database";
+import VariantEditor from "./product-form/VariantEditor";
+import type { Product, Category, Brand, SpecItem, VariantsData } from "@/lib/types/database";
 
 // ── Product payload ─────────────────────────────────────────────
 export interface ProductPayload {
@@ -18,10 +19,12 @@ export interface ProductPayload {
     slug: string;
     price: number;
     category_id: string;
+    brand_id?: string | null;
     image_url?: string | null;
     gallery?: string[] | null;
     description?: string | null;
     specs?: SpecItem[] | null;
+    variants?: VariantsData | null;
 }
 
 interface ProductFormModalProps {
@@ -45,10 +48,12 @@ export default function ProductFormModal({
     const [slug, setSlug] = useState("");
     const [price, setPrice] = useState("");
     const [categoryId, setCategoryId] = useState("");
+    const [brandId, setBrandId] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Categories
+    // Categories and Brands
     const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
 
     // ── Thumbnail image ─────────────────────────────────────────
@@ -62,24 +67,27 @@ export default function ProductFormModal({
     // ── Rich text description ───────────────────────────────────
     const [description, setDescription] = useState("");
 
-    // ── Specs ───────────────────────────────────────────────────
     const [specs, setSpecs] = useState<SpecItem[]>([]);
+
+    // ── Variants ────────────────────────────────────────────────
+    const [variants, setVariants] = useState<VariantsData | null>(null);
 
     const isEdit = !!editingProduct;
 
-    // ── Fetch categories ────────────────────────────────────────
+    // ── Fetch categories and brands ─────────────────────────────
     useEffect(() => {
         if (!open) return;
-        async function fetchCategories() {
+        async function fetchData() {
             setLoadingCategories(true);
-            const { data } = await supabase
-                .from("categories")
-                .select("*")
-                .order("name", { ascending: true });
-            setCategories((data as Category[]) ?? []);
+            const [categoriesRes, brandsRes] = await Promise.all([
+                supabase.from("categories").select("*").order("name", { ascending: true }),
+                supabase.from("brands").select("*").order("name", { ascending: true }),
+            ]);
+            setCategories((categoriesRes.data as Category[]) ?? []);
+            setBrands((brandsRes.data as Brand[]) ?? []);
             setLoadingCategories(false);
         }
-        fetchCategories();
+        fetchData();
     }, [open, supabase]);
 
     // ── Populate khi edit ───────────────────────────────────────
@@ -88,9 +96,11 @@ export default function ProductFormModal({
             setName(editingProduct.name);
             setSlug(editingProduct.slug);
             setPrice(String(editingProduct.price));
+            setBrandId(editingProduct.brand_id ?? "");
             setCategoryId(editingProduct.category_id);
             setDescription(editingProduct.description ?? "");
             setSpecs(editingProduct.specs ?? []);
+            setVariants(editingProduct.variants ?? null);
             // Image
             setThumbExisting(editingProduct.image_url ? [editingProduct.image_url] : []);
             setThumbPending([]);
@@ -115,10 +125,12 @@ export default function ProductFormModal({
     function resetForm() {
         setName("");
         setSlug("");
+        setBrandId("");
         setPrice("");
         setCategoryId("");
         setDescription("");
         setSpecs([]);
+        setVariants(null);
         setThumbExisting([]);
         setThumbPending([]);
         setGalleryExisting([]);
@@ -188,16 +200,28 @@ export default function ProductFormModal({
                 (s) => s.name.trim() && s.value.trim()
             );
 
-            // 3. Build payload
+            // 3. Clean and normalize variants
+            const finalVariants = variants?.options?.length ? {
+                options: variants.options,
+                variants: variants.variants.map((v) => ({
+                    ...v,
+                    price: v.price === -1 ? numericPrice : v.price,
+                    stock: v.stock === -1 ? 999 : v.stock,
+                }))
+            } : null;
+
+            // 4. Build payload
             const payload: ProductPayload = {
                 name: name.trim(),
                 slug: finalSlug,
                 price: numericPrice,
                 category_id: categoryId,
+                brand_id: brandId || null,
                 image_url: finalThumbUrl,
                 gallery: finalGallery.length > 0 ? finalGallery : null,
                 description: description.trim() || null,
                 specs: cleanSpecs.length > 0 ? cleanSpecs : null,
+                variants: finalVariants,
             };
 
             await onSubmit(payload);
@@ -273,8 +297,8 @@ export default function ProductFormModal({
                         </div>
                     </div>
 
-                    {/* Giá + Danh mục */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* Giá + Danh mục + Thương hiệu */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <label
                                 htmlFor="product-price"
@@ -330,7 +354,50 @@ export default function ProductFormModal({
                                 </select>
                             )}
                         </div>
+                        <div>
+                            <label
+                                htmlFor="product-brand"
+                                className="mb-1.5 block text-sm font-medium text-gray-700"
+                            >
+                                Thương hiệu
+                            </label>
+                            {loadingCategories ? (
+                                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-400">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Đang tải...
+                                </div>
+                            ) : (
+                                <select
+                                    id="product-brand"
+                                    value={brandId}
+                                    onChange={(e) => setBrandId(e.target.value)}
+                                    disabled={loading}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
+                                >
+                                    <option value="">— Chưa chọn —</option>
+                                    {brands.map((brand) => (
+                                        <option key={brand.id} value={brand.id}>
+                                            {brand.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
                     </div>
+                </fieldset>
+
+                {/* ════════════════════════════════════════════════════ */}
+                {/* SECTION 1.5: Biến thể sản phẩm                       */}
+                {/* ════════════════════════════════════════════════════ */}
+                <fieldset className="space-y-4 rounded-lg border border-gray-200 p-4">
+                    <legend className="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Quản lý Biến thể
+                    </legend>
+                    <VariantEditor
+                        value={variants}
+                        onChange={setVariants}
+                        basePrice={parseFloat(price) || 0}
+                    />
                 </fieldset>
 
                 {/* ════════════════════════════════════════════════════ */}

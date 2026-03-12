@@ -62,3 +62,41 @@ export function timeAgo(dateString: string): string {
     if (diffMonth < 12) return `${diffMonth} tháng trước`;
     return `${Math.floor(diffMonth / 12)} năm trước`;
 }
+
+// ── Build category tree from flat array ─────────────────────────
+import type { Category, CategoryWithChildren } from "@/lib/types/database";
+
+export function buildCategoryTree(categories: Category[]): CategoryWithChildren[] {
+    const map = new Map<string, CategoryWithChildren>();
+    const roots: CategoryWithChildren[] = [];
+
+    // 1. Create map with empty children
+    for (const cat of categories) {
+        map.set(cat.id, { ...cat, children: [] });
+    }
+
+    // 2. Attach children to parents
+    for (const cat of categories) {
+        const node = map.get(cat.id)!;
+        if (cat.parent_id && map.has(cat.parent_id)) {
+            map.get(cat.parent_id)!.children.push(node);
+        } else {
+            roots.push(node);
+        }
+    }
+
+    return roots;
+}
+
+// Get all descendant IDs of a category (inclusive)
+export function getDescendantIds(
+    categoryId: string,
+    allCategories: Category[]
+): string[] {
+    const ids = [categoryId];
+    const children = allCategories.filter((c) => c.parent_id === categoryId);
+    for (const child of children) {
+        ids.push(...getDescendantIds(child.id, allCategories));
+    }
+    return ids;
+}

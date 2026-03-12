@@ -9,9 +9,9 @@ export default function CartHeaderIcon() {
 
     return (
         <Link
-            href="/gio-hang-bao-gia"
+            href="/gio-hang"
             className="relative flex items-center justify-center rounded-full p-2 text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600"
-            aria-label={`Giỏ báo giá (${totalItems} sản phẩm)`}
+            aria-label={`Giỏ hàng (${totalItems} sản phẩm)`}
         >
             <ShoppingCart className="h-5 w-5" />
             {totalItems > 0 && (

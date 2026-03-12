@@ -4,23 +4,87 @@
 export interface Database {
     public: {
         Tables: {
+            banners: {
+                Row: {
+                    id: string;
+                    title: string | null;
+                    image_url: string;
+                    link_url: string | null;
+                    is_active: boolean;
+                    sort_order: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    title?: string | null;
+                    image_url: string;
+                    link_url?: string | null;
+                    is_active?: boolean;
+                    sort_order?: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    title?: string | null;
+                    image_url?: string;
+                    link_url?: string | null;
+                    is_active?: boolean;
+                    sort_order?: number;
+                    created_at?: string;
+                };
+            };
             categories: {
                 Row: {
                     id: string;
                     name: string;
                     slug: string;
+                    parent_id: string | null;
+                    image_url: string | null;
+                    description: string | null;
                     created_at: string;
                 };
                 Insert: {
                     id?: string;
                     name: string;
                     slug: string;
+                    parent_id?: string | null;
+                    image_url?: string | null;
+                    description?: string | null;
                     created_at?: string;
                 };
                 Update: {
                     id?: string;
                     name?: string;
                     slug?: string;
+                    parent_id?: string | null;
+                    image_url?: string | null;
+                    description?: string | null;
+                    created_at?: string;
+                };
+            };
+            brands: {
+                Row: {
+                    id: string;
+                    name: string;
+                    slug: string;
+                    logo_url: string | null;
+                    description: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    name: string;
+                    slug: string;
+                    logo_url?: string | null;
+                    description?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    name?: string;
+                    slug?: string;
+                    logo_url?: string | null;
+                    description?: string | null;
                     created_at?: string;
                 };
             };
@@ -34,7 +98,9 @@ export interface Database {
                     gallery: string[] | null;
                     description: string | null;
                     specs: SpecItem[] | null;
+                    variants: VariantsData | null;
                     category_id: string;
+                    brand_id: string | null;
                     created_at: string;
                 };
                 Insert: {
@@ -46,7 +112,9 @@ export interface Database {
                     gallery?: string[] | null;
                     description?: string | null;
                     specs?: SpecItem[] | null;
+                    variants?: VariantsData | null;
                     category_id: string;
+                    brand_id?: string | null;
                     created_at?: string;
                 };
                 Update: {
@@ -58,36 +126,56 @@ export interface Database {
                     gallery?: string[] | null;
                     description?: string | null;
                     specs?: SpecItem[] | null;
+                    variants?: VariantsData | null;
                     category_id?: string;
+                    brand_id?: string | null;
                     created_at?: string;
                 };
             };
-            quote_requests: {
+            orders: {
                 Row: {
                     id: string;
                     customer_name: string;
                     phone: string;
+                    title: string | null;
                     message: string | null;
+                    delivery_method: string;
+                    address: string | null;
+                    card_at_home: boolean;
+                    invoice_company: boolean;
+                    total_amount: number;
                     status: string;
-                    items: QuoteItem[];
+                    items: OrderItem[];
                     created_at: string;
                 };
                 Insert: {
                     id?: string;
                     customer_name: string;
                     phone: string;
+                    title?: string | null;
                     message?: string | null;
+                    delivery_method?: string;
+                    address?: string | null;
+                    card_at_home?: boolean;
+                    invoice_company?: boolean;
+                    total_amount?: number;
                     status?: string;
-                    items: QuoteItem[];
+                    items: OrderItem[];
                     created_at?: string;
                 };
                 Update: {
                     id?: string;
                     customer_name?: string;
                     phone?: string;
+                    title?: string | null;
                     message?: string | null;
+                    delivery_method?: string;
+                    address?: string | null;
+                    card_at_home?: boolean;
+                    invoice_company?: boolean;
+                    total_amount?: number;
                     status?: string;
-                    items?: QuoteItem[];
+                    items?: OrderItem[];
                     created_at?: string;
                 };
             };
@@ -99,21 +187,35 @@ export interface Database {
 }
 
 // ── Convenience types ───────────────────────────────────────────
+export type Brand = Database["public"]["Tables"]["brands"]["Row"];
+export type BrandInsert = Database["public"]["Tables"]["brands"]["Insert"];
+export type BrandUpdate = Database["public"]["Tables"]["brands"]["Update"];
+
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 export type CategoryInsert = Database["public"]["Tables"]["categories"]["Insert"];
 export type CategoryUpdate = Database["public"]["Tables"]["categories"]["Update"];
+
+// Category kèm danh mục con (dùng cho tree view)
+export type CategoryWithChildren = Category & {
+    children: CategoryWithChildren[];
+};
 
 export type Product = Database["public"]["Tables"]["products"]["Row"];
 export type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 export type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 
-export type QuoteRequest = Database["public"]["Tables"]["quote_requests"]["Row"];
-export type QuoteRequestInsert = Database["public"]["Tables"]["quote_requests"]["Insert"];
-export type QuoteRequestUpdate = Database["public"]["Tables"]["quote_requests"]["Update"];
+export type Order = Database["public"]["Tables"]["orders"]["Row"];
+export type OrderInsert = Database["public"]["Tables"]["orders"]["Insert"];
+export type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"];
 
 // Product kèm thông tin category (dùng cho query join)
 export type ProductWithCategory = Product & {
-    categories: { name: string } | null;
+    categories: { name: string; slug: string } | null;
+};
+
+export type ProductWithRelations = Product & {
+    categories: { name: string; slug: string } | null;
+    brands: { name: string; slug: string; logo_url: string | null } | null;
 };
 
 // ── Spec Item (lưu trong JSONB `specs`) ─────────────────────────
@@ -122,22 +224,43 @@ export interface SpecItem {
     value: string;
 }
 
-// ── Quote Item (lưu trong JSONB `items`) ────────────────────────
-export interface QuoteItem {
+// ── Variant Data (lưu trong JSONB `variants`) ───────────────────
+export interface VariantOption {
+    name: string;
+    values: string[];
+}
+
+export interface VariantItem {
+    combination: string[];
+    price: number;
+    stock: number;
+    sku?: string;
+}
+
+export interface VariantsData {
+    options: VariantOption[];
+    variants: VariantItem[];
+}
+
+// ── Order Item (lưu trong JSONB `items`) ────────────────────────
+export interface OrderItem {
     product_id: string;
     product_name: string;
+    product_image?: string | null;
+    variant_label?: string | null;
+    unit_price: number;
     quantity: number;
 }
 
-// ── Quote Status ────────────────────────────────────────────────
-export type QuoteStatus = "new" | "processing" | "completed" | "cancelled";
+// ── Order Status ────────────────────────────────────────────────
+export type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
 
-export const QUOTE_STATUS_MAP: Record<
-    QuoteStatus,
+export const ORDER_STATUS_MAP: Record<
+    OrderStatus,
     { label: string; bg: string; text: string }
 > = {
-    new: {
-        label: "Mới",
+    pending: {
+        label: "Chờ xác nhận",
         bg: "bg-blue-50",
         text: "text-blue-700",
     },
@@ -147,7 +270,7 @@ export const QUOTE_STATUS_MAP: Record<
         text: "text-amber-700",
     },
     completed: {
-        label: "Đã xong",
+        label: "Hoàn thành",
         bg: "bg-green-50",
         text: "text-green-700",
     },
@@ -157,3 +280,8 @@ export const QUOTE_STATUS_MAP: Record<
         text: "text-red-700",
     },
 };
+
+// ── Banners ─────────────────────────────────────────────────────
+export type Banner = Database["public"]["Tables"]["banners"]["Row"];
+export type BannerInsert = Database["public"]["Tables"]["banners"]["Insert"];
+export type BannerUpdate = Database["public"]["Tables"]["banners"]["Update"];

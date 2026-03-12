@@ -33,10 +33,10 @@ export default function AddToCartButton({
             <button
                 onClick={handleAdd}
                 className={`flex items-center justify-center gap-2 rounded-xl border-2 px-6 py-3.5 text-sm font-bold transition-all ${justAdded
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                        : alreadyInCart
-                            ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                            : "border-gray-200 bg-white text-gray-700 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                    : alreadyInCart
+                        ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
                     } ${className}`}
             >
                 {justAdded ? (
@@ -52,7 +52,7 @@ export default function AddToCartButton({
                 ) : (
                     <>
                         <ShoppingCart className="h-5 w-5" />
-                        Thêm vào giỏ báo giá
+                        Thêm vào giỏ hàng
                     </>
                 )}
             </button>
@@ -64,8 +64,8 @@ export default function AddToCartButton({
         <button
             onClick={handleAdd}
             className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${justAdded
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-amber-50 text-amber-700 hover:bg-amber-100"
                 } ${className}`}
             aria-label={`Thêm ${product.name} vào giỏ`}
         >

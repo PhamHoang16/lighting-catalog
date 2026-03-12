@@ -11,7 +11,9 @@ import {
     Info,
     Mail,
     ShoppingBag,
+    Search
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { siteConfig } from "@/lib/config/site";
 
 interface MobileMenuProps {
@@ -20,6 +22,19 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ categories }: MobileMenuProps) {
     const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState("");
+    const router = useRouter();
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (query.trim()) {
+            const params = new URLSearchParams();
+            params.set("q", query.trim());
+            router.push(`/danh-muc?${params.toString()}`);
+            setQuery("");
+            setOpen(false);
+        }
+    };
 
     return (
         <>
@@ -55,6 +70,26 @@ export default function MobileMenu({ categories }: MobileMenuProps) {
                     >
                         <X className="h-5 w-5" />
                     </button>
+                </div>
+
+                {/* Search Bar */}
+                <div className="px-5 py-4 border-b border-gray-100">
+                    <form onSubmit={handleSearch} className="relative">
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Tìm kiếm sản phẩm..."
+                            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-2.5 pl-4 pr-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20"
+                        />
+                        <button
+                            type="submit"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 hover:bg-amber-100 hover:text-amber-600 active:scale-95"
+                            aria-label="Tìm kiếm"
+                        >
+                            <Search className="h-4 w-4" />
+                        </button>
+                    </form>
                 </div>
 
                 {/* Nav links */}

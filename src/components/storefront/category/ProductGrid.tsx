@@ -1,46 +1,47 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { PackageOpen, Home } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import ProductCard from "@/components/storefront/ProductCard";
 import SortDropdown, { type SortOption } from "./SortDropdown";
+import Pagination from "./Pagination";
 import type { Product } from "@/lib/types/database";
 
 interface ProductGridProps {
     products: Product[];
     categoryName?: string;
+    totalCount?: number;
+    currentPage?: number;
+    totalPages?: number;
 }
 
 export default function ProductGrid({
     products,
     categoryName,
+    totalCount = 0,
+    currentPage = 1,
+    totalPages = 1,
 }: ProductGridProps) {
-    const [sort, setSort] = useState<SortOption>("newest");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [isPending, startTransition] = useTransition();
 
-    const sorted = useMemo(() => {
-        const list = [...products];
-        switch (sort) {
-            case "newest":
-                return list.sort(
-                    (a, b) =>
-                        new Date(b.created_at).getTime() -
-                        new Date(a.created_at).getTime()
-                );
-            case "oldest":
-                return list.sort(
-                    (a, b) =>
-                        new Date(a.created_at).getTime() -
-                        new Date(b.created_at).getTime()
-                );
-            case "price-asc":
-                return list.sort((a, b) => a.price - b.price);
-            case "price-desc":
-                return list.sort((a, b) => b.price - a.price);
-            default:
-                return list;
-        }
-    }, [products, sort]);
+    const currentSort = (searchParams.get("sort") as SortOption) || "newest";
+
+    const handleSortChange = (newSort: SortOption) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("sort", newSort);
+        // Reset page to 1 when sort changes
+        params.set("page", "1");
+
+        startTransition(() => {
+            router.push(`?${params.toString()}`);
+        });
+    };
+
+
 
     // ── Empty state ─────────────────────────────────────────────
     if (products.length === 0) {
@@ -77,19 +78,26 @@ export default function ProductGrid({
                 <p className="text-sm text-gray-500">
                     Hiển thị{" "}
                     <span className="font-semibold text-gray-900">
-                        {products.length}
+                        {totalCount}
                     </span>{" "}
                     sản phẩm
                 </p>
-                <SortDropdown value={sort} onChange={setSort} />
+                <div className={`transition-opacity ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <SortDropdown value={currentSort} onChange={handleSortChange} />
+                </div>
             </div>
 
             {/* ── Grid ─────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                {sorted.map((product) => (
+            <div className={`grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 transition-opacity ${isPending ? 'opacity-50' : ''}`}>
+                {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                 ))}
             </div>
+
+            {/* ── Pagination ────────────────────────────────────── */}
+            {totalPages > 1 && (
+                <Pagination currentPage={currentPage} totalPages={totalPages} />
+            )}
         </div>
     );
 }

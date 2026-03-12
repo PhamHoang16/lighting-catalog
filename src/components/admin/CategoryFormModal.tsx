@@ -1,17 +1,25 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImageIcon } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { toSlug } from "@/lib/utils";
 import type { Category } from "@/lib/types/database";
 
+export interface CategoryFormData {
+    name: string;
+    slug: string;
+    parent_id: string | null;
+    image_url: string | null;
+    description: string | null;
+}
+
 interface CategoryFormModalProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: { name: string; slug: string }) => Promise<void>;
-    /** If provided, modal is in "Edit" mode */
+    onSubmit: (data: CategoryFormData) => Promise<void>;
     editingCategory?: Category | null;
+    allCategories: Category[]; // for parent dropdown
 }
 
 export default function CategoryFormModal({
@@ -19,42 +27,69 @@ export default function CategoryFormModal({
     onClose,
     onSubmit,
     editingCategory,
+    allCategories,
 }: CategoryFormModalProps) {
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
+    const [parentId, setParentId] = useState("");
+    const [imageUrl, setImageUrl] = useState("");
+    const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
 
     const isEdit = !!editingCategory;
 
-    // Populate fields when editing
+    // Exclude self and own children from parent options (prevent circular)
+    const parentOptions = allCategories.filter(
+        (c) => !editingCategory || (c.id !== editingCategory.id && c.parent_id !== editingCategory.id)
+    );
+
+    // Only show top-level categories as potential parents
+    const topLevelParents = parentOptions.filter((c) => !c.parent_id);
+
     useEffect(() => {
         if (editingCategory) {
             setName(editingCategory.name);
             setSlug(editingCategory.slug);
+            setParentId(editingCategory.parent_id ?? "");
+            setImageUrl(editingCategory.image_url ?? "");
+            setDescription(editingCategory.description ?? "");
         } else {
             setName("");
             setSlug("");
+            setParentId("");
+            setImageUrl("");
+            setDescription("");
         }
     }, [editingCategory, open]);
 
-    // Auto-generate slug from name
     useEffect(() => {
-        if (name) {
+        if (!isEdit) {
+            setSlug(name ? toSlug(name) : "");
+        } else if (name && name !== editingCategory?.name) {
             setSlug(toSlug(name));
-        } else {
-            setSlug("");
         }
-    }, [name]);
+    }, [name, isEdit, editingCategory?.name]);
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         if (!name.trim()) return;
 
+        const finalSlug = slug || toSlug(name.trim());
+
         setLoading(true);
         try {
-            await onSubmit({ name: name.trim(), slug });
+            await onSubmit({
+                name: name.trim(),
+                slug: finalSlug,
+                parent_id: parentId || null,
+                image_url: imageUrl.trim() || null,
+                description: description.trim() || null,
+            });
             setName("");
             setSlug("");
+            setParentId("");
+            setImageUrl("");
+            setDescription("");
         } finally {
             setLoading(false);
         }
@@ -64,6 +99,9 @@ export default function CategoryFormModal({
         if (!loading) {
             setName("");
             setSlug("");
+            setParentId("");
+            setImageUrl("");
+            setDescription("");
             onClose();
         }
     }
@@ -75,16 +113,13 @@ export default function CategoryFormModal({
             title={isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
         >
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Name input */}
+                {/* Name */}
                 <div>
-                    <label
-                        htmlFor="category-name"
-                        className="mb-1.5 block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="cat-name" className="mb-1.5 block text-sm font-medium text-gray-700">
                         Tên danh mục <span className="text-red-500">*</span>
                     </label>
                     <input
-                        id="category-name"
+                        id="cat-name"
                         type="text"
                         required
                         autoFocus
@@ -96,7 +131,7 @@ export default function CategoryFormModal({
                     />
                 </div>
 
-                {/* Slug preview */}
+                {/* Slug */}
                 <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-500">
                         Slug (tự động tạo)
@@ -104,6 +139,75 @@ export default function CategoryFormModal({
                     <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
                         {slug || "—"}
                     </div>
+                </div>
+
+                {/* Parent category */}
+                <div>
+                    <label htmlFor="cat-parent" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Danh mục cha
+                    </label>
+                    <select
+                        id="cat-parent"
+                        value={parentId}
+                        onChange={(e) => setParentId(e.target.value)}
+                        disabled={loading}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <option value="">— Không (danh mục gốc) —</option>
+                        {topLevelParents.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-400">
+                        Để trống nếu đây là danh mục cấp cao nhất
+                    </p>
+                </div>
+
+                {/* Image URL */}
+                <div>
+                    <label htmlFor="cat-image" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Link ảnh danh mục
+                    </label>
+                    <input
+                        id="cat-image"
+                        type="url"
+                        placeholder="https://example.com/image.jpg"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        disabled={loading}
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+                    {imageUrl && (
+                        <div className="mt-2 flex items-center gap-2">
+                            <div className="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                                <img
+                                    src={imageUrl}
+                                    alt="Preview"
+                                    className="h-full w-full object-cover"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                            </div>
+                            <span className="text-xs text-gray-500">Xem trước</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Description */}
+                <div>
+                    <label htmlFor="cat-desc" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Mô tả ngắn
+                    </label>
+                    <textarea
+                        id="cat-desc"
+                        rows={2}
+                        placeholder="Mô tả ngắn gọn về danh mục..."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        disabled={loading}
+                        className="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    />
                 </div>
 
                 {/* Actions */}

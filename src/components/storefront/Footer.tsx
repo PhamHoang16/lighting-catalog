@@ -27,7 +27,7 @@ export default async function StorefrontFooter() {
     return (
         <footer className="bg-gray-900 text-gray-300">
             {/* ── Main grid ──────────────────────────────────────── */}
-            <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+            <div className="mx-auto max-w-[1440px] px-4 py-14 sm:px-6">
                 <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
                     {/* ── Cột 1: Công ty ─────────────────────────────── */}
                     <div>
@@ -167,7 +167,7 @@ export default async function StorefrontFooter() {
 
             {/* ── Bottom bar ─────────────────────────────────────── */}
             <div className="border-t border-gray-800">
-                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 sm:flex-row sm:px-6">
+                <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-2 px-4 py-5 sm:flex-row sm:px-6">
                     <p className="text-xs text-gray-500">
                         © {currentYear} {siteConfig.name}. Tất cả quyền được bảo lưu.
                     </p>

@@ -5,7 +5,8 @@ import { Plus, Loader2, Package, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import ProductTable from "@/components/admin/ProductTable";
-import ProductFormModal from "@/components/admin/ProductFormModal";
+import ProductFormModal, { type ProductPayload } from "@/components/admin/ProductFormModal";
+import ProductImportModal from "@/components/admin/ProductImportModal";
 import ProductToolbar, {
     SORT_OPTIONS,
 } from "@/components/admin/ProductToolbar";
@@ -21,6 +22,7 @@ export default function AdminProductsPage() {
     const [products, setProducts] = useState<ProductWithCategory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] =
         useState<ProductWithCategory | null>(null);
 
@@ -105,16 +107,7 @@ export default function AdminProductsPage() {
     }
 
     // ── Create / Update ─────────────────────────────────────────
-    async function handleSaveProduct(formData: {
-        name: string;
-        slug: string;
-        price: number;
-        category_id: string;
-        image_url?: string | null;
-        gallery?: string[] | null;
-        description?: string | null;
-        specs?: { name: string; value: string }[] | null;
-    }) {
+    async function handleSaveProduct(formData: ProductPayload) {
         if (selectedProduct) {
             const { error } = await supabase
                 .from("products")
@@ -208,6 +201,12 @@ export default function AdminProductsPage() {
                         />
                     </button>
                     <button
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="flex items-center gap-2 rounded-lg border border-blue-600 bg-white px-4 py-2.5 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    >
+                        Import CSV
+                    </button>
+                    <button
                         onClick={openCreate}
                         className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-lg"
                     >
@@ -257,6 +256,13 @@ export default function AdminProductsPage() {
                 }}
                 onSubmit={handleSaveProduct}
                 editingProduct={selectedProduct}
+            />
+
+            {/* Import CSV Modal */}
+            <ProductImportModal
+                open={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onSuccess={() => fetchProducts()}
             />
         </div>
     );

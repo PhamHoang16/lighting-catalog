@@ -2,21 +2,21 @@ import { Suspense } from "react";
 import {
     Package,
     FolderOpen,
-    FileText,
+    ShoppingCart,
     Bell,
     Loader2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import StatCard from "@/components/admin/dashboard/StatCard";
-import RecentQuotes from "@/components/admin/dashboard/RecentQuotes";
+import RecentOrders from "@/components/admin/dashboard/RecentOrders";
 import QuickActions from "@/components/admin/dashboard/QuickActions";
-import type { QuoteRequest } from "@/lib/types/database";
+import type { Order } from "@/lib/types/database";
 
 // ── Data fetching (Server-side) ─────────────────────────────────
 async function getDashboardStats() {
     const supabase = await createClient();
 
-    const [categoriesRes, productsRes, quotesRes, newQuotesRes, recentRes] =
+    const [categoriesRes, productsRes, ordersRes, pendingOrdersRes, recentRes] =
         await Promise.all([
             supabase
                 .from("categories")
@@ -25,14 +25,14 @@ async function getDashboardStats() {
                 .from("products")
                 .select("*", { count: "exact", head: true }),
             supabase
-                .from("quote_requests")
+                .from("orders")
                 .select("*", { count: "exact", head: true }),
             supabase
-                .from("quote_requests")
+                .from("orders")
                 .select("*", { count: "exact", head: true })
-                .eq("status", "new"),
+                .eq("status", "pending"),
             supabase
-                .from("quote_requests")
+                .from("orders")
                 .select("*")
                 .order("created_at", { ascending: false })
                 .limit(5),
@@ -41,9 +41,9 @@ async function getDashboardStats() {
     return {
         categoryCount: categoriesRes.count ?? 0,
         productCount: productsRes.count ?? 0,
-        quoteCount: quotesRes.count ?? 0,
-        newQuoteCount: newQuotesRes.count ?? 0,
-        recentQuotes: (recentRes.data as QuoteRequest[]) ?? [],
+        orderCount: ordersRes.count ?? 0,
+        pendingOrderCount: pendingOrdersRes.count ?? 0,
+        recentOrders: (recentRes.data as Order[]) ?? [],
     };
 }
 
@@ -51,7 +51,6 @@ async function getDashboardStats() {
 function DashboardSkeleton() {
     return (
         <div className="space-y-8">
-            {/* KPI skeleton */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                     <div
@@ -68,7 +67,6 @@ function DashboardSkeleton() {
                     </div>
                 ))}
             </div>
-            {/* Content skeleton */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 lg:col-span-2">
                     <div className="h-5 w-48 rounded bg-gray-200" />
@@ -118,14 +116,14 @@ async function DashboardContent() {
                     color="blue"
                 />
                 <StatCard
-                    title="Yêu cầu báo giá"
-                    value={stats.quoteCount}
-                    icon={FileText}
+                    title="Đơn hàng"
+                    value={stats.orderCount}
+                    icon={ShoppingCart}
                     color="amber"
                 />
                 <StatCard
-                    title="Báo giá MỚI"
-                    value={stats.newQuoteCount}
+                    title="Chờ xác nhận"
+                    value={stats.pendingOrderCount}
                     icon={Bell}
                     color="red"
                 />
@@ -133,15 +131,13 @@ async function DashboardContent() {
 
             {/* ── Content Row ────────────────────────────────────── */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Hoạt động gần đây — 2/3 width */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
                     <h2 className="mb-5 text-base font-semibold text-gray-900">
-                        Yêu cầu báo giá gần đây
+                        Đơn hàng gần đây
                     </h2>
-                    <RecentQuotes quotes={stats.recentQuotes} />
+                    <RecentOrders orders={stats.recentOrders} />
                 </div>
 
-                {/* Quick Actions — 1/3 width */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <h2 className="mb-5 text-base font-semibold text-gray-900">
                         Thao tác nhanh
@@ -157,7 +153,6 @@ async function DashboardContent() {
 export default function AdminDashboardPage() {
     return (
         <section>
-            {/* Header */}
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900">
                     Tổng quan
@@ -167,7 +162,6 @@ export default function AdminDashboardPage() {
                 </p>
             </div>
 
-            {/* Content with Suspense */}
             <Suspense fallback={<DashboardSkeleton />}>
                 <DashboardContent />
             </Suspense>

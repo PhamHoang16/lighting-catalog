@@ -64,7 +64,7 @@ export default function ContactPage() {
         <div className="bg-white">
             {/* ── Hero ──────────────────────────────────────────── */}
             <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-                <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+                <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20">
                     <div className="text-center">
                         <h1 className="text-3xl font-extrabold text-white sm:text-4xl">
                             Liên hệ với chúng tôi
@@ -78,7 +78,7 @@ export default function ContactPage() {
             </section>
 
             {/* ── Contact Info Cards ────────────────────────────── */}
-            <section className="relative -mt-8 mx-auto max-w-7xl px-4 sm:px-6">
+            <section className="relative -mt-8 mx-auto max-w-[1440px] px-4 sm:px-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {CONTACT_INFO.map((info) => (
                         <div
@@ -110,7 +110,7 @@ export default function ContactPage() {
             </section>
 
             {/* ── Form + Map ───────────────────────────────────── */}
-            <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+            <section className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6">
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                     {/* ── Contact Form (3/5) ─────────────────────────── */}
                     <div className="lg:col-span-3">

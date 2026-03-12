@@ -4,6 +4,7 @@ import {
     FileText,
     FolderOpen,
     ExternalLink,
+    Images,
 } from "lucide-react";
 
 const ACTIONS = [
@@ -20,8 +21,14 @@ const ACTIONS = [
         color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100",
     },
     {
-        label: "Xem báo giá",
-        href: "/admin/yeu-cau-bao-gia",
+        label: "Quản lý banner",
+        href: "/admin/banner",
+        icon: Images,
+        color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
+    },
+    {
+        label: "Xem đơn hàng",
+        href: "/admin/don-hang",
         icon: FileText,
         color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
     },

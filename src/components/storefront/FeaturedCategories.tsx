@@ -27,7 +27,7 @@ export default async function FeaturedCategories() {
 
     return (
         <section className="py-16 sm:py-20">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
                 {/* Section header */}
                 <div className="mb-10 flex items-end justify-between">
                     <div>

@@ -179,6 +179,44 @@ export interface Database {
                     created_at?: string;
                 };
             };
+            posts: {
+                Row: {
+                    id: string;
+                    title: string;
+                    slug: string;
+                    thumbnail_url: string | null;
+                    summary: string | null;
+                    content: string | null;
+                    is_published: boolean;
+                    is_featured: boolean;
+                    is_popular: boolean;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    title: string;
+                    slug: string;
+                    thumbnail_url?: string | null;
+                    summary?: string | null;
+                    content?: string | null;
+                    is_published?: boolean;
+                    is_featured?: boolean;
+                    is_popular?: boolean;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    title?: string;
+                    slug?: string;
+                    thumbnail_url?: string | null;
+                    summary?: string | null;
+                    content?: string | null;
+                    is_published?: boolean;
+                    is_featured?: boolean;
+                    is_popular?: boolean;
+                    created_at?: string;
+                };
+            };
         };
         Views: Record<string, never>;
         Functions: Record<string, never>;
@@ -285,3 +323,8 @@ export const ORDER_STATUS_MAP: Record<
 export type Banner = Database["public"]["Tables"]["banners"]["Row"];
 export type BannerInsert = Database["public"]["Tables"]["banners"]["Insert"];
 export type BannerUpdate = Database["public"]["Tables"]["banners"]["Update"];
+
+// ── Posts (Tin tức) ─────────────────────────────────────────────
+export type Post = Database["public"]["Tables"]["posts"]["Row"];
+export type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
+export type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];

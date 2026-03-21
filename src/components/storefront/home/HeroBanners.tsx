@@ -5,15 +5,35 @@ import Autoplay from "embla-carousel-autoplay";
 import type { Banner } from "@/lib/types/database";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { clsx } from "clsx";
 
 export default function HeroBanners({ banners }: { banners: Banner[] }) {
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
         Autoplay({ delay: 5000, stopOnInteraction: true }),
     ]);
 
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
+
     const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
     const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+    const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
+
+    const onInit = useCallback((emblaApi: any) => {
+        setScrollSnaps(emblaApi.scrollSnapList());
+    }, []);
+
+    const onSelect = useCallback((emblaApi: any) => {
+        setSelectedIndex(emblaApi.selectedScrollSnap());
+    }, []);
+
+    useEffect(() => {
+        if (!emblaApi) return;
+        onInit(emblaApi);
+        onSelect(emblaApi);
+        emblaApi.on("reInit", onInit).on("reInit", onSelect).on("select", onSelect);
+    }, [emblaApi, onInit, onSelect]);
 
     if (!banners || banners.length === 0) {
         return (
@@ -27,7 +47,7 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
 
     return (
         <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 mt-4">
-            <div className="relative overflow-hidden rounded-2xl shadow-sm" ref={emblaRef}>
+            <div className="relative overflow-hidden rounded-2xl shadow-sm bg-gray-50" ref={emblaRef}>
                 <div className="flex touch-pan-y">
                     {banners.map((banner) => (
                         <div key={banner.id} className="min-w-0 flex-[0_0_100%]">
@@ -36,7 +56,7 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                                     <img
                                         src={banner.image_url}
                                         alt={banner.title ?? "Banner"}
-                                        className="h-full w-full object-cover"
+                                        className="h-full w-full object-contain"
                                         loading="lazy"
                                     />
                                 </Link>
@@ -45,7 +65,7 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                                     <img
                                         src={banner.image_url}
                                         alt={banner.title ?? "Banner"}
-                                        className="h-full w-full object-cover"
+                                        className="h-full w-full object-contain"
                                         loading="lazy"
                                     />
                                 </div>
@@ -67,6 +87,25 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                 >
                     <ChevronRight className="h-6 w-6" />
                 </button>
+                
+                {/* Pagination Dots */}
+                {scrollSnaps.length > 1 && (
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                        {scrollSnaps.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => scrollTo(index)}
+                                className={clsx(
+                                    "h-2 rounded-full transition-all duration-300",
+                                    index === selectedIndex
+                                        ? "w-6 bg-amber-500"
+                                        : "w-2 bg-black/20 hover:bg-black/40"
+                                )}
+                                aria-label={`Go to slide ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

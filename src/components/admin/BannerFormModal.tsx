@@ -109,12 +109,15 @@ export default function BannerFormModal({
                         />
                         <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     </div>
-                    {imageUrl && (
+                    {imageUrl && imageUrl.startsWith("http") && (
                         <div className="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                             <img
                                 src={imageUrl}
                                 alt="Banner preview"
                                 className="w-full object-cover max-h-[160px]"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/1200x400/eeeeee/999999?text=Image+Not+Found";
+                                }}
                             />
                         </div>
                     )}

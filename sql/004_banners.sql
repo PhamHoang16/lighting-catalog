@@ -18,8 +18,8 @@ CREATE POLICY "Cho phép tất cả mọi người được xem banners"
 
 CREATE POLICY "Chỉ role admin mới được sửa banners" 
     ON public.banners FOR ALL 
-    USING (auth.jwt() ->> 'role' = 'admin') 
-    WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+    USING (auth.role() = 'authenticated') 
+    WITH CHECK (auth.role() = 'authenticated');
 
 -- Default seed data (optional) so the user sees something immediately
 INSERT INTO public.banners (title, image_url, sort_order) VALUES

@@ -122,6 +122,7 @@ export default async function StorefrontHeader() {
                     </div>
 
                     <NavLink href="/gioi-thieu">Giới thiệu</NavLink>
+                    <NavLink href="/tin-tuc">Tin tức</NavLink>
                     <NavLink href="/lien-he">Liên hệ</NavLink>
                 </nav>
 

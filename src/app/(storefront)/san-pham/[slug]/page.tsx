@@ -8,7 +8,8 @@ import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import ProductGallery from "@/components/storefront/product/ProductGallery";
 import SpecsTable from "@/components/storefront/product/SpecsTable";
 import ProductActions from "@/components/storefront/product/ProductActions";
-import type { ProductWithRelations } from "@/lib/types/database";
+import ProductCard from "@/components/storefront/ProductCard";
+import type { ProductWithRelations, Product } from "@/lib/types/database";
 
 // ── Formatter VND ───────────────────────────────────────────────
 const vndFormat = new Intl.NumberFormat("vi-VN", {
@@ -26,6 +27,19 @@ async function getProduct(slug: string) {
         .single();
 
     return data as ProductWithRelations | null;
+}
+
+async function getRelatedProducts(currentId: string, categoryId: string) {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("category_id", categoryId)
+        .neq("id", currentId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+    return (data ?? []) as Product[];
 }
 
 // ── SEO ─────────────────────────────────────────────────────────
@@ -56,6 +70,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     const product = await getProduct(slug);
 
     if (!product) notFound();
+
+    const relatedProducts = await getRelatedProducts(product.id, product.category_id);
 
     const hasVariants = !!(product.variants && product.variants.options.length > 0);
     const hasSpecs = product.specs && product.specs.length > 0;
@@ -214,7 +230,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         />
 
                         {/* ── Quick specs ─────────────────────────────── */}
-                        {hasSpecs && product.specs!.length > 0 && (
+                        {/* {hasSpecs && product.specs!.length > 0 && (
                             <div className="mt-8 rounded-2xl border border-gray-100/60 bg-white p-5 sm:p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                                 <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-900">
                                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600">
@@ -238,7 +254,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -285,6 +301,37 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Thay đổi kiểu prose trong render ───────────────── */}
+            <style>{`
+                .prose-admin img {
+                    border-radius: 0.75rem;
+                    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+                    margin-top: 2rem;
+                    margin-bottom: 2rem;
+                }
+                .prose-admin a { color: #d97706; text-decoration: none; }
+                .prose-admin a:hover { text-decoration: underline; }
+            `}</style>
+
+            {/* ── Related Products ───────────────────────────────── */}
+            {relatedProducts.length > 0 && (
+                <div className="border-t border-gray-100 bg-white py-12 lg:py-16">
+                    <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
+                        <div className="mb-8 flex items-center gap-3">
+                            <div className="h-8 w-1.5 rounded-full bg-gradient-to-b from-amber-500 to-orange-600" />
+                            <h2 className="text-2xl font-bold uppercase tracking-tight text-gray-900 md:text-3xl">
+                                Sản phẩm tương tự
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
+                            {relatedProducts.map((relProduct) => (
+                                <ProductCard key={relProduct.id} product={relProduct} />
+                            ))}
                         </div>
                     </div>
                 </div>

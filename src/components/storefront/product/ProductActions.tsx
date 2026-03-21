@@ -137,9 +137,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
                         <span className={`text-3xl font-extrabold tracking-tight ${canBuy ? "text-amber-600" : "text-gray-400"}`}>
                             {canBuy ? vndFormat.format(currentPrice) : "Chọn phân loại"}
                         </span>
-                        {canBuy && currentPrice > 0 && (
-                            <span className="text-sm text-gray-400">/ sản phẩm</span>
-                        )}
+                        {canBuy && currentPrice > 0}
                     </div>
                     {canBuy && variantLabel && (
                         <p className="mt-1 text-xs text-amber-600/70">

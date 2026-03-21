@@ -10,6 +10,7 @@ import {
     Tag,
     FileText,
     Images,
+    Newspaper,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,11 @@ const navItems = [
         label: "Banner",
         href: "/admin/banner",
         icon: Images,
+    },
+    {
+        label: "Tin tức",
+        href: "/admin/tin-tuc",
+        icon: Newspaper,
     },
     {
         label: "Đơn hàng",

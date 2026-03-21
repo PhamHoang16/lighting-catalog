@@ -106,6 +106,7 @@ export default async function StorefrontFooter() {
                             Hỗ trợ khách hàng
                         </h3>
                         <ul className="space-y-2.5">
+                            <FooterLink href="/tin-tuc" label="Tin tức" />
                             <FooterLink href="/gioi-thieu" label="Giới thiệu" />
                             <FooterLink href="/lien-he" label="Liên hệ" />
                             <FooterLink

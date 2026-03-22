@@ -58,19 +58,17 @@ export default async function StorefrontHeader() {
                 {/* Tầng 2: Main Header (To, Đậm) */}
                 <div className="bg-white px-6">
                     <div className="mx-auto flex h-28 max-w-[1440px] items-center gap-12">
-                        {/* Box Trái: Logo cực to */}
-                        <Link href="/" className="group flex shrink-0 items-center gap-3">
-                            <div className="flex h-[52px] w-[52px] items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 transition-transform group-hover:scale-105">
-                                <span className="text-3xl font-black text-white">L</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-3xl font-black uppercase leading-none tracking-tight text-gray-900">
-                                    {siteConfig.name}
-                                </span>
-                                <span className="mt-1 text-[10px] font-bold tracking-[0.2em] text-gray-400">
-                                    THƯƠNG HIỆU ĐÈN SỐ 1
-                                </span>
-                            </div>
+                        <Link href="/" className="group shrink-0 transition-opacity hover:opacity-80 flex flex-col justify-center">
+                            {/* 
+                              Thay thế cấu trúc text này bằng thẻ img logo thực tế của bạn khi có file:
+                              <img src="/logo-ngang.png" className="h-12 w-auto object-contain" alt="Logo" />
+                            */}
+                            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
+                                {siteConfig.name}
+                            </h1>
+                            <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] text-gray-500 mt-1 uppercase hidden sm:block">
+                                THƯƠNG HIỆU ĐÈN SỐ 1
+                            </span>
                         </Link>
 
                         {/* Box Giữa: Thanh Search Dài */}
@@ -220,13 +218,11 @@ export default async function StorefrontHeader() {
                 </div>
 
                 {/* Logo (Center) */}
-                <Link href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 max-w-[150px] items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm">
-                        <span className="text-lg font-black text-white">L</span>
-                    </div>
-                    <span className="truncate text-xl font-black uppercase tracking-tight text-gray-900">
+                <Link href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center transition-opacity hover:opacity-80">
+                    {/* Placeholder Logo ngang Mobile */}
+                    <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 whitespace-nowrap">
                         {siteConfig.name}
-                    </span>
+                    </h1>
                 </Link>
 
                 {/* Actions (Right) Search & Cart */}

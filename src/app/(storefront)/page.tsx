@@ -34,7 +34,7 @@ export default async function HomePage() {
     const banners = !bannersRes.error && bannersRes.data ? bannersRes.data : [];
     const hotProducts = hotProductsRes.data ?? [];
     const parentCategories = parentCategoriesRes.data ?? [];
-    const showcaseParentCategories = parentCategories.slice(0, 5);
+    const showcaseParentCategories = parentCategories;
 
     // 2. Fetch subcategories & products for each parent category (limit to showcase items)
     const categoryShowcaseData: CategoryShowcaseData[] = await Promise.all(

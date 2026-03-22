@@ -65,7 +65,7 @@ export default async function HomePage() {
     );
 
     return (
-        <div className="flex flex-col gap-8 py-8 bg-slate-100 min-h-screen">
+        <div className="flex flex-col gap-8 pb-8 bg-slate-100 min-h-screen">
             <HeroBanners banners={banners} />
 
             <TopCategoriesGrid categories={parentCategories} />

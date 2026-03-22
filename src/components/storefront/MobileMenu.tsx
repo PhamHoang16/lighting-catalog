@@ -136,12 +136,6 @@ export default function MobileMenu({ categories }: MobileMenuProps) {
                             onClick={() => setOpen(false)}
                         />
                         <MobileNavItem
-                            href="/tin-tuc"
-                            icon={<Info className="h-5 w-5" />}
-                            label="Tin tức"
-                            onClick={() => setOpen(false)}
-                        />
-                        <MobileNavItem
                             href="/lien-he"
                             icon={<Mail className="h-5 w-5" />}
                             label="Liên hệ"

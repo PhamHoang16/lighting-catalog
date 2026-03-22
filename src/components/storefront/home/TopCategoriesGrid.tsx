@@ -49,11 +49,11 @@ export default function TopCategoriesGrid({ categories }: TopCategoriesGridProps
                             href="/danh-muc"
                             className="group flex flex-col items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm p-2 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-lg sm:p-4 border border-transparent hover:border-amber-200"
                         >
-                            <div className="mb-3 flex aspect-square w-12 items-center justify-center rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-colors group-hover:bg-amber-100 group-hover:ring-amber-200 sm:w-16">
-                                <Grid2X2 className="h-6 w-6 text-gray-400 transition-colors group-hover:text-amber-600 sm:h-7 sm:w-7" />
+                            <div className="mb-3 flex aspect-square w-full max-w-[70px] sm:max-w-[90px] lg:max-w-[100px] items-center justify-center rounded-3xl bg-gray-50 shadow-[0_4px_12px_rgba(0,0,0,0.05)] ring-1 ring-gray-100 transition-colors group-hover:bg-amber-100 group-hover:ring-amber-200">
+                                <Grid2X2 className="h-6 w-6 text-gray-400 transition-colors group-hover:text-amber-600 sm:h-8 sm:w-8" />
                             </div>
-                            <span className="text-center text-[10px] font-semibold text-gray-600 transition-colors group-hover:text-amber-700 sm:text-xs">
-                                Khác
+                            <span className="text-center text-xs sm:text-sm lg:text-base text-gray-600 transition-colors group-hover:text-amber-700">
+                                Xem tất cả
                             </span>
                         </Link>
                     )}
@@ -69,9 +69,9 @@ function CategoryGridItem({ category }: { category: Category }) {
     return (
         <Link
             href={`/danh-muc/${category.slug}`}
-            className="group flex flex-col items-center rounded-2xl bg-white/60 backdrop-blur-sm p-2 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-lg sm:p-3 border border-transparent hover:border-amber-200"
+            className="group flex flex-col items-center rounded-2xl bg-white/60 backdrop-blur-sm p-2 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-lg sm:p-4 border border-transparent hover:border-amber-200"
         >
-            <div className="mb-3 relative flex aspect-square w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100/50 transition-all group-hover:ring-amber-200 sm:w-20">
+            <div className="mb-3 relative flex aspect-square w-full max-w-[70px] sm:max-w-[90px] lg:max-w-[100px] items-center justify-center overflow-hidden rounded-3xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] ring-1 ring-gray-100/50 transition-all group-hover:ring-amber-300">
                 {hasImage ? (
                     <img
                         src={category.image_url!}
@@ -80,10 +80,10 @@ function CategoryGridItem({ category }: { category: Category }) {
                         loading="lazy"
                     />
                 ) : (
-                    <ImageOff className="h-5 w-5 text-gray-300 sm:h-7 sm:w-7" />
+                    <ImageOff className="h-6 w-6 text-gray-300 sm:h-8 sm:w-8" />
                 )}
             </div>
-            <span className="mt-1 w-full truncate text-center text-[10px] font-semibold text-gray-700 transition-colors group-hover:text-amber-700 sm:text-xs">
+            <span className="w-full text-center text-xs sm:text-sm lg:text-base font-bold text-gray-800 transition-colors group-hover:text-amber-700 line-clamp-2 leading-tight">
                 {category.name}
             </span>
         </Link>

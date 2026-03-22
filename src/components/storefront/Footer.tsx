@@ -113,14 +113,6 @@ export default async function StorefrontFooter() {
                                 href="/chinh-sach/bao-hanh"
                                 label="Chính sách bảo hành"
                             />
-                            <FooterLink
-                                href="/chinh-sach/doi-tra"
-                                label="Chính sách đổi trả"
-                            />
-                            <FooterLink
-                                href="/chinh-sach/bao-mat"
-                                label="Chính sách bảo mật"
-                            />
                         </ul>
                     </div>
 

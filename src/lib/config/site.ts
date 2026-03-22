@@ -7,6 +7,7 @@ export const siteConfig = {
     // ── Thông tin liên hệ (hardcode) ──────────────────────────────
     contact: {
         hotline: "0909 123 456",
+        hotline2: "0909 123 456",
         hotlineHref: "tel:0909123456",
         zalo: "0909 123 456",
         zaloHref: "https://zalo.me/0909123456",

@@ -10,7 +10,6 @@ export interface BrandFormData {
     name: string;
     slug: string;
     logo_url: string | null;
-    description: string | null;
 }
 
 interface BrandFormModalProps {
@@ -29,7 +28,6 @@ export default function BrandFormModal({
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [logoUrl, setLogoUrl] = useState("");
-    const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
 
     const isEdit = !!editingBrand;
@@ -39,7 +37,6 @@ export default function BrandFormModal({
             setName(editingBrand.name);
             setSlug(editingBrand.slug);
             setLogoUrl(editingBrand.logo_url ?? "");
-            setDescription(editingBrand.description ?? "");
         }
     }, [editingBrand]);
 
@@ -53,7 +50,6 @@ export default function BrandFormModal({
         setName("");
         setSlug("");
         setLogoUrl("");
-        setDescription("");
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -66,7 +62,6 @@ export default function BrandFormModal({
                 name: name.trim(),
                 slug: slug.trim(),
                 logo_url: logoUrl.trim() || null,
-                description: description.trim() || null,
             });
             reset();
         } catch {
@@ -86,6 +81,7 @@ export default function BrandFormModal({
             open={open}
             onClose={handleClose}
             title={isEdit ? "Cập nhật Thương hiệu" : "Thêm Thương hiệu Mới"}
+            closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Name */}
@@ -162,24 +158,7 @@ export default function BrandFormModal({
                     )}
                 </div>
 
-                {/* Description */}
-                <div>
-                    <label
-                        htmlFor="brand-description"
-                        className="mb-1.5 block text-sm font-medium text-gray-700"
-                    >
-                        Mô tả ngắn
-                    </label>
-                    <textarea
-                        id="brand-description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Thông tin về thương hiệu..."
-                        rows={3}
-                        className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        disabled={loading}
-                    />
-                </div>
+
 
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-5">

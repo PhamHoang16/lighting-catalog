@@ -201,6 +201,7 @@ export default function RichTextEditor({
                 onClose={() => !uploading && setIsImageModalOpen(false)}
                 title="Chèn Hình ảnh"
                 maxWidth="max-w-md"
+                closeOnClickOutside={false}
             >
                 <div className="p-2 space-y-4">
                     {/* Tabs */}

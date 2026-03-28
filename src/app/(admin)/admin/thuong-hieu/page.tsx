@@ -55,7 +55,6 @@ export default function AdminBrandsPage() {
                 name: formData.name,
                 slug: formData.slug,
                 logo_url: formData.logo_url,
-                description: formData.description,
             });
 
         if (error) {
@@ -82,7 +81,6 @@ export default function AdminBrandsPage() {
                 name: formData.name,
                 slug: formData.slug,
                 logo_url: formData.logo_url,
-                description: formData.description,
             })
             .eq("id", editingBrand.id);
 

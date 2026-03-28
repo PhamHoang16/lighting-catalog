@@ -11,6 +11,8 @@ interface ModalProps {
     children: ReactNode;
     /** Max width class, default "max-w-md" */
     maxWidth?: string;
+    /** Default true. Set to false if you want to prevent closing by clicking outside. */
+    closeOnClickOutside?: boolean;
 }
 
 export default function Modal({
@@ -19,6 +21,7 @@ export default function Modal({
     title,
     children,
     maxWidth = "max-w-md",
+    closeOnClickOutside = true,
 }: ModalProps) {
     const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +47,7 @@ export default function Modal({
             ref={overlayRef}
             className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm sm:items-center"
             onClick={(e) => {
-                if (e.target === overlayRef.current) onClose();
+                if (closeOnClickOutside && e.target === overlayRef.current) onClose();
             }}
         >
             <div

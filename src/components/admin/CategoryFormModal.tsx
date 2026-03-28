@@ -111,6 +111,7 @@ export default function CategoryFormModal({
             open={open}
             onClose={handleClose}
             title={isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
+            closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}

@@ -86,6 +86,7 @@ export default function BannerFormModal({
             open={open}
             onClose={handleClose}
             title={isEdit ? "Cập nhật Banner" : "Thêm Banner Mới"}
+            closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Image URL */}

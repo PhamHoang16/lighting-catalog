@@ -182,7 +182,7 @@ export default function ProductImportModal({ open, onClose, onSuccess }: Product
     };
 
     return (
-        <Modal open={open} onClose={handleClose} title="Import Sản phẩm (CSV)" maxWidth="max-w-xl">
+        <Modal open={open} onClose={handleClose} title="Import Sản phẩm (CSV)" maxWidth="max-w-xl" closeOnClickOutside={false}>
             <div className="space-y-6">
 
                 {/* Step 1: Download Template */}

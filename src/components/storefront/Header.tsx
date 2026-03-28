@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown } from "lucide-react";
+import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { createClient } from "@/lib/supabase/server";
 import { buildCategoryTree } from "@/lib/utils";
@@ -130,8 +130,17 @@ export default async function StorefrontHeader() {
 
                         {/* NHÓM TRÁI: Khu vực Bán hàng */}
                         <div className="flex h-full items-center">
+                            {/* Nút Home */}
+                            <Link
+                                href="/"
+                                className="flex h-full w-14 items-center justify-center border-r border-white/10 text-white transition-colors hover:bg-black/10"
+                                title="Trang chủ"
+                            >
+                                <Home className="h-5 w-5" />
+                            </Link>
+
                             {/* Dropdown Tất Cả Danh Mục */}
-                            <div className="group relative flex h-full cursor-pointer items-center justify-between gap-3 bg-black/15 px-6 font-bold text-white transition-colors hover:bg-black/25 min-w-[260px]">
+                            <div className="group relative flex h-full cursor-pointer items-center justify-between gap-3 px-6 font-bold text-white transition-colors hover:bg-black/10 min-w-[260px]">
                                 <div className="flex items-center gap-3">
                                     <Menu className="h-5 w-5" />
                                     <span className="text-sm">TẤT CẢ DANH MỤC</span>

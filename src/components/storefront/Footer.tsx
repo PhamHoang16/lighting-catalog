@@ -15,7 +15,7 @@ async function getCategories() {
     const supabase = await createClient();
     const { data } = await supabase
         .from("categories")
-        .select("id, name, slug")
+        .select("id, name, slug, parent_id")
         .order("name", { ascending: true });
     return data ?? [];
 }
@@ -87,7 +87,7 @@ export default async function StorefrontFooter() {
                                     Tất cả sản phẩm
                                 </Link>
                             </li>
-                            {categories.map((cat) => (
+                            {categories.filter(c => !c.parent_id).map((cat) => (
                                 <li key={cat.id}>
                                     <Link
                                         href={`/danh-muc/${cat.slug}`}

@@ -120,6 +120,7 @@ export default function PostFormModal({
             onClose={handleClose}
             title={isEdit ? "Cập nhật Bài viết" : "Thêm Bài viết Mới"}
             maxWidth="max-w-4xl"
+            closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Title */}

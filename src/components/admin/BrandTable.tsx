@@ -40,9 +40,7 @@ export default function BrandTable({ brands, onEdit, onDelete }: BrandTableProps
                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Slug
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Mô tả
-                            </th>
+
                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Ngày tạo
                             </th>
@@ -82,15 +80,7 @@ export default function BrandTable({ brands, onEdit, onDelete }: BrandTableProps
                                         {brand.slug}
                                     </code>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="max-w-xs truncate text-sm text-gray-600">
-                                        {brand.description || (
-                                            <span className="italic text-gray-400">
-                                                Chưa có mô tả
-                                            </span>
-                                        )}
-                                    </div>
-                                </td>
+
                                 <td className="px-6 py-4 text-sm text-gray-500">
                                     {formatDate(brand.created_at)}
                                 </td>

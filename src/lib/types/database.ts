@@ -68,7 +68,6 @@ export interface Database {
                     name: string;
                     slug: string;
                     logo_url: string | null;
-                    description: string | null;
                     created_at: string;
                 };
                 Insert: {
@@ -76,7 +75,6 @@ export interface Database {
                     name: string;
                     slug: string;
                     logo_url?: string | null;
-                    description?: string | null;
                     created_at?: string;
                 };
                 Update: {
@@ -84,7 +82,6 @@ export interface Database {
                     name?: string;
                     slug?: string;
                     logo_url?: string | null;
-                    description?: string | null;
                     created_at?: string;
                 };
             };

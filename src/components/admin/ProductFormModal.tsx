@@ -256,6 +256,7 @@ export default function ProductFormModal({
             onClose={handleClose}
             title={isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
             maxWidth="max-w-2xl"
+            closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* ════════════════════════════════════════════════════ */}

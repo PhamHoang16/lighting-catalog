@@ -313,12 +313,6 @@ export default function CartPage() {
                                         <span className="font-bold text-slate-800">{vndFormat.format(totalAmount)}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="font-semibold text-slate-400 italic">VẬN CHUYỂN</span>
-                                        <span className="font-bold text-slate-300 text-xs">
-                                            (Tính ở bước sau)
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm">
                                         <span className="font-semibold text-slate-400 italic">THUẾ (VAT)</span>
                                         <span className="font-bold text-slate-600">Đã bao gồm</span>
                                     </div>

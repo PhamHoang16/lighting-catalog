@@ -409,9 +409,9 @@ export default function CheckoutPage() {
                                                 <Wallet className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <p className="font-black text-gray-900 uppercase tracking-tight italic">Tất cả tỉnh thành</p>
+                                                <p className="font-black text-gray-900 uppercase tracking-tight italic">Thanh toán khi nhận</p>
                                                 <p className="text-xs font-bold text-gray-500 leading-tight mt-1">
-                                                    Thanh toán bằng tiền mặt khi nhận được hàng.
+                                                    Thanh toán khi nhận được hàng.
                                                 </p>
                                             </div>
                                             {paymentMethod === "cod" && <div className="absolute top-4 right-4 text-amber-500"><CheckCircle2 className="w-6 h-6" /></div>}

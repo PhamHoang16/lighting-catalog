@@ -13,18 +13,14 @@ export default function StorefrontLayout({
     children: ReactNode;
 }) {
     return (
-        <ToastProvider>
-            <CartProvider>
-                <div className="flex min-h-screen flex-col bg-gray-50">
-                    <Suspense fallback={null}>
-                        <ScrollToTop />
-                    </Suspense>
-                    <StorefrontHeader />
-                    <main className="flex-1">{children}</main>
-                    <StorefrontFooter />
-                    <FloatingContact />
-                </div>
-            </CartProvider>
-        </ToastProvider>
+        <div className="flex min-h-screen flex-col bg-gray-50">
+            <Suspense fallback={null}>
+                <ScrollToTop />
+            </Suspense>
+            <StorefrontHeader />
+            <main className="flex-1">{children}</main>
+            <StorefrontFooter />
+            <FloatingContact />
+        </div>
     );
 }

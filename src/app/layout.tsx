@@ -4,6 +4,9 @@ import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import { siteConfig } from "@/lib/config/site";
 
+import { ToastProvider } from "@/components/ui/Toast";
+import { CartProvider } from "@/lib/cart/CartContext";
+
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
   variable: "--font-inter",
@@ -37,7 +40,11 @@ export default function RootLayout({
           speed={200}
           shadow="0 0 10px #d97706,0 0 5px #d97706"
         />
-        {children}
+        <ToastProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </ToastProvider>
       </body>
     </html>
   );

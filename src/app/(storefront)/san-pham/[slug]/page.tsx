@@ -293,9 +293,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                         </div>
 
                                         <div
-                                            className="relative z-10 p-6 sm:p-8 bg-white/80 backdrop-blur-sm prose prose-sm sm:prose-base max-w-none prose-slate prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-gray-900 prose-a:font-medium prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-strong:text-gray-900 prose-img:rounded-2xl prose-img:shadow-sm prose-img:border prose-img:border-gray-100 prose-table:w-full prose-table:overflow-x-auto prose-table:text-sm prose-th:bg-gray-50 prose-th:p-3 prose-td:p-3 prose-td:border-t prose-td:border-gray-100 break-words [&_*]:break-words leading-relaxed text-gray-600"
+                                            className="relative z-10 p-6 sm:p-8 bg-white/80 backdrop-blur-sm prose prose-sm sm:prose-base max-w-none prose-slate prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-gray-900 prose-a:font-medium prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-strong:text-gray-900 prose-img:rounded-2xl prose-img:shadow-sm prose-img:border prose-img:border-gray-100 prose-table:w-full prose-table:overflow-x-auto prose-table:text-sm prose-th:bg-gray-50 prose-th:p-3 prose-td:p-3 prose-td:border-t prose-td:border-gray-100 break-words leading-relaxed text-gray-600"
                                             dangerouslySetInnerHTML={{
-                                                __html: product.description!,
+                                                __html: product.description!.replace(/&nbsp;/g, ' '),
                                             }}
                                         />
                                     </div>

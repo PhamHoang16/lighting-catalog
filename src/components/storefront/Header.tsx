@@ -263,7 +263,7 @@ export default async function StorefrontHeader() {
             <header className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-gray-100 bg-white px-4 shadow-sm lg:hidden">
                 {/* Hamburger (Left) - via MobileMenu component */}
                 <div className="flex shrink-0 items-center justify-start w-[80px]">
-                    <MobileMenu categories={categories} />
+                    <MobileMenu categories={tree} />
                 </div>
 
                 {/* Logo (Center) */}
@@ -275,7 +275,7 @@ export default async function StorefrontHeader() {
                 </Link>
 
                 {/* Actions (Right) Search & Cart */}
-                <div className="flex shrink-0 items-center justify-end gap-3 w-[80px]">
+                <div className="flex shrink-0 items-center justify-end gap-1 w-[80px]">
                     {/* Bấm vào search nhảy sang trang danh mục, autofocus */}
                     <Link href="/danh-muc" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600">
                         <Search className="h-5 w-5" />

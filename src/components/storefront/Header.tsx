@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { createClient } from "@/lib/supabase/server";
@@ -140,49 +141,88 @@ export default async function StorefrontHeader() {
                             </Link>
 
                             {/* Dropdown Tất Cả Danh Mục */}
-                            <div className="group relative flex h-full cursor-pointer items-center justify-between gap-3 px-6 font-bold text-white transition-colors hover:bg-black/10 min-w-[260px]">
-                                <div className="flex items-center gap-3">
+                            <div className="group relative flex h-full cursor-pointer items-center justify-between gap-3 border-r border-white/10 px-6 font-bold text-white transition-colors hover:bg-black/10 min-w-[260px]">
+                                <Link href="/tat-ca-danh-muc" className="flex items-center gap-3 w-full h-full">
                                     <Menu className="h-5 w-5" />
                                     <span className="text-sm">TẤT CẢ DANH MỤC</span>
-                                </div>
-                                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:-rotate-180" />
+                                </Link>
+                                <ChevronDown className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 h-4 w-4 transition-transform duration-300 group-hover:-rotate-180" />
 
                                 {/* Mega Menu Dropdown (Flyout) */}
-                                <div className="absolute left-0 top-full z-[100] hidden w-64 rounded-b-xl border border-t-0 border-gray-100 bg-white shadow-xl group-hover:block">
+                                <div className="absolute left-0 top-full z-[100] hidden w-[300px] rounded-b-xl border border-t-0 border-gray-100 bg-white shadow-xl group-hover:block">
                                     <ul className="flex flex-col py-2">
                                         {tree.map(parent => (
                                             <li key={parent.id} className="group/item relative">
                                                 <Link
                                                     href={`/danh-muc/${parent.slug}`}
-                                                    className="flex w-full items-center justify-between px-6 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                                                    className="group/linkmega flex w-full items-center justify-between px-6 py-3 transition-colors hover:bg-amber-50"
                                                 >
-                                                    {parent.name}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-100 bg-gray-50 p-1 transition-colors group-hover/linkmega:bg-white group-hover/linkmega:shadow-sm">
+                                                            {parent.image_url ? (
+                                                                <Image
+                                                                    src={parent.image_url as string}
+                                                                    alt={parent.name}
+                                                                    width={32}
+                                                                    height={32}
+                                                                    className="h-full w-full object-contain mix-blend-multiply"
+                                                                />
+                                                            ) : (
+                                                                <div className="h-2 w-2 rounded-full bg-gray-300" />
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[15px] font-bold text-gray-800 transition-colors group-hover/linkmega:text-amber-600">
+                                                            {parent.name}
+                                                        </span>
+                                                    </div>
                                                     {parent.children.length > 0 && (
-                                                        <ChevronDown className="h-4 w-4 -rotate-90 text-gray-400 transition-colors group-hover/item:text-amber-500" />
+                                                        <ChevronDown className="h-4 w-4 shrink-0 -rotate-90 text-gray-400 transition-colors group-hover/item:text-amber-500" />
                                                     )}
                                                 </Link>
 
-                                                {/* Sub Menu (Flyout ngang) */}
+                                                {/* Sub Menu (Flyout ngang) Grid UI */}
                                                 {parent.children.length > 0 && (
-                                                    <ul className="absolute left-full top-0 z-[100] hidden min-w-[240px] rounded-r-xl border border-l-0 border-gray-100 bg-white py-2 shadow-xl group-hover/item:block">
-                                                        {parent.children.map(child => (
-                                                            <li key={child.id}>
+                                                    <div className="absolute left-[calc(100%-1px)] top-0 z-[100] hidden min-h-[100%] w-[550px] rounded-r-xl border border-gray-100 bg-white p-6 shadow-2xl group-hover/item:block">
+                                                        <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
+                                                            <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">{parent.name}</h3>
+                                                            <Link href={`/danh-muc/${parent.slug}`} className="text-xs font-bold text-amber-500 hover:text-amber-600 hover:underline">
+                                                                XEM TẤT CẢ &rarr;
+                                                            </Link>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            {parent.children.map(child => (
                                                                 <Link
+                                                                    key={child.id}
                                                                     href={`/danh-muc/${child.slug}`}
-                                                                    className="block w-full px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                                                                    className="group/child flex items-center gap-3 rounded-xl border border-transparent bg-white p-2 transition-all hover:border-amber-100 hover:bg-amber-50 hover:shadow-md"
                                                                 >
-                                                                    {child.name}
+                                                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-white p-1 shadow-sm">
+                                                                        {child.image_url ? (
+                                                                            <Image
+                                                                                src={child.image_url as string}
+                                                                                alt={child.name}
+                                                                                width={40}
+                                                                                height={40}
+                                                                                className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 group-hover/child:scale-110"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="h-2 w-2 rounded-full bg-gray-200" />
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="text-[15px] font-semibold text-gray-800 transition-colors group-hover/child:text-amber-600 leading-tight">
+                                                                        {child.name}
+                                                                    </span>
                                                                 </Link>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </li>
                                         ))}
                                     </ul>
                                     <div className="rounded-b-xl bg-gray-50 px-6 py-4">
-                                        <Link href="/danh-muc" className="flex items-center justify-center text-sm font-bold text-amber-600 transition-colors hover:text-amber-700">
-                                            XEM TOÀN BỘ SẢN PHẨM &rarr;
+                                        <Link href="/tat-ca-danh-muc" className="flex items-center justify-center text-sm font-bold text-amber-600 transition-colors hover:text-amber-700">
+                                            XEM TẤT CẢ DANH MỤC &rarr;
                                         </Link>
                                     </div>
                                 </div>

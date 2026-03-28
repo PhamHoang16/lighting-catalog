@@ -13,7 +13,8 @@ import {
     Tag,
     Package,
     Loader2,
-    DollarSign
+    DollarSign,
+    ArrowRight
 } from "lucide-react";
 import { buildCategoryTree } from "@/lib/utils";
 import type { Category, CategoryWithChildren, Brand } from "@/lib/types/database";
@@ -33,6 +34,11 @@ export default function CategorySidebar({
     const searchParams = useSearchParams();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+
+    // Accordion states
+    const [openCategory, setOpenCategory] = useState(true);
+    const [openBrand, setOpenBrand] = useState(true);
+    const [openPrice, setOpenPrice] = useState(true);
 
     const tree = buildCategoryTree(categories);
     const selectedBrands = searchParams.get("brands")?.split(",").filter(Boolean) ?? [];
@@ -121,176 +127,171 @@ export default function CategorySidebar({
     const content = (
         <div className="space-y-6">
             {/* Categories */}
-            <nav className="space-y-1">
-                <SidebarLink
-                    href="/danh-muc"
-                    label="Tất cả sản phẩm"
-                    icon={<Layers className="h-4 w-4" />}
-                    active={!activeSlug}
-                    onClick={() => setMobileOpen(false)}
-                />
-
-                <div className="my-3 h-px bg-gray-200" />
-
-                <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Danh mục
-                </p>
-
-                {tree.map((cat) => (
-                    <CategoryNode
-                        key={cat.id}
-                        category={cat}
-                        activeSlug={activeSlug}
-                        onNavigate={() => setMobileOpen(false)}
-                    />
-                ))}
-            </nav>
+            <div className="relative">
+                <button 
+                    onClick={() => setOpenCategory(!openCategory)}
+                    className="group flex w-full items-center justify-between pb-2 text-[15px] font-black uppercase tracking-wider text-gray-900"
+                >
+                    <div className="flex items-center gap-2 relative">
+                        Danh Mục
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 absolute -right-3 top-1"></span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${openCategory ? "rotate-180" : "group-hover:translate-y-0.5"}`} />
+                </button>
+                
+                <div className={`transition-all duration-300 overflow-hidden ${openCategory ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                    <nav className="space-y-1.5 px-0.5">
+                        <SidebarLink
+                            href="/danh-muc"
+                            label="Tất cả sản phẩm"
+                            icon={<Layers className="h-4 w-4" />}
+                            active={!activeSlug}
+                            onClick={() => setMobileOpen(false)}
+                        />
+                        {tree.map((cat) => (
+                            <CategoryNode
+                                key={cat.id}
+                                category={cat}
+                                activeSlug={activeSlug}
+                                onNavigate={() => setMobileOpen(false)}
+                            />
+                        ))}
+                    </nav>
+                </div>
+            </div>
+            
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
             {/* Brand Filters */}
-            <div>
+            <div className="relative">
                 <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                            Thương hiệu
-                        </p>
-                    </div>
-                    {hasActiveFilters && (
-                        <button
-                            onClick={clearFilters}
-                            className="text-xs font-medium text-amber-600 hover:text-amber-700"
-                        >
-                            Xóa bộ lọc
-                        </button>
-                    )}
+                    <button 
+                        onClick={() => setOpenBrand(!openBrand)}
+                        className="flex flex-1 items-center justify-between text-sm font-bold uppercase tracking-wider text-gray-900"
+                    >
+                        Thương hiệu
+                        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${openBrand ? "rotate-180" : ""}`} />
+                    </button>
                 </div>
 
-                {brands.length === 0 ? (
-                    <p className="px-3 py-2 text-sm italic text-gray-400">
-                        Chưa có thương hiệu nào
-                    </p>
-                ) : (
-                    <div className="space-y-1.5">
-                        {brands.map((brand) => {
-                            const isSelected = selectedBrands.includes(brand.slug);
-                            return (
-                                <button
-                                    key={brand.id}
-                                    onClick={() => toggleBrand(brand.slug)}
-                                    disabled={isPending}
-                                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all disabled:opacity-50 disabled:cursor-wait ${isSelected
-                                        ? "bg-amber-50 text-amber-900"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    {/* Checkbox */}
-                                    <div
-                                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-all ${isSelected
-                                            ? "border-amber-500 bg-amber-500"
-                                            : "border-gray-300 bg-white"
+                <div className={`transition-all duration-300 overflow-hidden ${openBrand ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                    {brands.length === 0 ? (
+                        <p className="py-2 text-sm italic text-gray-400">
+                            Chưa có dữ liệu
+                        </p>
+                    ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 pt-1 pb-1">
+                            {brands.map((brand) => {
+                                const isSelected = selectedBrands.includes(brand.slug);
+                                return (
+                                    <button
+                                        key={brand.id}
+                                        onClick={() => toggleBrand(brand.slug)}
+                                        disabled={isPending}
+                                        className={`group relative flex w-full flex-row lg:flex-row items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-all disabled:opacity-50 disabled:cursor-wait ${isSelected
+                                            ? "border-amber-400 bg-amber-50/50 shadow-[0_2px_10px_-4px_rgba(245,158,11,0.2)]"
+                                            : "border-gray-200 bg-white hover:border-amber-300/50 hover:bg-gray-50/50 hover:shadow-sm"
                                             }`}
                                     >
-                                        {isSelected && !isPending && (
-                                            <svg
-                                                className="h-2.5 w-2.5 text-white"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                strokeWidth={4}
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M5 13l4 4L19 7"
+                                        {/* Logo or Icon */}
+                                        {brand.logo_url ? (
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-100/50 bg-white p-0.5">
+                                                <img
+                                                    src={brand.logo_url}
+                                                    alt={brand.name}
+                                                    className="h-full w-full object-contain"
                                                 />
-                                            </svg>
+                                            </div>
+                                        ) : (
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-100 bg-gray-50/80">
+                                                <Package className="h-4 w-4 text-gray-400" />
+                                            </div>
                                         )}
-                                        {isSelected && isPending && (
-                                            <Loader2 className="h-2.5 w-2.5 text-white animate-spin" />
+
+                                        {/* Name */}
+                                        <span className={`flex-1 font-semibold transition-colors ${isSelected ? "text-amber-900" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                            {brand.name}
+                                        </span>
+
+                                        {/* Indicator Dot */}
+                                        {isSelected ? (
+                                             <div className="flex shrink-0 h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                                        ) : (
+                                             <div className="flex shrink-0 h-1.5 w-1.5 rounded-full bg-gray-200 group-hover:bg-amber-300 transition-colors"></div>
                                         )}
-                                    </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
 
-                                    {/* Logo */}
-                                    {brand.logo_url ? (
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-gray-200 bg-white">
-                                            <img
-                                                src={brand.logo_url}
-                                                alt={brand.name}
-                                                className="h-full w-full object-contain p-0.5"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50">
-                                            <Package className="h-4 w-4 text-gray-400" />
-                                        </div>
-                                    )}
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
-                                    {/* Name */}
-                                    <span className="flex-1 font-medium">
-                                        {brand.name}
-                                    </span>
+            {/* Price Filters */}
+            <div className="py-5">
+                <button 
+                    onClick={() => setOpenPrice(!openPrice)}
+                    className="group mb-2 flex w-full items-center justify-between text-[15px] font-black uppercase tracking-wider text-gray-900"
+                >
+                    Mức giá
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${openPrice ? "rotate-180" : "group-hover:translate-y-0.5"}`} />
+                </button>
+                
+                <div className={`transition-all duration-300 overflow-hidden ${openPrice ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                        {PRICE_RANGES.map((range) => {
+                            const isSelected = parsedMinPrice === range.min && parsedMaxPrice === range.max;
+                            return (
+                                <button
+                                    key={range.id}
+                                    onClick={() => applyPriceRange(range.min, range.max)}
+                                    disabled={isPending}
+                                    className={`flex items-center justify-center rounded-xl border px-2 py-2.5 text-xs text-center font-bold tracking-tight transition-all disabled:opacity-50 disabled:cursor-wait ${isSelected
+                                            ? "border-amber-400 bg-gradient-to-b from-amber-50 to-orange-50/50 text-amber-900 shadow-sm"
+                                            : "border-gray-200 bg-white text-gray-600 hover:border-amber-300/50 hover:bg-gray-50/50 hover:text-gray-900 shadow-sm"
+                                        }`}
+                                >
+                                    {range.label}
                                 </button>
                             );
                         })}
                     </div>
-                )}
-            </div>
-
-            {/* Price Filters */}
-            <div>
-                <div className="mb-3 flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                        Mức giá
-                    </p>
-                </div>
-                <div className="space-y-1.5">
-                    {PRICE_RANGES.map((range) => {
-                        const isSelected = parsedMinPrice === range.min && parsedMaxPrice === range.max;
-                        return (
-                            <button
-                                key={range.id}
-                                onClick={() => applyPriceRange(range.min, range.max)}
-                                disabled={isPending}
-                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all disabled:opacity-50 disabled:cursor-wait ${isSelected
-                                        ? "bg-amber-50 text-amber-900 font-semibold"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                    }`}
-                            >
-                                <div
-                                    className={`flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all ${isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300 bg-white"
-                                        }`}
-                                >
-                                    {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                        
+                    {/* Custom Price Inputs */}
+                        <div className="mt-4 flex flex-col gap-2 rounded-xl border border-gray-100 bg-gray-50/50 p-3">
+                            <span className="text-xs font-semibold uppercase text-gray-500 mb-1">Hoặc nhập khoảng giá</span>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="relative w-full">
+                                    <input
+                                        type="number"
+                                        placeholder="0"
+                                        value={minPriceInput}
+                                        onChange={(e) => setMinPriceInput(e.target.value)}
+                                        className="w-full rounded-lg border-none bg-white py-2 pl-3 pr-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-amber-500"
+                                    />
                                 </div>
-                                <span>{range.label}</span>
+                                <span className="text-gray-400 font-bold">-</span>
+                                <div className="relative w-full">
+                                    <input
+                                        type="number"
+                                        placeholder="Tối đa"
+                                        value={maxPriceInput}
+                                        onChange={(e) => setMaxPriceInput(e.target.value)}
+                                        className="w-full rounded-lg border-none bg-white py-2 pl-3 pr-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-amber-500"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={applyCustomPrice}
+                                disabled={isPending || (!minPriceInput && !maxPriceInput)}
+                                className="mt-2 w-full rounded-lg bg-gradient-to-r from-gray-900 to-gray-800 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:from-gray-800 hover:to-gray-700 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                            >
+                                Áp dụng <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                             </button>
-                        );
-                    })}
+                        </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                    <input
-                        type="number"
-                        placeholder="Tối thiểu"
-                        value={minPriceInput}
-                        onChange={(e) => setMinPriceInput(e.target.value)}
-                        className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm placeholder:text-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
-                    <input
-                        type="number"
-                        placeholder="Tối đa"
-                        value={maxPriceInput}
-                        onChange={(e) => setMaxPriceInput(e.target.value)}
-                        className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm placeholder:text-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
-                </div>
-                <button
-                    onClick={applyCustomPrice}
-                    disabled={isPending}
-                    className="mt-2 w-full rounded-md bg-white border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 transition-all active:scale-95"
-                >
-                    Áp dụng giá
-                </button>
             </div>
         </div>
     );
@@ -298,51 +299,75 @@ export default function CategorySidebar({
     return (
         <>
             {/* ── Desktop Sidebar ──────────────────────────────── */}
-            <aside className="hidden lg:block">
-                <div className="sticky top-24 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <h3 className="mb-3 text-sm font-bold text-gray-900">
-                        Bộ lọc
-                    </h3>
+            <aside className="hidden lg:block relative z-20">
+                <div className="sticky top-24 rounded-2xl bg-white p-5 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] ring-1 ring-gray-950/5 overflow-hidden">
+                    {/* Decorative subtle background gradient on top of desktop sidebar */}
+                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-amber-50/50 to-transparent pointer-events-none -z-10" />
+                    
                     {content}
                 </div>
             </aside>
 
             {/* ── Mobile Filter Button ─────────────────────────── */}
-            <div className="lg:hidden">
+            <div className="lg:hidden mb-6 flex justify-end">
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white border border-dashed border-gray-300 px-5 py-3.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400"
                 >
-                    <Filter className="h-4 w-4" />
-                    Bộ lọc
+                    <Filter className="h-4 w-4 text-gray-500" />
+                    Bộ lọc & Tìm kiếm
                     {activeFilterCount > 0 && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-black text-white">
                             {activeFilterCount}
                         </span>
                     )}
                 </button>
             </div>
 
-            {/* ── Mobile Drawer ────────────────────────────────── */}
+            {/* ── Mobile Drawer (Bottom Sheet) ──────────────────── */}
             {mobileOpen && (
-                <div className="fixed inset-0 z-[60] lg:hidden">
+                <div className="fixed inset-0 z-[60] lg:hidden flex flex-col justify-end">
                     <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
                         onClick={() => setMobileOpen(false)}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-base font-bold text-gray-900">
-                                Bộ lọc
+                    <div className="relative flex flex-col max-h-[85vh] h-[85vh] w-full rounded-t-[2rem] bg-white shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out">
+                        {/* Drawer Header */}
+                        <div className="shrink-0 flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                            <h3 className="text-lg font-black text-gray-900">
+                                Lọc & Sắp xếp
                             </h3>
                             <button
                                 onClick={() => setMobileOpen(false)}
-                                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
-                        {content}
+                        
+                        {/* Drawer Body */}
+                        <div className="flex-1 overflow-y-auto px-6 py-2">
+                            {content}
+                        </div>
+
+                        {/* Drawer Footer (Sticky) */}
+                        <div className="shrink-0 border-t border-gray-100 bg-white p-4 pb-safe flex gap-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                            <button
+                                onClick={() => {
+                                    clearFilters();
+                                    setMobileOpen(false);
+                                }}
+                                className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 active:bg-gray-100"
+                            >
+                                Đặt lại
+                            </button>
+                            <button
+                                onClick={() => setMobileOpen(false)}
+                                className="flex-1 rounded-xl bg-gray-900 px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-gray-800 active:scale-[0.98]"
+                            >
+                                Xem kết quả {hasActiveFilters ? `(${activeFilterCount})` : ""}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -369,48 +394,57 @@ function CategoryNode({
 
     return (
         <div>
-            <div className="flex items-center">
+            <div className="flex items-center relative group">
+                {/* Visual Active Line */}
+                {isActive && (
+                    <div className="absolute -left-1.5 md:-left-3 top-2 bottom-2 w-1.5 rounded-r-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                )}
                 <Link
                     href={`/danh-muc/${category.slug}`}
                     onClick={onNavigate}
-                    className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                        ? "bg-amber-50 text-amber-700 shadow-sm"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    className={`flex flex-1 items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] font-[600] transition-all duration-200 ${isActive
+                        ? "bg-gradient-to-r from-amber-50 to-orange-50/30 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-amber-500/20"
+                        : "text-gray-600 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm"
                         }`}
                 >
-                    <span className={isActive ? "text-amber-500" : "text-gray-400"}>
-                        <FolderOpen className="h-4 w-4" />
+                    <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-sm ${isActive ? 'bg-white ring-1 ring-amber-100 text-amber-500' : 'bg-white border border-gray-100 text-gray-400 group-hover:border-gray-200 group-hover:text-amber-500 transition-colors'}`}>
+                        {category.image_url ? (
+                            <img src={category.image_url} alt={category.name} className="h-7 w-7 object-cover rounded-lg" />
+                        ) : (
+                            <span className="flex h-7 w-7 items-center justify-center">
+                                <FolderOpen className="h-4 w-4" />
+                            </span>
+                        )}
                     </span>
-                    {category.name}
+                    <span className="flex-1 truncate leading-tight">{category.name}</span>
                 </Link>
 
                 {hasChildren && (
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                        className={`absolute right-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-all ${expanded ? 'bg-gray-100/80 text-gray-900' : 'hover:bg-gray-100 hover:text-gray-900'}`}
                     >
-                        {expanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                        ) : (
-                            <ChevronRight className="h-4 w-4" />
-                        )}
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
                     </button>
                 )}
             </div>
 
-            {/* Children */}
-            {hasChildren && expanded && (
-                <div className="ml-4 border-l border-gray-100 pl-2">
+            {/* Children container with animated height */}
+            <div className={`overflow-hidden transition-all duration-300 ${hasChildren && expanded ? 'max-h-[1000px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-[22px] border-l-2 border-dashed border-gray-200/60 pl-3 relative">
                     {category.children.map((child) => (
-                        <CategoryNode
-                            key={child.id}
-                            category={child}
-                            activeSlug={activeSlug}
-                            onNavigate={onNavigate}
-                        />
+                        <div key={child.id} className="relative mt-1">
+                            {/* Branch connector */}
+                            {expanded && <div className="absolute -left-3 top-4 w-2.5 h-[2px] bg-gray-200/60 dashed" />}
+                            <CategoryNode
+                                category={child}
+                                activeSlug={activeSlug}
+                                onNavigate={onNavigate}
+                            />
+                        </div>
                     ))}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -430,18 +464,22 @@ function SidebarLink({
     onClick?: () => void;
 }) {
     return (
-        <Link
-            href={href}
-            onClick={onClick}
-            className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${active
-                ? "bg-amber-50 text-amber-700 shadow-sm"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-        >
-            <span className={active ? "text-amber-500" : "text-gray-400"}>
-                {icon}
-            </span>
-            {label}
-        </Link>
+        <div className="flex items-center relative group mb-1.5">
+            <Link
+                href={href}
+                onClick={onClick}
+                className={`flex flex-1 items-center gap-3 rounded-xl px-2.5 py-2 text-[14px] font-[600] transition-all duration-200 ${active
+                    ? "bg-gradient-to-r from-amber-50 to-orange-50/30 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-amber-500/20"
+                    : "text-gray-600 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm"
+                    }`}
+            >
+                <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-sm ${active ? 'bg-white ring-1 ring-amber-100 text-amber-500' : 'bg-white border border-gray-100 text-gray-400 group-hover:border-gray-200 group-hover:text-amber-500 transition-colors'}`}>
+                    <span className="flex h-7 w-7 items-center justify-center">
+                        {icon}
+                    </span>
+                </span>
+                <span className="flex-1 truncate leading-tight">{label}</span>
+            </Link>
+        </div>
     );
 }

@@ -15,6 +15,7 @@ interface ProductGridProps {
     totalCount?: number;
     currentPage?: number;
     totalPages?: number;
+    hasFilters?: boolean;
 }
 
 export default function ProductGrid({
@@ -23,6 +24,7 @@ export default function ProductGrid({
     totalCount = 0,
     currentPage = 1,
     totalPages = 1,
+    hasFilters = false,
 }: ProductGridProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -46,27 +48,40 @@ export default function ProductGrid({
     // ── Empty state ─────────────────────────────────────────────
     if (products.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                    <PackageOpen className="h-8 w-8 text-gray-300" />
+            <div className="flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50/50 px-6 py-24 text-center mx-auto max-w-2xl h-full min-h-[400px]">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-sm border border-gray-100 mb-2">
+                    <PackageOpen className="h-10 w-10 text-gray-400" strokeWidth={1.5} />
                 </div>
                 <div>
-                    <p className="text-base font-semibold text-gray-900">
-                        Chưa có sản phẩm nào
+                    <p className="text-xl font-bold text-gray-900 mb-2">
+                        {hasFilters ? "Không tìm thấy kết quả phù hợp" : "Chưa có sản phẩm nào"}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                        {categoryName
-                            ? `Danh mục "${categoryName}" hiện chưa có sản phẩm.`
-                            : "Hiện chưa có sản phẩm nào trong hệ thống."}
+                    <p className="text-[15px] text-gray-500 max-w-md mx-auto leading-relaxed">
+                        {hasFilters 
+                            ? "Không có sản phẩm nào khớp với bộ lọc bạn đang chọn. Vui lòng thử thay đổi các tùy chọn lọc hoặc xóa bộ lọc để xem toàn bộ danh sách."
+                            : categoryName
+                                ? `Danh mục "${categoryName}" hiện đang được cập nhật sản phẩm. Vui lòng quay lại sau.`
+                                : "Hiện chưa có sản phẩm nào trong hệ thống."}
                     </p>
                 </div>
-                <Link
-                    href="/"
-                    className="mt-2 flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/25 transition-all hover:bg-amber-600"
-                >
-                    <Home className="h-4 w-4" />
-                    Quay lại trang chủ
-                </Link>
+                
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                    {hasFilters && (
+                        <button
+                            onClick={() => router.push("?")}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-gray-800 hover:scale-105 active:scale-95"
+                        >
+                            Xóa toàn bộ bộ lọc
+                        </button>
+                    )}
+                    <Link
+                        href="/"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300"
+                    >
+                        <Home className="h-4 w-4" />
+                        Về trang chủ
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -74,13 +89,9 @@ export default function ProductGrid({
     return (
         <div>
             {/* ── Toolbar ──────────────────────────────────────── */}
-            <div className="mb-5 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                    Hiển thị{" "}
-                    <span className="font-semibold text-gray-900">
-                        {totalCount}
-                    </span>{" "}
-                    sản phẩm
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                <p className="text-[15px] font-medium text-gray-600">
+                    Tìm thấy <span className="font-bold text-gray-900">{totalCount}</span> sản phẩm
                 </p>
                 <div className={`transition-opacity ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
                     <SortDropdown value={currentSort} onChange={handleSortChange} />

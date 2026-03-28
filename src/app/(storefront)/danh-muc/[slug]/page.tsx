@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { X, SlidersHorizontal } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/config/site";
 import { getDescendantIds } from "@/lib/utils";
@@ -173,56 +175,77 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
     const { activeCategory, parentCategory, categories, brands, products, totalCount, totalPages } = data;
     const hasFilters = (brandSlugs && brandSlugs.length > 0) || !isNaN(minPrice ?? NaN) || !isNaN(maxPrice ?? NaN) || !!searchQuery;
 
-    return (
-        <div className="bg-slate-100 min-h-screen pb-12">
-            {/* Breadcrumbs */}
-            <div className="border-b border-gray-100 bg-gray-50/50">
-                <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6">
-                    <Breadcrumbs
-                        items={[
-                            { label: "Danh mục", href: "/danh-muc" },
-                            ...(parentCategory
-                                ? [{ label: parentCategory.name, href: `/danh-muc/${parentCategory.slug}` }]
-                                : []),
-                            { label: activeCategory.name },
-                        ]}
-                    />
-                </div>
-            </div>
+    const buildQueryString = (keyToUpdate: string, newValue: string | null) => {
+        // Safe cast since we know our URL structure uses simple strings
+        const params = new URLSearchParams(search as Record<string, string>);
+        if (newValue === null || newValue === "") {
+            params.delete(keyToUpdate);
+        } else {
+            params.set(keyToUpdate, newValue);
+        }
+        return `?${params.toString()}`;
+    };
 
-            {/* Header */}
-            <div className="border-b border-gray-100 bg-gradient-to-r from-gray-900 to-gray-800 shadow-sm">
-                <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6">
-                    <div className="flex items-center gap-3">
-                        {activeCategory.image_url && (
-                            <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/20">
-                                <img
-                                    src={activeCategory.image_url}
-                                    alt={activeCategory.name}
-                                    className="h-full w-full object-cover"
-                                />
+    return (
+        <div className="bg-slate-50 min-h-screen pb-12">
+            {/* ── Dynamic Hero Header ────────────────────────────────────────── */}
+            <div className="relative overflow-hidden bg-white border-b border-gray-200">
+                {/* Decorative Pattern / Glow */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+
+                <div className="relative mx-auto max-w-[1440px] px-4 py-6 sm:px-6">
+                    {/* Breadcrumbs integraded inside Hero */}
+                    <div className="mb-6">
+                        <Breadcrumbs
+                            items={[
+                                { label: "Danh mục", href: "/danh-muc" },
+                                ...(parentCategory
+                                    ? [{ label: parentCategory.name, href: `/danh-muc/${parentCategory.slug}` }]
+                                    : []),
+                                { label: activeCategory.name },
+                            ]}
+                        />
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4">
+                        <div className="flex items-center gap-4">
+                            {activeCategory.image_url && (
+                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm p-1">
+                                    <img
+                                        src={activeCategory.image_url}
+                                        alt={activeCategory.name}
+                                        className="h-full w-full object-cover rounded-xl"
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <h1 className="text-3xl font-black text-gray-900 tracking-tight sm:text-4xl">
+                                    {searchQuery ? `Tìm kiếm: "${searchQuery}"` : activeCategory.name}
+                                </h1>
+                                <p className="mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
+                                    {activeCategory.description 
+                                        ? activeCategory.description 
+                                        : `Khám phá các sản phẩm ${activeCategory.name.toLowerCase()} chất lượng cao, đa dạng mẫu mã và bảo hành dài hạn.`}
+                                </p>
                             </div>
-                        )}
-                        <div>
-                            <h1 className="text-2xl font-bold text-white sm:text-3xl">
-                                {searchQuery ? `Kết quả tìm kiếm cho: "${searchQuery}" trong ${activeCategory.name}` : activeCategory.name}
-                            </h1>
-                            <p className="mt-0.5 text-sm text-gray-400">
-                                {totalCount} sản phẩm
-                                {activeCategory.description && (
-                                    <span> — {activeCategory.description}</span>
-                                )}
-                            </p>
+                        </div>
+                        <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
+                            <span className="text-sm font-bold text-gray-700">
+                                <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main content */}
+            {/* ── Main content (Filters & Grid) ────────────────────────────── */}
             <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-                    {/* Sidebar */}
-                    <div className="lg:w-64 lg:shrink-0">
+                    
+                    {/* Sidebar Filter */}
+                    <div className="lg:w-[280px] lg:shrink-0">
                         <CategorySidebarAdvanced
                             categories={categories}
                             brands={brands}
@@ -230,15 +253,73 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                         />
                     </div>
 
-                    {/* Products */}
-                    <div className="flex-1">
-                        <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-gray-100">
+                    {/* Product Grid Area */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                        
+                        {/* Active Filters Display Toolbar (if any) */}
+                        {hasFilters && (
+                            <div className="mb-6 flex flex-wrap items-center gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                <span className="text-xs font-semibold uppercase text-gray-400 mr-2 flex items-center gap-1.5 shrink-0">
+                                    <SlidersHorizontal className="w-3.5 h-3.5" /> Bộ lọc đang chọn:
+                                </span>
+                                
+                                {brandSlugs?.map(slug => {
+                                    const b = brands.find(br => br.slug === slug);
+                                    if (!b) return null;
+                                    const newBrands = brandSlugs.filter(s => s !== slug).join(',');
+                                    return (
+                                        <Link 
+                                            key={slug} 
+                                            href={buildQueryString('brands', newBrands)}
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
+                                        >
+                                            Thương hiệu: {b.name} <X className="h-3 w-3" />
+                                        </Link>
+                                    );
+                                })}
+
+                                {minPrice !== undefined && (
+                                    <Link 
+                                        href={buildQueryString('minPrice', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
+                                    >
+                                        Từ: {(minPrice).toLocaleString()}đ <X className="h-3 w-3" />
+                                    </Link>
+                                )}
+
+                                {maxPrice !== undefined && (
+                                    <Link 
+                                        href={buildQueryString('maxPrice', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
+                                    >
+                                        Đến: {(maxPrice).toLocaleString()}đ <X className="h-3 w-3" />
+                                    </Link>
+                                )}
+                                
+                                {searchQuery && (
+                                    <Link 
+                                        href={buildQueryString('q', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
+                                    >
+                                        Từ khóa: "{searchQuery}" <X className="h-3 w-3" />
+                                    </Link>
+                                )}
+
+                                <Link href="?" className="ml-auto text-xs font-semibold text-red-600 hover:text-red-700 underline underline-offset-2 shrink-0">
+                                    Xóa tất cả
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Grid */}
+                        <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-gray-100 flex-1">
                             <ProductGrid
                                 products={products}
                                 categoryName={activeCategory.name}
                                 totalCount={totalCount}
                                 currentPage={currentPage}
                                 totalPages={totalPages}
+                                hasFilters={hasFilters}
                             />
                         </div>
                     </div>

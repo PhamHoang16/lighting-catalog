@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ImageOff, Star, ShieldCheck, ShoppingCart } from "lucide-react";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
+import ProductCardCartButton from "@/components/storefront/ProductCardCartButton";
 import type { Product } from "@/lib/types/database";
 
 // ── Formatter VND ───────────────────────────────────────────────
@@ -50,17 +51,21 @@ export default function ProductCard({
     const originalPrice = product.price > 0 ? Math.round(product.price / (1 - randomDiscount / 100)) : 0;
 
     return (
-        <Link
-            href={`/san-pham/${product.slug}`}
-            className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-red-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
-        >
-            {/* ── Image ────────────────────────────────────────────── */}
-            <div className="relative aspect-square overflow-hidden bg-gray-50">
+        <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-amber-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            {/* The Invisible Overlay Link */}
+            <Link 
+                href={`/san-pham/${product.slug}`} 
+                className="absolute inset-0 z-10"
+                aria-label={`Xem chi tiết ${product.name}`}
+            />
+
+            {/* ── Image Section ────────────────────────────────── */}
+            <div className="relative aspect-square overflow-hidden bg-gray-50/50 p-2">
                 {hasImage ? (
                     <img
                         src={product.image_url!}
                         alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                     />
                 ) : (
@@ -72,35 +77,34 @@ export default function ProductCard({
                 )}
 
                 {/* E-commerce Badges */}
-                <div className="absolute left-0 top-0 z-10">
-                    <div className="rounded-br-xl bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1 text-[10px] sm:text-xs font-bold text-white shadow-sm flex items-center gap-1">
+                <div className="absolute left-0 top-0 z-20">
+                    <div className="rounded-br-xl bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1 text-[10px] sm:text-xs font-bold text-white shadow-sm flex items-center gap-1 uppercase">
                         <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4" />
-                        CHÍNH HÃNG
+                        Chính hãng
                     </div>
                 </div>
 
                 {categoryName && (
-                    <span className="absolute bottom-2 left-2 rounded-sm bg-white/95 px-2 py-0.5 text-[10px] font-bold text-gray-700 shadow-sm backdrop-blur-md">
+                    <span className="absolute bottom-2 left-2 z-20 rounded-md bg-white/95 px-2 py-0.5 text-[9px] font-black uppercase text-gray-500 shadow-sm backdrop-blur-md tracking-tighter border border-gray-100">
                         {categoryName}
                     </span>
                 )}
 
-                {/* Extra absolute discount badge if price > 0 */}
+                {/* Extra absolute discount badge */}
                 {product.price > 0 && (
-                    <div className="absolute right-0 top-0 bg-[#fceea7] px-1.5 py-1 text-center shadow-sm">
+                    <div className="absolute right-0 top-0 z-20 bg-[#fceea7] px-1.5 py-1 text-center shadow-sm">
                         <span className="block text-[10px] font-extrabold text-red-600 leading-none">
                             {randomDiscount}%
                         </span>
                         <span className="block text-[8px] font-bold uppercase text-red-600 leading-tight">
                             GIẢM
                         </span>
-                        {/* CSS Triangle for the ribbon tail */}
                         <div className="absolute -bottom-1.5 left-0 w-full h-0 border-l-[12px] border-r-[12px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#fceea7]" />
                     </div>
                 )}
 
-                {/* Add to cart / Quick action */}
-                <div className="absolute right-3 bottom-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                {/* Float Add to cart (Top Button) - High Z-index */}
+                <div className="absolute right-3 bottom-3 z-30 opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden sm:block">
                     <AddToCartButton
                         product={{
                             id: product.id,
@@ -114,17 +118,17 @@ export default function ProductCard({
                 </div>
             </div>
 
-            {/* ── Content ──────────────────────────────────────────── */}
+            {/* ── Content Section ──────────────────────────────── */}
             <div className="flex flex-1 flex-col p-3 sm:p-4">
                 {/* Title */}
-                <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] text-xs font-medium leading-relaxed text-gray-800 transition-colors group-hover:text-red-600 sm:min-h-[2.75rem] sm:text-sm">
+                <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] text-xs font-bold leading-relaxed text-gray-800 transition-colors group-hover:text-amber-600 sm:min-h-[2.75rem] sm:text-sm">
                     {product.name}
                 </h3>
 
-                {/* Specs or Variants (Tóm tắt nhanh) */}
+                {/* Specs / Variants */}
                 <div className="mb-2 flex flex-wrap items-center gap-1.5 min-h-[20px]">
-                    {product.specs && product.specs.length > 0 && (
-                        <span className="inline-flex items-center rounded-sm bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600 border border-gray-200 truncate max-w-[120px]">
+                    {Array.isArray(product.specs) && product.specs.length > 0 && (
+                        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-400 border border-gray-100 truncate max-w-full">
                             {product.specs[0].name}: {product.specs[0].value}
                         </span>
                     )}
@@ -132,7 +136,7 @@ export default function ProductCard({
 
                 {/* Ratings & Sold */}
                 <div className="mb-3 flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-500 sm:text-xs">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 sm:text-xs">
                         <div className="flex items-center text-[#ffc107]">
                             <Star className="h-3 w-3 fill-current" />
                             <Star className="h-3 w-3 fill-current" />
@@ -140,26 +144,33 @@ export default function ProductCard({
                             <Star className="h-3 w-3 fill-current" />
                             <Star className="h-3 w-3 fill-current" />
                         </div>
-                        <span className="w-px h-2.5 bg-gray-300"></span>
-                        <span className="tracking-tight">Đã bán {randomSold}</span>
+                        <span className="w-px h-2.5 bg-gray-200"></span>
+                        <span className="tracking-tighter uppercase whitespace-nowrap">Đã bán {randomSold}</span>
                     </div>
                 </div>
 
-                {/* Bottom Row - Price & CTA */}
-                <div className="flex items-end justify-between border-t border-gray-100/50 pt-2.5">
+                {/* Bottom Row - Price & Real CTA (Bottom Button) - High Z-index */}
+                <div className="flex items-center justify-between border-t border-gray-100/50 pt-3 mt-auto relative z-30">
                     <div className="flex flex-col">
                         <span className="text-[10px] sm:text-xs text-gray-400 line-through mb-0.5 min-h-[16px]">
                             {originalPrice > 0 ? vndFormat.format(originalPrice) : ""}
                         </span>
-                        <span className={`text-sm sm:text-base md:text-lg font-bold tracking-tight ${product.price > 0 ? "text-red-600" : "text-gray-600"}`}>
+                        <span className={`text-sm sm:text-base md:text-lg font-black tracking-tighter ${product.price > 0 ? "text-red-600" : "text-gray-600"}`}>
                             {priceDisplay}
                         </span>
                     </div>
-                    <div className="flex shrink-0 items-center justify-center rounded-full bg-red-50 p-2 text-red-600 transition-all duration-300 group-hover:bg-red-600 group-hover:text-white shadow-sm hover:scale-110">
-                        <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </div>
+                    
+                    <ProductCardCartButton
+                        product={{
+                            id: product.id,
+                            name: product.name,
+                            slug: product.slug,
+                            image_url: product.image_url,
+                            price: product.price,
+                        }}
+                    />
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }

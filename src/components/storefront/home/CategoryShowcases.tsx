@@ -52,12 +52,12 @@ export default function CategoryShowcaseBlock({ data }: { data: CategoryShowcase
 
                         {/* Subcategories - Compact & Scrollable on Mobile */}
                         {data.subcategories && data.subcategories.length > 0 && (
-                            <ul className="mb-4 lg:mb-8 flex flex-row lg:flex-col gap-1.5 lg:gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-hide no-scrollbar flex-nowrap lg:flex-nowrap">
+                            <ul className="mb-4 lg:mb-8 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
                                 {data.subcategories.map((sub) => (
-                                    <li key={sub.id}>
+                                    <li key={sub.id} className="shrink-0">
                                         <Link
                                             href={`/danh-muc/${sub.slug}`}
-                                            className="group flex items-center gap-2 whitespace-nowrap rounded-full lg:rounded-lg bg-white/5 lg:bg-transparent px-3 py-1.5 text-[11px] lg:text-sm font-bold text-slate-300 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+                                            className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold text-slate-300 transition-all hover:bg-white/10 hover:text-white active:scale-95 lg:bg-transparent lg:px-3 lg:py-1.5 lg:text-sm"
                                         >
                                             <span className="hidden h-1.5 w-1.5 rounded-full bg-amber-500 transition-transform group-hover:scale-150 lg:block" />
                                             {sub.name}

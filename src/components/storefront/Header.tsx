@@ -1,11 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home } from "lucide-react";
+import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home, ChevronRight } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import { createClient } from "@/lib/supabase/server";
 import { buildCategoryTree } from "@/lib/utils";
 import MobileMenu from "@/components/storefront/MobileMenu";
 import CartHeaderIcon from "@/components/storefront/CartHeaderIcon";
+
+import MobileNav from "@/components/storefront/home/MobileQuickNav";
+
+import MobileSearch from "@/components/storefront/MobileSearch";
 
 // Server Component — fetch categories trực tiếp
 async function getCategories() {
@@ -259,30 +263,32 @@ export default async function StorefrontHeader() {
                 </div>
             </header>
 
-            {/* ── MOBILE HEADER (Gắn gọn thành 1 thanh Navigation) ─────────── */}
-            <header className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-gray-100 bg-white px-4 shadow-sm lg:hidden">
-                {/* Hamburger (Left) - via MobileMenu component */}
-                <div className="flex shrink-0 items-center justify-start w-[80px]">
-                    <MobileMenu categories={tree} />
-                </div>
+            {/* ── MOBILE HEADER (Enhanced Multi-layered & Glassmorphic) ────── */}
+            <div className="sticky top-0 z-50 w-full lg:hidden">
+                {/* Layer 1: Primary Header */}
+                <header className="relative z-20 flex h-16 w-full items-center justify-between border-b border-white/20 bg-white/80 px-4 backdrop-blur-xl shadow-sm">
+                    {/* Hamburger (Left) */}
+                    <div className="flex shrink-0 items-center justify-start w-[60px]">
+                        <MobileMenu categories={tree} />
+                    </div>
 
-                {/* Logo (Center) */}
-                <Link href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center transition-opacity hover:opacity-80">
-                    {/* Placeholder Logo ngang Mobile */}
-                    <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 whitespace-nowrap">
-                        {siteConfig.name}
-                    </h1>
-                </Link>
-
-                {/* Actions (Right) Search & Cart */}
-                <div className="flex shrink-0 items-center justify-end gap-1 w-[80px]">
-                    {/* Bấm vào search nhảy sang trang danh mục, autofocus */}
-                    <Link href="/danh-muc" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-600 transition-colors hover:bg-amber-50 hover:text-amber-600">
-                        <Search className="h-5 w-5" />
+                    {/* Logo (Center) */}
+                    <Link href="/" className="flex items-center justify-center transition-opacity hover:opacity-80">
+                        <h1 className="text-xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 whitespace-nowrap">
+                            {siteConfig.name}
+                        </h1>
                     </Link>
-                    <CartHeaderIcon showLabel={false} />
-                </div>
-            </header>
+
+                    {/* Actions (Right) Search & Cart */}
+                    <div className="flex shrink-0 items-center justify-end gap-1 w-[60px]">
+                        <MobileSearch />
+                        <CartHeaderIcon showLabel={false} />
+                    </div>
+                </header>
+
+                {/* Layer 2: Theme-based Category Quick Icons (Conditional Home-only) */}
+                <MobileNav topCategories={topCategories} />
+            </div>
         </>
     );
 }

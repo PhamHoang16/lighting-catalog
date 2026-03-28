@@ -283,7 +283,7 @@ export default function CheckoutPage() {
                                                 className="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
                                             />
                                             <CreditCard className="h-4 w-4 text-gray-400" />
-                                            Cà thẻ tại nhà
+                                            Thanh toán khi nhận hàng
                                         </label>
                                         <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
                                             <input

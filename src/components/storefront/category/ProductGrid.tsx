@@ -7,6 +7,7 @@ import { useTransition } from "react";
 import ProductCard from "@/components/storefront/ProductCard";
 import SortDropdown, { type SortOption } from "./SortDropdown";
 import Pagination from "./Pagination";
+import ProductCardSkeleton from "./ProductCardSkeleton";
 import type { Product } from "@/lib/types/database";
 
 interface ProductGridProps {
@@ -99,16 +100,29 @@ export default function ProductGrid({
             </div>
 
             {/* ── Grid ─────────────────────────────────────────── */}
-            <div className={`grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 transition-opacity ${isPending ? 'opacity-50' : ''}`}>
-                {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
+            {/* ── Grid ─────────────────────────────────────────── */}
+            <div className="relative">
+                {isPending ? (
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 animate-in fade-in duration-300">
+                        {[...Array(8)].map((_, i) => (
+                            <ProductCardSkeleton key={i} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 animate-in fade-in duration-500">
+                        {products.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* ── Pagination ────────────────────────────────────── */}
-            {totalPages > 1 && (
-                <Pagination currentPage={currentPage} totalPages={totalPages} />
-            )}
+            <div className={isPending ? "opacity-30 pointer-events-none" : ""}>
+                {totalPages > 1 && (
+                    <Pagination currentPage={currentPage} totalPages={totalPages} />
+                )}
+            </div>
         </div>
     );
 }

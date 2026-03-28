@@ -7,6 +7,8 @@ import { buildCategoryTree } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import CategorySidebarAdvanced from "@/components/storefront/category/CategorySidebarAdvanced";
 import ProductGrid from "@/components/storefront/category/ProductGrid";
+import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
+import { Suspense } from "react";
 import type { Category, CategoryWithChildren, Brand, Product } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -18,7 +20,27 @@ interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getData(
+async function getMetadata() {
+    const supabase = await createClient();
+
+    const { data: allCategories } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true });
+
+    const { data: allBrands } = await supabase
+        .from("brands")
+        .select("*")
+        .order("name", { ascending: true });
+
+    return {
+        categories: (allCategories as Category[]) ?? [],
+        brands: (allBrands as Brand[]) ?? []
+    };
+}
+
+async function getProducts(
+    brands: Brand[],
     brandSlugs?: string[],
     minPrice?: number,
     maxPrice?: number,
@@ -28,22 +50,6 @@ async function getData(
     sort: string = "newest"
 ) {
     const supabase = await createClient();
-
-    // Get all categories
-    const { data: allCategories } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name", { ascending: true });
-
-    const categories = (allCategories as Category[]) ?? [];
-
-    // Get all brands
-    const { data: allBrands } = await supabase
-        .from("brands")
-        .select("*")
-        .order("name", { ascending: true });
-
-    const brands = (allBrands as Brand[]) ?? [];
 
     // Get products with count
     let productsQuery = supabase
@@ -90,12 +96,35 @@ async function getData(
     const { data: products, count } = await productsQuery;
 
     return {
-        categories,
-        brands,
         products: (products as Product[]) ?? [],
         totalCount: count ?? 0,
         totalPages: count ? Math.ceil(count / limit) : 1
     };
+}
+
+// ── Intermediate Server Components for Suspense ────────────────
+async function ProductsCountInHeader({ brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort }: any) {
+    const { totalCount } = await getProducts(brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    return (
+        <span className="text-sm font-bold text-gray-700 animate-in fade-in duration-300">
+            <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
+        </span>
+    );
+}
+
+async function ProductGridLoader({ brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort, hasFilters }: any) {
+    const { products, totalCount, totalPages } = await getProducts(brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    return (
+        <div className="animate-in fade-in duration-500">
+            <ProductGrid
+                products={products}
+                totalCount={totalCount}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasFilters={hasFilters}
+            />
+        </div>
+    );
 }
 
 export default async function AllCategoriesPage({ searchParams }: PageProps) {
@@ -124,7 +153,9 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
     const qParam = search.q;
     const searchQuery = typeof qParam === "string" ? qParam : undefined;
 
-    const { categories, brands, products, totalCount, totalPages } = await getData(brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    const { categories, brands } = await getMetadata();
+
+    // ── Pre-calculate filters for Sidebar (so it doesn't wait for product fetch) ──
     const hasFilters = (brandSlugs && brandSlugs.length > 0) || !isNaN(minPrice ?? NaN) || !isNaN(maxPrice ?? NaN) || !!searchQuery;
 
     const buildQueryString = (keyToUpdate: string, newValue: string | null) => {
@@ -162,9 +193,17 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
                             </div>
                         </div>
                         <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
-                            <span className="text-sm font-bold text-gray-700">
-                                <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
-                            </span>
+                            <Suspense fallback={<div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />}>
+                                <ProductsCountInHeader 
+                                    brands={brands} 
+                                    brandSlugs={brandSlugs} 
+                                    minPrice={minPrice} 
+                                    maxPrice={maxPrice} 
+                                    searchQuery={searchQuery} 
+                                    currentPage={currentPage} 
+                                    currentSort={currentSort} 
+                                />
+                            </Suspense>
                         </div>
                     </div>
                 </div>
@@ -240,13 +279,19 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
                         )}
 
                         <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-gray-100 flex-1">
-                            <ProductGrid
-                                products={products}
-                                totalCount={totalCount}
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                hasFilters={hasFilters}
-                            />
+                            {/* Keying Suspense on search ensure skeletons show during transitions */}
+                            <Suspense key={JSON.stringify(search)} fallback={<ProductGridLoading />}>
+                                <ProductGridLoader
+                                    brands={brands}
+                                    brandSlugs={brandSlugs}
+                                    minPrice={minPrice}
+                                    maxPrice={maxPrice}
+                                    searchQuery={searchQuery}
+                                    currentPage={currentPage}
+                                    currentSort={currentSort}
+                                    hasFilters={hasFilters}
+                                />
+                            </Suspense>
                         </div>
                     </div>
                 </div>
@@ -254,5 +299,6 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
         </div>
     );
 }
+
 
 

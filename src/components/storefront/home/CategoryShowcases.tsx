@@ -16,8 +16,8 @@ export default function CategoryShowcaseBlock({ data }: { data: CategoryShowcase
         <section className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 mb-8">
             <div className="flex flex-col lg:flex-row overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-200">
 
-                {/* ── Left Sidebar: Category Info & Banner ──────────────── */}
-                <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 lg:w-[280px] xl:w-[320px] shrink-0">
+                {/* ── Left Sidebar / Top Mobile Header: Category Info & Banner ──────────────── */}
+                <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 lg:p-6 lg:w-[280px] xl:w-[320px] shrink-0 border-b border-white/5 lg:border-none">
                     {/* Background Image (if any) with Overlay */}
                     {data.category.image_url && (
                         <div className="absolute inset-0 z-0">
@@ -27,27 +27,37 @@ export default function CategoryShowcaseBlock({ data }: { data: CategoryShowcase
                                 className="h-full w-full object-cover opacity-20 mix-blend-luminosity duration-700 hover:scale-105 transition-transform"
                                 loading="lazy"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-br from-slate-950 via-slate-900/40 to-transparent" />
                         </div>
                     )}
 
                     {/* Content */}
                     <div className="relative z-10 flex flex-col flex-1">
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-3xl leading-tight">
-                                {data.category.name}
-                            </h2>
-                            <div className="mt-4 h-1 w-12 rounded-full bg-amber-500" />
+                        <div className="flex items-center justify-between lg:block mb-4 lg:mb-6">
+                            <div className="flex flex-col">
+                                <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl lg:text-3xl uppercase italic leading-none">
+                                    {data.category.name}
+                                </h2>
+                                <div className="mt-2 h-1 w-8 lg:w-12 rounded-full bg-amber-500" />
+                            </div>
+                            
+                            {/* Mobile only "See All" Link - Discrete style */}
+                            <Link
+                                href={`/danh-muc/${data.category.slug}`}
+                                className="lg:hidden text-[10px] font-black uppercase tracking-widest text-amber-500 border border-amber-500/30 rounded-full px-3 py-1.5 hover:bg-amber-500 hover:text-white transition-all"
+                            >
+                                Xem tất cả
+                            </Link>
                         </div>
 
-                        {/* Subcategories */}
+                        {/* Subcategories - Compact & Scrollable on Mobile */}
                         {data.subcategories && data.subcategories.length > 0 && (
-                            <ul className="mb-8 flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide flex-wrap lg:flex-nowrap">
+                            <ul className="mb-4 lg:mb-8 flex flex-row lg:flex-col gap-1.5 lg:gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-hide no-scrollbar flex-nowrap lg:flex-nowrap">
                                 {data.subcategories.map((sub) => (
                                     <li key={sub.id}>
                                         <Link
                                             href={`/danh-muc/${sub.slug}`}
-                                            className="group flex items-center gap-2 whitespace-nowrap lg:whitespace-normal rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+                                            className="group flex items-center gap-2 whitespace-nowrap rounded-full lg:rounded-lg bg-white/5 lg:bg-transparent px-3 py-1.5 text-[11px] lg:text-sm font-bold text-slate-300 transition-all hover:bg-white/10 hover:text-white active:scale-95"
                                         >
                                             <span className="hidden h-1.5 w-1.5 rounded-full bg-amber-500 transition-transform group-hover:scale-150 lg:block" />
                                             {sub.name}
@@ -57,7 +67,7 @@ export default function CategoryShowcaseBlock({ data }: { data: CategoryShowcase
                             </ul>
                         )}
 
-                        <div className="mt-auto pt-4 flex">
+                        <div className="hidden lg:flex mt-auto pt-4">
                             <Link
                                 href={`/danh-muc/${data.category.slug}`}
                                 className="group inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition-all hover:bg-amber-400 active:scale-95"

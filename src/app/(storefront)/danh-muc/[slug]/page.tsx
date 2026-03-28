@@ -8,6 +8,8 @@ import { getDescendantIds } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import CategorySidebarAdvanced from "@/components/storefront/category/CategorySidebarAdvanced";
 import ProductGrid from "@/components/storefront/category/ProductGrid";
+import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
+import { Suspense } from "react";
 import type { Category, Product, Brand } from "@/lib/types/database";
 
 interface PageProps {
@@ -39,16 +41,7 @@ export async function generateMetadata({
 }
 
 // ── Data ────────────────────────────────────────────────────────
-async function getData(
-    slug: string,
-    brandSlugs?: string[],
-    minPrice?: number,
-    maxPrice?: number,
-    searchQuery?: string,
-    page: number = 1,
-    limit: number = 20,
-    sort: string = "newest"
-) {
+async function getMetadata(slug: string) {
     const supabase = await createClient();
 
     // 1. Get the target category
@@ -60,7 +53,7 @@ async function getData(
 
     if (!activeCategory) return null;
 
-    // 2. Get all categories (for sidebar + descendant calculation)
+    // 2. Get all categories
     const { data: allCategories } = await supabase
         .from("categories")
         .select("*")
@@ -68,64 +61,11 @@ async function getData(
 
     const categories = (allCategories as Category[]) ?? [];
 
-    // 3. Get all brands for filter
     const { data: allBrands } = await supabase
         .from("brands")
         .select("*")
         .order("name", { ascending: true });
 
-    const brands = (allBrands as Brand[]) ?? [];
-
-    // 4. Get descendant category IDs (includes self)
-    const categoryIds = getDescendantIds(activeCategory.id, categories);
-
-    // 5. Fetch products matching category IDs with exact count
-    let productsQuery = supabase
-        .from("products")
-        .select("*", { count: "exact" })
-        .in("category_id", categoryIds);
-
-    // 6. Apply brand filter if specified
-    if (brandSlugs && brandSlugs.length > 0) {
-        const brandIds = brands
-            .filter((b) => brandSlugs.includes(b.slug))
-            .map((b) => b.id);
-
-        if (brandIds.length > 0) {
-            productsQuery = productsQuery.in("brand_id", brandIds);
-        }
-    }
-
-    // Apply price filter
-    if (minPrice !== undefined && !isNaN(minPrice)) {
-        productsQuery = productsQuery.gte("price", minPrice);
-    }
-    if (maxPrice !== undefined && !isNaN(maxPrice)) {
-        productsQuery = productsQuery.lte("price", maxPrice);
-    }
-
-    // Apply text search filter
-    if (searchQuery) {
-        productsQuery = productsQuery.ilike("name", `%${searchQuery}%`);
-    }
-
-    // Sorting
-    switch (sort) {
-        case "oldest": productsQuery = productsQuery.order("created_at", { ascending: true }); break;
-        case "price-asc": productsQuery = productsQuery.order("price", { ascending: true }); break;
-        case "price-desc": productsQuery = productsQuery.order("price", { ascending: false }); break;
-        case "newest":
-        default: productsQuery = productsQuery.order("created_at", { ascending: false }); break;
-    }
-
-    // Pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    productsQuery = productsQuery.range(from, to);
-
-    const { data: products, count } = await productsQuery;
-
-    // 7. Build breadcrumbs
     const parentCategory = activeCategory.parent_id
         ? categories.find((c) => c.id === activeCategory.parent_id) ?? null
         : null;
@@ -134,11 +74,94 @@ async function getData(
         activeCategory: activeCategory as Category,
         parentCategory,
         categories,
-        brands,
+        brands: (allBrands as Brand[]) ?? []
+    };
+}
+
+async function getProducts(
+    activeCategoryId: string,
+    categories: Category[],
+    brands: Brand[],
+    brandSlugs?: string[],
+    minPrice?: number,
+    maxPrice?: number,
+    searchQuery?: string,
+    page: number = 1,
+    limit: number = 20,
+    sort: string = "newest"
+) {
+    const supabase = await createClient();
+    const categoryIds = getDescendantIds(activeCategoryId, categories);
+
+    let productsQuery = supabase
+        .from("products")
+        .select("*", { count: "exact" })
+        .in("category_id", categoryIds);
+
+    if (brandSlugs && brandSlugs.length > 0) {
+        const brandIds = brands
+            .filter((b) => brandSlugs.includes(b.slug))
+            .map((b) => b.id);
+        if (brandIds.length > 0) {
+            productsQuery = productsQuery.in("brand_id", brandIds);
+        }
+    }
+
+    if (minPrice !== undefined && !isNaN(minPrice)) {
+        productsQuery = productsQuery.gte("price", minPrice);
+    }
+    if (maxPrice !== undefined && !isNaN(maxPrice)) {
+        productsQuery = productsQuery.lte("price", maxPrice);
+    }
+    if (searchQuery) {
+        productsQuery = productsQuery.ilike("name", `%${searchQuery}%`);
+    }
+
+    switch (sort) {
+        case "oldest": productsQuery = productsQuery.order("created_at", { ascending: true }); break;
+        case "price-asc": productsQuery = productsQuery.order("price", { ascending: true }); break;
+        case "price-desc": productsQuery = productsQuery.order("price", { ascending: false }); break;
+        case "newest":
+        default: productsQuery = productsQuery.order("created_at", { ascending: false }); break;
+    }
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    productsQuery = productsQuery.range(from, to);
+
+    const { data: products, count } = await productsQuery;
+
+    return {
         products: (products as Product[]) ?? [],
         totalCount: count ?? 0,
         totalPages: count ? Math.ceil(count / limit) : 1
     };
+}
+
+// ── Intermediate Server Components for Suspense ────────────────
+async function ProductsCountInHeaderDetail({ activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort }: any) {
+    const { totalCount } = await getProducts(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    return (
+        <span className="text-sm font-bold text-gray-700 animate-in fade-in duration-300">
+            <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
+        </span>
+    );
+}
+
+async function ProductGridLoaderDetail({ activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort, hasFilters, activeCategoryName }: any) {
+    const { products, totalCount, totalPages } = await getProducts(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    return (
+        <div className="animate-in fade-in duration-500">
+            <ProductGrid
+                products={products}
+                categoryName={activeCategoryName}
+                totalCount={totalCount}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasFilters={hasFilters}
+            />
+        </div>
+    );
 }
 
 // ── Page ────────────────────────────────────────────────────────
@@ -168,11 +191,10 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
     const qParam = search.q;
     const searchQuery = typeof qParam === "string" ? qParam : undefined;
 
-    const data = await getData(slug, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
-
+    const data = await getMetadata(slug);
     if (!data) notFound();
 
-    const { activeCategory, parentCategory, categories, brands, products, totalCount, totalPages } = data;
+    const { activeCategory, parentCategory, categories, brands } = data;
     const hasFilters = (brandSlugs && brandSlugs.length > 0) || !isNaN(minPrice ?? NaN) || !isNaN(maxPrice ?? NaN) || !!searchQuery;
 
     const buildQueryString = (keyToUpdate: string, newValue: string | null) => {
@@ -232,9 +254,19 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                             </div>
                         </div>
                         <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
-                            <span className="text-sm font-bold text-gray-700">
-                                <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
-                            </span>
+                            <Suspense fallback={<div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />}>
+                                <ProductsCountInHeaderDetail 
+                                    activeCategoryId={activeCategory.id}
+                                    categories={categories}
+                                    brands={brands}
+                                    brandSlugs={brandSlugs} 
+                                    minPrice={minPrice} 
+                                    maxPrice={maxPrice} 
+                                    searchQuery={searchQuery} 
+                                    currentPage={currentPage} 
+                                    currentSort={currentSort} 
+                                />
+                            </Suspense>
                         </div>
                     </div>
                 </div>
@@ -313,14 +345,21 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
 
                         {/* Grid */}
                         <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-gray-100 flex-1">
-                            <ProductGrid
-                                products={products}
-                                categoryName={activeCategory.name}
-                                totalCount={totalCount}
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                hasFilters={hasFilters}
-                            />
+                            <Suspense key={JSON.stringify(search)} fallback={<ProductGridLoading />}>
+                                <ProductGridLoaderDetail
+                                    activeCategoryId={activeCategory.id}
+                                    categories={categories}
+                                    brands={brands}
+                                    brandSlugs={brandSlugs}
+                                    minPrice={minPrice}
+                                    maxPrice={maxPrice}
+                                    searchQuery={searchQuery}
+                                    currentPage={currentPage}
+                                    currentSort={currentSort}
+                                    hasFilters={hasFilters}
+                                    activeCategoryName={activeCategory.name}
+                                />
+                            </Suspense>
                         </div>
                     </div>
                 </div>

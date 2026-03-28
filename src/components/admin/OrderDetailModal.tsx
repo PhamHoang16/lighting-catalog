@@ -114,7 +114,7 @@ export default function OrderDetailModal({
                             {order.card_at_home && (
                                 <span className="rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
                                     <CreditCard className="mr-1 inline h-3 w-3" />
-                                    Cà thẻ tại nhà
+                                    Thanh toán khi nhận hàng
                                 </span>
                             )}
                             {order.invoice_company && (

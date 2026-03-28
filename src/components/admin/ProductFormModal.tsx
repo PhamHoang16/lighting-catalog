@@ -312,7 +312,7 @@ export default function ProductFormModal({
                                 type="number"
                                 required
                                 min="0"
-                                step="1000"
+                                step="1"
                                 placeholder="350000"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}

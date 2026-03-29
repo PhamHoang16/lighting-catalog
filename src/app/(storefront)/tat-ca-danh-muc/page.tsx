@@ -1,28 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { buildCategoryTree } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import type { Category } from "@/lib/types/database";
+
+export const revalidate = 60;
+
 export const metadata: Metadata = {
     title: "Tất cả danh mục sản phẩm",
     description: `Khám phá toàn bộ danh mục sản phẩm chiếu sáng tại ${siteConfig.name}.`,
 };
-export default async function AllCategoriesDirectoryPage() {
-    const supabase = await createClient();
+
+async function getCategoriesData() {
+    const supabase = createStaticClient();
     const { data: allCategories } = await supabase
         .from("categories")
         .select("*")
         .order("name", { ascending: true });
-    const categories = (allCategories as Category[]) ?? [];
+    
+    return (allCategories as Category[]) ?? [];
+}
+
+export default async function AllCategoriesDirectoryPage() {
+    const categories = await getCategoriesData();
     const tree = buildCategoryTree(categories);
+    
     const subtleBgs = [
         "bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 border-amber-500/20",
         "bg-gradient-to-br from-orange-500/10 via-white to-orange-500/5 border-orange-500/20",
         "bg-gradient-to-br from-yellow-500/10 via-white to-yellow-500/5 border-yellow-500/20"
     ];
+
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
             {/* Header / Hero Section */}

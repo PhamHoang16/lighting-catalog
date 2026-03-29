@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import ProductCard from "@/components/storefront/ProductCard";
 import type { ProductWithCategory } from "@/lib/types/database";
 
 async function getLatestProducts() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("products")
         .select("*, categories(name)")

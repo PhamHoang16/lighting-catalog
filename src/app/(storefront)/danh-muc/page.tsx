@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FolderOpen, X, SlidersHorizontal } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { buildCategoryTree } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
@@ -16,12 +16,15 @@ export const metadata: Metadata = {
     description: `Khám phá các danh mục sản phẩm chiếu sáng tại ${siteConfig.name}. Nhận báo giá và tư vấn miễn phí.`,
 };
 
+export const revalidate = 60;
+export const dynamic = "force-static"; // Ensure static listing page
+
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getMetadata() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
 
     const { data: allCategories } = await supabase
         .from("categories")
@@ -49,7 +52,7 @@ async function getProducts(
     limit: number = 20,
     sort: string = "newest"
 ) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
 
     // Get products with count
     let productsQuery = supabase

@@ -13,6 +13,7 @@ import { Suspense } from "react";
 import type { Category, Product, Brand } from "@/lib/types/database";
 
 export const revalidate = 60;
+export const dynamic = "force-static"; // Test if searchParams is the cause
 
 export async function generateStaticParams() {
     const supabase = createStaticClient();

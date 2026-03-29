@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     description: `Tìm hiểu về ${siteConfig.name} — đơn vị cung cấp giải pháp chiếu sáng chuyên nghiệp hàng đầu.`,
 };
 
+// Removed force-static to test heuristic after isolation
+
 // ── Stats ───────────────────────────────────────────────────────
 const STATS = [
     { number: "10+", label: "Năm kinh nghiệm" },

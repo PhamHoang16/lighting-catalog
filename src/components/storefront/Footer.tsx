@@ -7,12 +7,13 @@ import {
     Facebook,
     ExternalLink,
 } from "lucide-react";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
-import { createClient } from "@/lib/supabase/server";
+import type { Category } from "@/lib/types/database";
 
-// Server Component — fetch categories
+// Fetch only root categories
 async function getCategories() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("categories")
         .select("id, name, slug, parent_id")

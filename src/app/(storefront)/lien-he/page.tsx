@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-static"; // Debug: Force static build for this client page
+
 import { useState, type FormEvent } from "react";
 import {
     MapPin,

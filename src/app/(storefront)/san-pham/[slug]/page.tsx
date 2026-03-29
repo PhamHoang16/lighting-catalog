@@ -11,8 +11,6 @@ import ProductActions from "@/components/storefront/product/ProductActions";
 import ProductCard from "@/components/storefront/ProductCard";
 import type { ProductWithRelations, Product } from "@/lib/types/database";
 
-export const revalidate = 60; // 1 minute (for data entry phase)
-
 export async function generateStaticParams() {
     const supabase = createStaticClient();
     const { data: products } = await supabase

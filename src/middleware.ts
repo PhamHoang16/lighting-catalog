@@ -8,12 +8,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - public folder assets
+         * Match only /admin and /login paths (and their children)
+         * to prevent storefront pages from being forced into dynamic rendering
+         * by session management cookies.
          */
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+        "/admin/:path*",
+        "/login",
     ],
 };

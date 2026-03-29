@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Grid3X3 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 
 // ── Accent colors cho mỗi card ─────────────────────────────────
 const CARD_ACCENTS = [
@@ -11,7 +11,7 @@ const CARD_ACCENTS = [
 ];
 
 async function getFeaturedCategories() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("categories")
         .select("id, name, slug")

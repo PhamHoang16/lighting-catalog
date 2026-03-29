@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Calendar, ArrowLeft, Newspaper } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { formatDate } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
@@ -10,9 +10,23 @@ import type { Post } from "@/lib/types/database";
 
 export const revalidate = 60;
 
+export async function generateStaticParams() {
+    const supabase = createStaticClient();
+    const { data: posts } = await supabase
+        .from("posts")
+        .select("slug")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+    return (posts ?? []).map((post) => ({
+        slug: post.slug,
+    }));
+}
+
 // ── Fetch ───────────────────────────────────────────────────────
 async function getPost(slug: string) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("posts")
         .select("*")

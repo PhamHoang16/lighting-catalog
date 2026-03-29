@@ -8,6 +8,7 @@ import CategoryTable from "@/components/admin/CategoryTable";
 import CategoryFormModal, { type CategoryFormData } from "@/components/admin/CategoryFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Category } from "@/lib/types/database";
+import { revalidateCategory, revalidateStorefront } from "@/app/actions/revalidate";
 
 export default function AdminCategoriesPage() {
     const supabase = createClient();
@@ -71,6 +72,8 @@ export default function AdminCategoriesPage() {
         toast("Đã thêm danh mục thành công!", "success");
         setFormOpen(false);
         fetchCategories();
+        // Revalidate
+        await revalidateStorefront();
     }
 
     // ── Update ──────────────────────────────────────────────────
@@ -101,6 +104,9 @@ export default function AdminCategoriesPage() {
         setEditingCategory(null);
         setFormOpen(false);
         fetchCategories();
+        
+        // Revalidate
+        await revalidateCategory(formData.slug);
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -117,6 +123,9 @@ export default function AdminCategoriesPage() {
             toast("Lỗi khi xóa: " + error.message, "error");
         } else {
             toast(`Đã xóa danh mục "${deletingCategory.name}".`, "success");
+            
+            // Revalidate
+            await revalidateCategory(deletingCategory.slug);
         }
 
         setDeleting(false);

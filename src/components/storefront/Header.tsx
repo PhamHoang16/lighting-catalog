@@ -2,18 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home, ChevronRight } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { buildCategoryTree } from "@/lib/utils";
 import MobileMenu from "@/components/storefront/MobileMenu";
 import CartHeaderIcon from "@/components/storefront/CartHeaderIcon";
-
 import MobileNav from "@/components/storefront/home/MobileQuickNav";
-
 import MobileSearch from "@/components/storefront/MobileSearch";
 
-// Server Component — fetch categories trực tiếp
+// Server Component — fetch categories using static client (ISR-safe)
 async function getCategories() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("categories")
         .select("*")

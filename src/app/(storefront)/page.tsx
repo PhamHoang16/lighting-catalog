@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import HeroBanners from "@/components/storefront/home/HeroBanners";
 import TopCategoriesGrid from "@/components/storefront/home/TopCategoriesGrid";
 import HotProducts from "@/components/storefront/home/HotProducts";
@@ -8,7 +8,7 @@ import type { Category } from "@/lib/types/database";
 export const revalidate = 60; // Revalidate every minute for home page
 
 export default async function HomePage() {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
 
     // 1. Fetch Banners, Hot Products, and Parent Categories
     const [bannersRes, hotProductsRes, parentCategoriesRes] = await Promise.all([

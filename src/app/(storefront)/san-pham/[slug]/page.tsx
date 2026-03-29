@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Truck, Clock, Star, Zap, Info, FileText, Sparkles } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import ProductGallery from "@/components/storefront/product/ProductGallery";
@@ -10,6 +10,21 @@ import SpecsTable from "@/components/storefront/product/SpecsTable";
 import ProductActions from "@/components/storefront/product/ProductActions";
 import ProductCard from "@/components/storefront/ProductCard";
 import type { ProductWithRelations, Product } from "@/lib/types/database";
+
+export const revalidate = 60; // 1 minute (for data entry phase)
+
+export async function generateStaticParams() {
+    const supabase = createStaticClient();
+    const { data: products } = await supabase
+        .from("products")
+        .select("slug")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+    return (products ?? []).map((product) => ({
+        slug: product.slug,
+    }));
+}
 
 // ── Formatter VND ───────────────────────────────────────────────
 const vndFormat = new Intl.NumberFormat("vi-VN", {
@@ -19,7 +34,7 @@ const vndFormat = new Intl.NumberFormat("vi-VN", {
 
 // ── Fetch ───────────────────────────────────────────────────────
 async function getProduct(slug: string) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("products")
         .select("*, categories(name, slug), brands(name, logo_url)")
@@ -30,7 +45,7 @@ async function getProduct(slug: string) {
 }
 
 async function getRelatedProducts(currentId: string, categoryId: string) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data } = await supabase
         .from("products")
         .select("*")

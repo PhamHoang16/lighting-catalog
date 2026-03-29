@@ -7,6 +7,7 @@ import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { toSlug } from "@/lib/utils";
+import { revalidateStorefront } from "@/app/actions/revalidate";
 
 interface ProductImportModalProps {
     open: boolean;
@@ -160,6 +161,9 @@ export default function ProductImportModal({ open, onClose, onSuccess }: Product
 
             toast(`Đã import thành công ${productsToInsert.length} sản phẩm!`, "success");
             onSuccess();
+            
+            // Revalidate storefront
+            await revalidateStorefront();
 
             setTimeout(() => {
                 if (open) handleClose();

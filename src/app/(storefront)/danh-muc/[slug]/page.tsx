@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { X, SlidersHorizontal } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { getDescendantIds } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
@@ -11,6 +11,21 @@ import ProductGrid from "@/components/storefront/category/ProductGrid";
 import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
 import { Suspense } from "react";
 import type { Category, Product, Brand } from "@/lib/types/database";
+
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+    const supabase = createStaticClient();
+    const { data: categories } = await supabase
+        .from("categories")
+        .select("slug")
+        .order("name", { ascending: true })
+        .limit(20);
+
+    return (categories ?? []).map((cat) => ({
+        slug: cat.slug,
+    }));
+}
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -22,7 +37,7 @@ export async function generateMetadata({
     params,
 }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const supabase = await createClient();
+    const supabase = createStaticClient();
 
     const { data: category } = await supabase
         .from("categories")
@@ -42,7 +57,7 @@ export async function generateMetadata({
 
 // ── Data ────────────────────────────────────────────────────────
 async function getMetadata(slug: string) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
 
     // 1. Get the target category
     const { data: activeCategory } = await supabase
@@ -90,7 +105,7 @@ async function getProducts(
     limit: number = 20,
     sort: string = "newest"
 ) {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const categoryIds = getDescendantIds(activeCategoryId, categories);
 
     let productsQuery = supabase

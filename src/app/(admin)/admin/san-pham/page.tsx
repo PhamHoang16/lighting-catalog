@@ -11,6 +11,7 @@ import ProductToolbar, {
     SORT_OPTIONS,
 } from "@/components/admin/ProductToolbar";
 import type { ProductWithCategory } from "@/lib/types/database";
+import { revalidateProduct, revalidateStorefront } from "@/app/actions/revalidate";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -140,10 +141,19 @@ export default function AdminProductsPage() {
         setIsModalOpen(false);
         setSelectedProduct(null);
         fetchProducts();
+
+        // ── Revalidation (On-demand) ────────────────────────────
+        if (formData.slug) {
+            await revalidateProduct(formData.slug);
+        } else {
+            await revalidateStorefront();
+        }
     }
 
     // ── Delete ──────────────────────────────────────────────────
     async function handleDeleteProduct(id: string) {
+        const productToDelete = products.find(p => p.id === id);
+
         const { error } = await supabase
             .from("products")
             .delete()
@@ -153,6 +163,12 @@ export default function AdminProductsPage() {
             toast("Lỗi khi xóa: " + error.message, "error");
         } else {
             toast("Đã xóa sản phẩm thành công!", "success");
+            
+            // Revalidate storefront path
+            if (productToDelete) {
+                await revalidateProduct(productToDelete.slug);
+            }
+
             if (products.length === 1 && currentPage > 0) {
                 setCurrentPage((prev) => prev - 1);
             } else {

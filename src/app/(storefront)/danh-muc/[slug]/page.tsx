@@ -13,7 +13,7 @@ import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
 import type { Category, Product, Brand } from "@/lib/types/database";
 
-export const revalidate = siteConfig.revalidate;
+export const revalidate = 86400; // 1 day - max caching for egress protection
 // export const dynamic = "force-static"; 
 
 export async function generateStaticParams() {

@@ -7,7 +7,7 @@ import { buildCategoryTree } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import type { Category } from "@/lib/types/database";
 
-export const revalidate = siteConfig.revalidate;
+export const revalidate = 86400; // 1 day - max caching for egress protection
 
 export const metadata: Metadata = {
     title: "Tất cả danh mục sản phẩm",

@@ -7,7 +7,7 @@ import NewsPopularScroll from "@/components/storefront/news/NewsPopularScroll";
 import NewsListBlock from "@/components/storefront/news/NewsListBlock";
 import type { Post } from "@/lib/types/database";
 
-export const revalidate = siteConfig.revalidate;
+export const revalidate = 86400; // 1 day - max caching for egress protection
 
 export const metadata: Metadata = {
     title: `Tin tức & Kiến thức chiếu sáng | ${siteConfig.name}`,

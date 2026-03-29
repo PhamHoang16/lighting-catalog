@@ -6,7 +6,7 @@ import HotProducts from "@/components/storefront/home/HotProducts";
 import CategoryShowcaseBlock, { type CategoryShowcaseData } from "@/components/storefront/home/CategoryShowcases";
 import type { Category } from "@/lib/types/database";
 
-export const revalidate = siteConfig.revalidate;
+export const revalidate = 3600; // Literal for build stability
 
 export default async function HomePage() {
     const supabase = createStaticClient();

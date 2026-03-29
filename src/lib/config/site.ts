@@ -30,8 +30,6 @@ export const siteConfig = {
             "lighting",
         ],
     },
-    // Global revalidate time for ISR (seconds). Default: 1 hour.
-    revalidate: Number(process.env.REVALIDATE_TIME) || 3600,
-};
+} as const;
 
 export type SiteConfig = typeof siteConfig;

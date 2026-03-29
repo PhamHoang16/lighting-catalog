@@ -50,9 +50,9 @@ export default function ProductToolbar({
             setLoadingCats(true);
             const { data } = await supabase
                 .from("categories")
-                .select("*")
+                .select("id, name")
                 .order("name", { ascending: true });
-            setCategories((data as Category[]) ?? []);
+            setCategories((data as any[]) ?? []);
             setLoadingCats(false);
         }
         fetchCategories();

@@ -27,18 +27,18 @@ export default function AdminCategoriesPage() {
     const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    // ── Fetch categories ────────────────────────────────────────
+    // ── Fetch categories (Thin Row) ────────────────────────────
     const fetchCategories = useCallback(async () => {
         setLoadingData(true);
         const { data, error } = await supabase
             .from("categories")
-            .select("*")
+            .select("id, name, slug, parent_id, image_url, created_at")
             .order("name", { ascending: true });
 
         if (error) {
             toast("Không thể tải danh mục: " + error.message, "error");
         } else {
-            setCategories(data ?? []);
+            setCategories((data as any[]) ?? []);
         }
         setLoadingData(false);
     }, [supabase, toast]);
@@ -140,8 +140,20 @@ export default function AdminCategoriesPage() {
         setFormOpen(true);
     }
 
-    function openEdit(category: Category) {
-        setEditingCategory(category);
+    async function openEdit(category: Category) {
+        // Fetch full project data before opening modal to avoid missing description
+        const { data, error } = await supabase
+            .from("categories")
+            .select("*")
+            .eq("id", category.id)
+            .single();
+
+        if (error) {
+            toast("Không thể lấy thông tin chi tiết: " + error.message, "error");
+            return;
+        }
+
+        setEditingCategory(data as Category);
         setFormOpen(true);
     }
 

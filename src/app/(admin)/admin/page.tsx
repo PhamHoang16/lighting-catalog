@@ -20,20 +20,20 @@ async function getDashboardStats() {
         await Promise.all([
             supabase
                 .from("categories")
-                .select("*", { count: "exact", head: true }),
+                .select("id", { count: "exact", head: true }),
             supabase
                 .from("products")
-                .select("*", { count: "exact", head: true }),
+                .select("id", { count: "exact", head: true }),
             supabase
                 .from("orders")
-                .select("*", { count: "exact", head: true }),
+                .select("id", { count: "exact", head: true }),
             supabase
                 .from("orders")
-                .select("*", { count: "exact", head: true })
+                .select("id", { count: "exact", head: true })
                 .eq("status", "pending"),
             supabase
                 .from("orders")
-                .select("*")
+                .select("id, customer_name, total_amount, status, created_at")
                 .order("created_at", { ascending: false })
                 .limit(5),
         ]);

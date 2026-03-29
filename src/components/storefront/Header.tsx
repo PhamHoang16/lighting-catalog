@@ -14,9 +14,9 @@ async function getCategories() {
     const supabase = createStaticClient();
     const { data } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, slug, parent_id, image_url")
         .order("name", { ascending: true });
-    return data ?? [];
+    return (data as any[]) ?? [];
 }
 
 export default async function StorefrontHeader() {

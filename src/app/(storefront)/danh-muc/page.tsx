@@ -30,16 +30,18 @@ async function getMetadataRaw() {
 
     const { data: allCategories } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, slug, parent_id, image_url, created_at")
         .order("name", { ascending: true });
+
+    const categories = (allCategories as Category[]) ?? [];
 
     const { data: allBrands } = await supabase
         .from("brands")
-        .select("*")
+        .select("id, name, slug, logo_url, created_at")
         .order("name", { ascending: true });
 
     return {
-        categories: (allCategories as Category[]) ?? [],
+        categories: categories,
         brands: (allBrands as Brand[]) ?? []
     };
 }
@@ -67,7 +69,7 @@ async function getProductsRaw(
     // Get products with count
     let productsQuery = supabase
         .from("products")
-        .select("*", { count: "exact" });
+        .select("id, name, slug, price, image_url, category_id, brand_id, created_at", { count: "exact" });
 
     if (brandSlugs && brandSlugs.length > 0) {
         const brandIds = brands

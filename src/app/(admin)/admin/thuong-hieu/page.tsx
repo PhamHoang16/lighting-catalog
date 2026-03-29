@@ -31,7 +31,7 @@ export default function AdminBrandsPage() {
         setLoadingData(true);
         const { data, error } = await supabase
             .from("brands")
-            .select("*")
+            .select("id, name, slug, logo_url, created_at")
             .order("name", { ascending: true });
 
         if (error) {

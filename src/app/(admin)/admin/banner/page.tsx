@@ -31,7 +31,7 @@ export default function AdminBannersPage() {
         setLoadingData(true);
         const { data, error } = await supabase
             .from("banners")
-            .select("*")
+            .select("id, title, image_url, link_url, sort_order, is_active, created_at")
             .order("sort_order", { ascending: true })
             .order("created_at", { ascending: false });
 

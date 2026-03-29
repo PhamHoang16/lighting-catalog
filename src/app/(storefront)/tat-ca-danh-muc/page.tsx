@@ -18,10 +18,10 @@ async function getCategoriesData() {
     const supabase = createStaticClient();
     const { data: allCategories } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, slug, image_url, parent_id")
         .order("name", { ascending: true });
     
-    return (allCategories as Category[]) ?? [];
+    return (allCategories as any[]) ?? [];
 }
 
 export default async function AllCategoriesDirectoryPage() {

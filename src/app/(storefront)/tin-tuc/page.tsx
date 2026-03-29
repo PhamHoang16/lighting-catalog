@@ -18,11 +18,11 @@ async function getPosts() {
     const supabase = createStaticClient();
     const { data } = await supabase
         .from("posts")
-        .select("*")
+        .select("id, title, slug, thumbnail_url, is_published, created_at, summary, is_featured, is_popular")
         .eq("is_published", true)
         .order("created_at", { ascending: false });
 
-    return (data ?? []) as Post[];
+    return (data ?? []) as any[];
 }
 
 export default async function NewsListPage() {

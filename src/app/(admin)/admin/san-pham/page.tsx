@@ -47,7 +47,7 @@ export default function AdminProductsPage() {
 
         let query = supabase
             .from("products")
-            .select("*, categories(name)", { count: "exact" });
+            .select("id, name, slug, price, image_url, category_id, brand_id, created_at, categories(name)", { count: "exact" });
 
         // Search
         if (searchTerm) {
@@ -69,7 +69,7 @@ export default function AdminProductsPage() {
         if (error) {
             toast("Không thể tải sản phẩm: " + error.message, "error");
         } else {
-            setProducts((data as ProductWithCategory[]) ?? []);
+            setProducts((data as any[]) ?? []);
             setTotalCount(count ?? 0);
         }
         setIsLoading(false);
@@ -183,8 +183,24 @@ export default function AdminProductsPage() {
         setIsModalOpen(true);
     }
 
-    function openEdit(product: ProductWithCategory) {
-        setSelectedProduct(product);
+    async function openEdit(product: ProductWithCategory) {
+        setIsLoading(true);
+        
+        // Fetch full product data before opening modal
+        const { data, error } = await supabase
+            .from("products")
+            .select("*")
+            .eq("id", product.id)
+            .single();
+
+        setIsLoading(false);
+
+        if (error) {
+            toast("Không thể lấy thông tin chi tiết: " + error.message, "error");
+            return;
+        }
+
+        setSelectedProduct(data as ProductWithCategory);
         setIsModalOpen(true);
     }
 

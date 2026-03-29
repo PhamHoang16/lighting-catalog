@@ -26,18 +26,18 @@ export default function AdminPostsPage() {
     const [deletingPost, setDeletingPost] = useState<Post | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    // ── Fetch posts ─────────────────────────────────────────────
+    // ── Fetch posts (Thin Row) ─────────────────────────────
     const fetchPosts = useCallback(async () => {
         setLoadingData(true);
         const { data, error } = await supabase
             .from("posts")
-            .select("*")
+            .select("id, title, slug, thumbnail_url, is_published, created_at, summary")
             .order("created_at", { ascending: false });
 
         if (error) {
             toast("Không thể tải bài viết: " + error.message, "error");
         } else {
-            setPosts(data ?? []);
+            setPosts((data as any[]) ?? []);
         }
         setLoadingData(false);
     }, [supabase, toast]);
@@ -144,8 +144,20 @@ export default function AdminPostsPage() {
         setFormOpen(true);
     }
 
-    function openEditForm(post: Post) {
-        setEditingPost(post);
+    async function openEditForm(post: Post) {
+        // Fetch full project data before opening modal to avoid missing content
+        const { data, error } = await supabase
+            .from("posts")
+            .select("*")
+            .eq("id", post.id)
+            .single();
+
+        if (error) {
+            toast("Không thể lấy nội dung chi tiết: " + error.message, "error");
+            return;
+        }
+
+        setEditingPost(data as Post);
         setFormOpen(true);
     }
 

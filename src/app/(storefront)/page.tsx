@@ -10,10 +10,10 @@ export const revalidate = 60; // Revalidate every minute for home page
 export default async function HomePage() {
     const supabase = createStaticClient();
 
-    // 1. Fetch all categories first to build a lookup for diversification
+    // 1. Fetch only essential category fields
     const { data: allCategories = [] } = await supabase
         .from("categories")
-        .select("*");
+        .select("id, name, slug, parent_id, image_url");
     
     const categoryMap = new Map((allCategories ?? []).map(c => [c.id, c]));
 
@@ -21,17 +21,17 @@ export default async function HomePage() {
     const [bannersRes, parentCategoriesRes, seedProductsRes] = await Promise.all([
         supabase
             .from("banners")
-            .select("*")
+            .select("id, title, image_url, link_url, sort_order, is_active, created_at")
             .order("sort_order", { ascending: true })
             .then((res) => res, () => ({ data: [], error: true })),
         supabase
             .from("categories")
-            .select("*")
+            .select("id, name, slug, parent_id, image_url, created_at")
             .is("parent_id", null)
             .order("name", { ascending: true }),
         supabase
             .from("products")
-            .select("*")
+            .select("id, name, slug, price, image_url, category_id, brand_id, created_at")
             .order("created_at", { ascending: false })
             .limit(30) // Seed pool for diversification (balanced for cache efficiency)
     ]);
@@ -71,34 +71,40 @@ export default async function HomePage() {
         iteration++;
     }
 
-    // 3. Fetch subcategories & products for each parent category (showcase items)
-    const categoryShowcaseData: CategoryShowcaseData[] = await Promise.all(
-        parentCategories.map(async (parent: Category) => {
-            const subcategories = (allCategories ?? []).filter(c => c.parent_id === parent.id);
-            const subIds = subcategories.map((s) => s.id);
-            const allCatIds = [parent.id, ...subIds];
+    // 3. Optimized: Fetch all products for showcases in ONE query instead of a loop
+    const allParentIds = parentCategories.map(p => p.id);
+    const subcategoryMap = new Map<string, string[]>();
+    parentCategories.forEach(p => {
+        const subs = (allCategories ?? []).filter(c => c.parent_id === p.id).map(s => s.id);
+        subcategoryMap.set(p.id, [p.id, ...subs]);
+    });
 
-            // Fetch products that belong to this category or its subcategories
-            const productsRes = await supabase
-                .from("products")
-                .select("*")
-                .in("category_id", allCatIds)
-                .order("created_at", { ascending: false })
-                .limit(10);
+    const allShowcaseIds = Array.from(subcategoryMap.values()).flat();
+    const { data: allShowcaseProductsRes } = await supabase
+        .from("products")
+        .select("id, name, slug, price, image_url, category_id, brand_id, created_at")
+        .in("category_id", allShowcaseIds);
 
-            return {
-                category: parent,
-                subcategories,
-                products: productsRes.data ?? [],
-            };
-        })
-    );
+    const allShowcaseProducts = allShowcaseProductsRes ?? [];
+
+    const categoryShowcaseData: CategoryShowcaseData[] = parentCategories.map((parent) => {
+        const targetIds = subcategoryMap.get(parent.id) || [];
+        const products = allShowcaseProducts
+            .filter(p => targetIds.includes(p.category_id))
+            .slice(0, 10);
+
+        return {
+            category: parent as any,
+            subcategories: (allCategories ?? []).filter(c => c.parent_id === parent.id) as any,
+            products: products as any,
+        };
+    });
 
     return (
         <div className="flex flex-col gap-8 pb-8 bg-slate-100 min-h-screen">
             <HeroBanners banners={banners} />
 
-            <TopCategoriesGrid categories={parentCategories} />
+            <TopCategoriesGrid categories={parentCategories as any} />
 
             {hotProducts.length > 0 && (
                 <HotProducts 

@@ -8,10 +8,10 @@ async function getLatestProducts() {
     const supabase = createStaticClient();
     const { data } = await supabase
         .from("products")
-        .select("*, categories(name)")
+        .select("id, name, slug, price, image_url, category_id, categories(name)")
         .order("created_at", { ascending: false })
         .limit(8);
-    return (data as ProductWithCategory[]) ?? [];
+    return (data as any[]) ?? [];
 }
 
 export default async function LatestProducts() {

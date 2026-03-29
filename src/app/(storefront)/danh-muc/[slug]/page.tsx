@@ -73,17 +73,19 @@ async function getMetadataRaw(slug: string) {
     if (!activeCategory) return null;
 
     // 2. Get all categories
-    const { data: allCategories } = await supabase
+    const { data: allCategoriesRes } = await supabase
         .from("categories")
-        .select("*")
+        .select("id, name, slug, parent_id, image_url, created_at")
         .order("name", { ascending: true });
 
-    const categories = (allCategories as Category[]) ?? [];
+    const categories = (allCategoriesRes as any[]) ?? [];
 
-    const { data: allBrands } = await supabase
+    const { data: allBrandsRes } = await supabase
         .from("brands")
-        .select("*")
+        .select("id, name, slug, logo_url, created_at")
         .order("name", { ascending: true });
+
+    const brands = (allBrandsRes as any[]) ?? [];
 
     const parentCategory = activeCategory.parent_id
         ? categories.find((c) => c.id === activeCategory.parent_id) ?? null
@@ -93,7 +95,7 @@ async function getMetadataRaw(slug: string) {
         activeCategory: activeCategory as Category,
         parentCategory,
         categories,
-        brands: (allBrands as Brand[]) ?? []
+        brands: brands
     };
 }
 
@@ -123,7 +125,7 @@ async function getProductsRaw(
 
     let productsQuery = supabase
         .from("products")
-        .select("*", { count: "exact" })
+        .select("id, name, slug, price, image_url, category_id, brand_id, created_at", { count: "exact" })
         .in("category_id", categoryIds);
 
     if (brandSlugs && brandSlugs.length > 0) {

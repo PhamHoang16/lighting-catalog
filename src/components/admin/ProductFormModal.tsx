@@ -80,11 +80,11 @@ export default function ProductFormModal({
         async function fetchData() {
             setLoadingCategories(true);
             const [categoriesRes, brandsRes] = await Promise.all([
-                supabase.from("categories").select("*").order("name", { ascending: true }),
-                supabase.from("brands").select("*").order("name", { ascending: true }),
+                supabase.from("categories").select("id, name").order("name", { ascending: true }),
+                supabase.from("brands").select("id, name").order("name", { ascending: true }),
             ]);
-            setCategories((categoriesRes.data as Category[]) ?? []);
-            setBrands((brandsRes.data as Brand[]) ?? []);
+            setCategories((categoriesRes.data as any[]) ?? []);
+            setBrands((brandsRes.data as any[]) ?? []);
             setLoadingCategories(false);
         }
         fetchData();

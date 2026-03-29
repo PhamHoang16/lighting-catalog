@@ -51,14 +51,14 @@ export default function AdminOrdersPage() {
 
             const { data, error, count } = await supabase
                 .from("orders")
-                .select("*", { count: "exact" })
+                .select("id, customer_name, title, phone, total_amount, status, created_at, delivery_method", { count: "exact" })
                 .order("created_at", { ascending: false })
                 .range(from, to);
 
             if (error) {
                 toast("Không thể tải đơn hàng: " + error.message, "error");
             } else {
-                setOrders((data as Order[]) ?? []);
+                setOrders((data as any[]) ?? []);
                 setTotalCount(count ?? 0);
             }
             setIsLoading(false);
@@ -177,8 +177,8 @@ export default function AdminOrdersPage() {
                                                 </a>
                                             </td>
                                             <td className="whitespace-nowrap px-6 py-4">
-                                                <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
-                                                    {itemCount} mặt hàng
+                                                <span className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
+                                                    Bấm xem
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap px-6 py-4 font-semibold text-amber-700">
@@ -198,8 +198,20 @@ export default function AdminOrdersPage() {
                                             <td className="whitespace-nowrap px-6 py-4">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <button
-                                                        onClick={() => {
-                                                            setSelectedOrder(order);
+                                                        onClick={async () => {
+                                                            setIsLoading(true);
+                                                            const { data, error } = await supabase
+                                                                .from("orders")
+                                                                .select("*")
+                                                                .eq("id", order.id)
+                                                                .single();
+                                                            setIsLoading(false);
+
+                                                            if (error) {
+                                                                toast("Lỗi khi lấy chi tiết: " + error.message, "error");
+                                                                return;
+                                                            }
+                                                            setSelectedOrder(data as Order);
                                                             setDetailOpen(true);
                                                         }}
                                                         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"

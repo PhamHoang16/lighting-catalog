@@ -46,13 +46,13 @@ async function getRelatedProducts(currentId: string, categoryId: string) {
     const supabase = createStaticClient();
     const { data } = await supabase
         .from("products")
-        .select("*")
+        .select("id, name, slug, price, image_url, category_id")
         .eq("category_id", categoryId)
         .neq("id", currentId)
         .order("created_at", { ascending: false })
         .limit(5);
 
-    return (data ?? []) as Product[];
+    return (data ?? []) as any[];
 }
 
 // ── SEO ─────────────────────────────────────────────────────────

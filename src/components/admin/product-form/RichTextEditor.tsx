@@ -36,7 +36,6 @@ const QUILL_FORMATS = [
     "link",
     "image",
     "video",
-    "clean",
 ];
 
 interface RichTextEditorProps {

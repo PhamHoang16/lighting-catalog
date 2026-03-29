@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import type { Post } from "@/lib/types/database";
 
-export const revalidate = 60;
+export const revalidate = siteConfig.revalidate;
 
 export async function generateStaticParams() {
     const supabase = createStaticClient();

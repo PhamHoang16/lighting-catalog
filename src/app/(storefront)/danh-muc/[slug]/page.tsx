@@ -13,7 +13,7 @@ import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
 import type { Category, Product, Brand } from "@/lib/types/database";
 
-export const revalidate = 60;
+export const revalidate = siteConfig.revalidate;
 // export const dynamic = "force-static"; 
 
 export async function generateStaticParams() {

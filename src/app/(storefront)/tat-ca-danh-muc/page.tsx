@@ -7,7 +7,7 @@ import { buildCategoryTree } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import type { Category } from "@/lib/types/database";
 
-export const revalidate = 60;
+export const revalidate = siteConfig.revalidate;
 
 export const metadata: Metadata = {
     title: "Tất cả danh mục sản phẩm",

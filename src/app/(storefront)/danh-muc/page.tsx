@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description: `Khám phá các danh mục sản phẩm chiếu sáng tại ${siteConfig.name}. Nhận báo giá và tư vấn miễn phí.`,
 };
 
-export const revalidate = 60;
+export const revalidate = siteConfig.revalidate;
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

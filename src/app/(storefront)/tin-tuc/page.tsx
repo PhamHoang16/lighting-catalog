@@ -7,7 +7,7 @@ import NewsPopularScroll from "@/components/storefront/news/NewsPopularScroll";
 import NewsListBlock from "@/components/storefront/news/NewsListBlock";
 import type { Post } from "@/lib/types/database";
 
-export const revalidate = 60;
+export const revalidate = siteConfig.revalidate;
 
 export const metadata: Metadata = {
     title: `Tin tức & Kiến thức chiếu sáng | ${siteConfig.name}`,

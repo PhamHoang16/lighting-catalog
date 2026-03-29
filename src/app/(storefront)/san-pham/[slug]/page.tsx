@@ -198,9 +198,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                     >
                                         {priceDisplay}
                                     </span>
-                                    {product.price > 0 && (
-                                        <span className="text-sm text-gray-400">/ sản phẩm</span>
-                                    )}
+                                    {product.price > 0}
                                 </div>
                                 <p className="mt-1 text-xs text-amber-600/70">
                                     Giá tốt nhất — Liên hệ để nhận chiết khấu dự án
@@ -351,7 +349,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
             )}
 
             {/* ── Mobile Sticky CTA ──────────────────────────────── */}
-            <div className="sticky bottom-0 border-t border-gray-200 bg-white/95 p-3 backdrop-blur-md lg:hidden">
+            <div className="sticky bottom-0 z-50 border-t border-gray-200 bg-white/95 p-3 backdrop-blur-md lg:hidden">
+                {/* Specific override: lift the global floating icons to clear the sticky bar ONLY on this page */}
+                <style>{`
+                    @media (max-width: 1023px) {
+                        .floating-contact-container {
+                            bottom: 84px !important; 
+                            transition: bottom 0.3s ease;
+                        }
+                    }
+                `}</style>
                 <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-xs text-gray-500">{product.name}</p>

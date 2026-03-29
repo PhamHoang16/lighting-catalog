@@ -29,16 +29,19 @@ export default function TopCategoriesGrid({ categories }: TopCategoriesGridProps
 
                 <div className="mb-6 flex items-center justify-between border-b border-amber-100/50 pb-5 relative z-10">
                     <div className="flex items-center gap-3">
+                        {/* Icon Box */}
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/30">
                             <Layers className="h-6 w-6 fill-current" />
                         </div>
-                        <h2 className="text-xl font-black uppercase tracking-tight sm:text-2xl">
-                            <span className="inline-block rounded-xl bg-white px-5 py-2 text-amber-600 shadow-sm ring-1 ring-amber-500/20 relative">
-                                Danh Mục Nổi Bật
-                                {/* Một nét viền nhỏ tạo điểm nhấn bên dưới */}
-                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500"></div>
-                            </span>
-                        </h2>
+                        {/* Label Badge */}
+                        <div className="relative">
+                            <h2 className="text-xl font-black uppercase tracking-tight sm:text-2xl text-amber-600">
+                                <span className="inline-block rounded-xl bg-white px-5 py-2 shadow-sm ring-1 ring-amber-500/20">
+                                    Danh Mục Nổi Bật
+                                </span>
+                            </h2>
+                            {/* Refined Accent Underline */}
+                        </div>
                     </div>
                 </div>
 
@@ -50,7 +53,7 @@ export default function TopCategoriesGrid({ categories }: TopCategoriesGridProps
                     {/* the 'Others' item if there are more categories or just as a 'View all' link */}
                     {(hasMore || true) && (
                         <Link
-                            href="/danh-muc"
+                            href="/tat-ca-danh-muc"
                             className="group flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white to-gray-50 p-2 sm:p-4 transition-all duration-300 hover:-translate-y-1 shadow-sm border border-gray-200 hover:border-amber-400 hover:shadow-lg"
                         >
                             <div className="mb-3 flex aspect-square w-full max-w-[70px] sm:max-w-[90px] lg:max-w-[100px] items-center justify-center rounded-full bg-white shadow-inner ring-4 ring-gray-50 transition-colors group-hover:bg-amber-50 group-hover:ring-amber-100">

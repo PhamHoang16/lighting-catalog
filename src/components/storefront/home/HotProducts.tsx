@@ -41,19 +41,24 @@ export default function HotProducts({ products }: { products: Product[] }) {
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-orange-400/10 blur-3xl pointer-events-none" />
 
                 {/* Header */}
-                <div className="mb-6 flex items-center justify-between border-b border-gray-100 pb-4 relative z-10">
+                <div className="mb-6 flex items-center justify-between border-b border-red-100/50 pb-5 relative z-10">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/20">
-                            <Zap className="h-5 w-5 fill-current animate-pulse" />
+                        {/* Icon Box */}
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 text-white shadow-lg shadow-red-500/30">
+                            <Zap className="h-6 w-6 fill-current animate-pulse" />
                         </div>
-                        <h2 className="text-xl font-black uppercase tracking-tight text-gray-900 sm:text-2xl">
-                            <span className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
-                                Sản phẩm bán chạy
-                            </span>
-                        </h2>
+                        {/* Label Badge */}
+                        <div className="relative">
+                            <h2 className="text-xl font-black uppercase tracking-tight sm:text-2xl text-red-600">
+                                <span className="inline-block rounded-xl bg-white px-5 py-2 shadow-sm ring-1 ring-red-500/20">
+                                    Sản phẩm bán chạy
+                                </span>
+                            </h2>
+                            {/* Refined Accent Underline */}
+                        </div>
                     </div>
-                    {/* View All link for header (Optional, removed arrows from here) */}
-                    <a href="/danh-muc" className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">
+                    {/* View All link */}
+                    <a href="/danh-muc" className="text-sm font-bold uppercase tracking-wider text-orange-500 hover:text-orange-600 transition-colors hidden sm:block">
                         Xem tất cả &rarr;
                     </a>
                 </div>
@@ -70,7 +75,10 @@ export default function HotProducts({ products }: { products: Product[] }) {
                                    LG: 5 items (20%) */
                                 className="min-w-0 pl-4 flex-[0_0_45%] sm:flex-[0_0_35%] md:flex-[0_0_25%] lg:flex-[0_0_20%]"
                             >
-                                <ProductCard product={product} />
+                                <ProductCard 
+                                    product={product} 
+                                    categoryName={(product as any).categoryName}
+                                />
                             </div>
                         ))}
                     </div>

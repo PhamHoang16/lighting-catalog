@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/config/site";
 
 export default function FloatingContact() {
     return (
-        <div className="fixed bottom-6 right-4 z-40 flex flex-col items-center gap-3 sm:right-6 lg:z-[45]">
+        <div className="floating-contact-container fixed bottom-6 right-4 z-40 flex flex-col items-center gap-3 sm:right-6 lg:z-[45]">
             {/* Zalo */}
             <a
                 href={siteConfig.contact.zaloHref}

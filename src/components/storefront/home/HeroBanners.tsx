@@ -38,7 +38,7 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
     if (!banners || banners.length === 0) {
         return (
             <div className="w-full">
-                <div className="aspect-[4/3] sm:aspect-[21/9] lg:aspect-[3/1] xl:aspect-[10/3] 2xl:aspect-[4/1] w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black animate-pulse flex items-center justify-center">
+                <div className="aspect-[21/9] lg:aspect-[3/1] w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black animate-pulse flex items-center justify-center">
                     <span className="text-white/50 font-medium tracking-widest uppercase text-sm md:text-base">Đang tải Banner...</span>
                 </div>
             </div>
@@ -56,7 +56,7 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                             key={banner.id}
                             className="min-w-0 flex-[0_0_100%] relative"
                         >
-                            <div className="relative w-full aspect-[4/3] sm:aspect-[21/9] lg:aspect-[3/1] xl:aspect-[10/3] 2xl:aspect-[4/1] overflow-hidden bg-gray-950">
+                            <div className="relative w-full aspect-[21/9] lg:aspect-[3/1] overflow-hidden bg-gray-950">
                                 {banner.link_url ? (
                                     <Link href={banner.link_url} className="absolute inset-0 block w-full h-full cursor-pointer">
                                         <img

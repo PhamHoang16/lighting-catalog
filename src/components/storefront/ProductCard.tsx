@@ -41,7 +41,7 @@ export default function ProductCard({
     }
 
     // Fake data for display purposes
-    const randomSold = (product.name.length * 12) + 125;
+    const randomSold = (product.name.length * 6) + 125;
     // 1. Định nghĩa sẵn các mốc % chiết khấu "đẹp" mà bạn muốn hiển thị
     const allowedDiscounts = [10, 15, 20, 25, 30, 35];
     // 2. Dùng phép chia lấy dư (%) theo độ dài của mảng để lấy index (đảm bảo index luôn từ 0 đến 5)

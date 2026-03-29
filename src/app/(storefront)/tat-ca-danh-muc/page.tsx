@@ -91,7 +91,7 @@ export default async function AllCategoriesDirectoryPage() {
                                     </div>
                                 </div>
                                 <div className="text-center lg:text-left">
-                                    <Link href={`/danh-muc/${parent.slug}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-3.5 text-sm font-bold text-white transition-all hover:from-amber-500 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/30">
+                                    <Link href={`/danh-muc/${parent.slug}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-sm font-bold text-white transition-all hover:from-amber-500 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/30">
                                         Xem tất cả {parent.name} &rarr;
                                     </Link>
                                 </div>

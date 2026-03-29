@@ -101,7 +101,12 @@ export default async function HomePage() {
             <TopCategoriesGrid categories={parentCategories} />
 
             {hotProducts.length > 0 && (
-                <HotProducts products={hotProducts} />
+                <HotProducts 
+                    products={hotProducts.map(p => ({
+                        ...p,
+                        categoryName: categoryMap.get(p.category_id)?.name
+                    })) as any} 
+                />
             )}
 
             <div className="flex flex-col gap-0">

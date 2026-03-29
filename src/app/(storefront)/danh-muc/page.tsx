@@ -9,6 +9,7 @@ import CategorySidebarAdvanced from "@/components/storefront/category/CategorySi
 import ProductGrid from "@/components/storefront/category/ProductGrid";
 import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import type { Category, CategoryWithChildren, Brand, Product } from "@/lib/types/database";
 
 export const metadata: Metadata = {
@@ -17,14 +18,15 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 60;
-export const dynamic = "force-static"; // Ensure static listing page
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getMetadata() {
+// ── Raw Data Functions (Uncached) ──────────────────────────
+async function getMetadataRaw() {
     const supabase = createStaticClient();
+    console.log("Supabase: Fetching Metadata (Categories & Brands)");
 
     const { data: allCategories } = await supabase
         .from("categories")
@@ -42,7 +44,14 @@ async function getMetadata() {
     };
 }
 
-async function getProducts(
+// ── Cached Metadata ──────────────────────────────────────────
+const getMetadata = unstable_cache(
+    async () => getMetadataRaw(),
+    ["all-listing-metadata"],
+    { revalidate: 3600, tags: ["categories", "brands"] }
+);
+
+async function getProductsRaw(
     brands: Brand[],
     brandSlugs?: string[],
     minPrice?: number,
@@ -53,6 +62,7 @@ async function getProducts(
     sort: string = "newest"
 ) {
     const supabase = createStaticClient();
+    console.log(`Supabase: Fetching Products (page: ${page}, sort: ${sort})`);
 
     // Get products with count
     let productsQuery = supabase
@@ -105,9 +115,29 @@ async function getProducts(
     };
 }
 
+// ── Cached Products ──────────────────────────────────────────
+const getProducts = unstable_cache(
+    async (
+        brandsSerialized: string, // Need to pass strings/primitives to cache keys
+        brandSlugsSerialized: string = "",
+        minPrice?: number,
+        maxPrice?: number,
+        searchQuery?: string,
+        page: number = 1,
+        limit: number = 20,
+        sort: string = "newest"
+    ) => {
+        const brands = JSON.parse(brandsSerialized);
+        const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(",") : undefined;
+        return getProductsRaw(brands, brandSlugs, minPrice, maxPrice, searchQuery, page, limit, sort);
+    },
+    ["all-products-listing"],
+    { revalidate: 60, tags: ["products"] }
+);
+
 // ── Intermediate Server Components for Suspense ────────────────
 async function ProductsCountInHeader({ brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort }: any) {
-    const { totalCount } = await getProducts(brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    const { totalCount } = await getProducts(JSON.stringify(brands), brandSlugs?.join(','), minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
     return (
         <span className="text-sm font-bold text-gray-700 animate-in fade-in duration-300">
             <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
@@ -116,7 +146,7 @@ async function ProductsCountInHeader({ brands, brandSlugs, minPrice, maxPrice, s
 }
 
 async function ProductGridLoader({ brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort, hasFilters }: any) {
-    const { products, totalCount, totalPages } = await getProducts(brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    const { products, totalCount, totalPages } = await getProducts(JSON.stringify(brands), brandSlugs?.join(','), minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
     return (
         <div className="animate-in fade-in duration-500">
             <ProductGrid

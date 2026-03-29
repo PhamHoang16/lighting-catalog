@@ -10,10 +10,11 @@ import CategorySidebarAdvanced from "@/components/storefront/category/CategorySi
 import ProductGrid from "@/components/storefront/category/ProductGrid";
 import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import type { Category, Product, Brand } from "@/lib/types/database";
 
 export const revalidate = 60;
-export const dynamic = "force-static"; // Test if searchParams is the cause
+// export const dynamic = "force-static"; 
 
 export async function generateStaticParams() {
     const supabase = createStaticClient();
@@ -57,8 +58,10 @@ export async function generateMetadata({
 }
 
 // ── Data ────────────────────────────────────────────────────────
-async function getMetadata(slug: string) {
+// ── Raw Data Functions (Uncached) ──────────────────────────
+async function getMetadataRaw(slug: string) {
     const supabase = createStaticClient();
+    console.log(`Supabase: Fetching Category Detail Metadata [${slug}]`);
 
     // 1. Get the target category
     const { data: activeCategory } = await supabase
@@ -94,7 +97,14 @@ async function getMetadata(slug: string) {
     };
 }
 
-async function getProducts(
+// ── Cached Metadata ──────────────────────────────────────────
+const getMetadata = unstable_cache(
+    async (slug: string) => getMetadataRaw(slug),
+    ["category-detail-metadata"],
+    { revalidate: 3600, tags: ["categories", "brands"] }
+);
+
+async function getProductsRaw(
     activeCategoryId: string,
     categories: Category[],
     brands: Brand[],
@@ -107,6 +117,8 @@ async function getProducts(
     sort: string = "newest"
 ) {
     const supabase = createStaticClient();
+    console.log(`Supabase: Fetching Category Products [${activeCategoryId}] (page: ${page})`);
+
     const categoryIds = getDescendantIds(activeCategoryId, categories);
 
     let productsQuery = supabase
@@ -154,9 +166,32 @@ async function getProducts(
     };
 }
 
+// ── Cached Products ──────────────────────────────────────────
+const getProducts = unstable_cache(
+    async (
+        activeCategoryId: string,
+        categoriesSerialized: string, // Serialize for cache key
+        brandsSerialized: string,
+        brandSlugsSerialized: string = "",
+        minPrice?: number,
+        maxPrice?: number,
+        searchQuery?: string,
+        page: number = 1,
+        limit: number = 20,
+        sort: string = "newest"
+    ) => {
+        const categories = JSON.parse(categoriesSerialized);
+        const brands = JSON.parse(brandsSerialized);
+        const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(',') : undefined;
+        return getProductsRaw(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, page, limit, sort);
+    },
+    ["category-detail-products"],
+    { revalidate: 60, tags: ["products"] }
+);
+
 // ── Intermediate Server Components for Suspense ────────────────
 async function ProductsCountInHeaderDetail({ activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort }: any) {
-    const { totalCount } = await getProducts(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    const { totalCount } = await getProducts(activeCategoryId, JSON.stringify(categories), JSON.stringify(brands), brandSlugs?.join(','), minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
     return (
         <span className="text-sm font-bold text-gray-700 animate-in fade-in duration-300">
             <span className="text-amber-600 text-lg mr-1">{totalCount}</span> sản phẩm
@@ -165,7 +200,7 @@ async function ProductsCountInHeaderDetail({ activeCategoryId, categories, brand
 }
 
 async function ProductGridLoaderDetail({ activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, currentSort, hasFilters, activeCategoryName }: any) {
-    const { products, totalCount, totalPages } = await getProducts(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
+    const { products, totalCount, totalPages } = await getProducts(activeCategoryId, JSON.stringify(categories), JSON.stringify(brands), brandSlugs?.join(','), minPrice, maxPrice, searchQuery, currentPage, 20, currentSort);
     return (
         <div className="animate-in fade-in duration-500">
             <ProductGrid

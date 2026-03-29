@@ -48,14 +48,13 @@ export default function HotProducts({ products }: { products: Product[] }) {
                             <Zap className="h-6 w-6 fill-current animate-pulse" />
                         </div>
                         {/* Label Badge */}
-                        <div className="relative group/label">
-                            <div className="flex items-center gap-0 overflow-hidden rounded-xl bg-white shadow-md shadow-red-500/5 ring-1 ring-red-500/20">
-                                {/* Side Accent bar */}
-                                <div className="h-full w-1.5 self-stretch bg-gradient-to-b from-red-500 to-orange-600" />
-                                <h2 className="px-5 py-2.5 text-xl font-black uppercase tracking-tight text-red-700 sm:text-2xl bg-gradient-to-br from-white via-white to-orange-50/50">
+                        <div className="relative">
+                            <h2 className="text-xl font-black uppercase tracking-tight sm:text-2xl text-red-600">
+                                <span className="inline-block rounded-xl bg-white px-5 py-2 shadow-sm ring-1 ring-red-500/20">
                                     Sản phẩm bán chạy
-                                </h2>
-                            </div>
+                                </span>
+                            </h2>
+                            {/* Refined Accent Underline */}
                         </div>
                     </div>
                     {/* View All link */}
@@ -76,8 +75,8 @@ export default function HotProducts({ products }: { products: Product[] }) {
                                    LG: 5 items (20%) */
                                 className="min-w-0 pl-4 flex-[0_0_45%] sm:flex-[0_0_35%] md:flex-[0_0_25%] lg:flex-[0_0_20%]"
                             >
-                                <ProductCard 
-                                    product={product} 
+                                <ProductCard
+                                    product={product}
                                     categoryName={(product as any).categoryName}
                                 />
                             </div>

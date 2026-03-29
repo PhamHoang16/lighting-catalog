@@ -34,13 +34,14 @@ export default function TopCategoriesGrid({ categories }: TopCategoriesGridProps
                             <Layers className="h-6 w-6 fill-current" />
                         </div>
                         {/* Label Badge */}
-                        <div className="relative">
-                            <h2 className="text-xl font-black uppercase tracking-tight sm:text-2xl text-amber-600">
-                                <span className="inline-block rounded-xl bg-white px-5 py-2 shadow-sm ring-1 ring-amber-500/20">
+                        <div className="relative group/label">
+                            <div className="flex items-center gap-0 overflow-hidden rounded-xl bg-white shadow-md shadow-amber-500/5 ring-1 ring-amber-500/20">
+                                {/* Side Accent bar */}
+                                <div className="h-full w-1.5 self-stretch bg-gradient-to-b from-amber-400 to-amber-600" />
+                                <h2 className="px-5 py-2.5 text-xl font-black uppercase tracking-tight text-amber-700 sm:text-2xl bg-gradient-to-br from-white via-white to-amber-50/50">
                                     Danh Mục Nổi Bật
-                                </span>
-                            </h2>
-                            {/* Refined Accent Underline */}
+                                </h2>
+                            </div>
                         </div>
                     </div>
                 </div>

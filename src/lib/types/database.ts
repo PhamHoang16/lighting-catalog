@@ -41,6 +41,7 @@ export interface Database {
                     parent_id: string | null;
                     image_url: string | null;
                     description: string | null;
+                    sort_order: number;
                     created_at: string;
                 };
                 Insert: {
@@ -50,6 +51,7 @@ export interface Database {
                     parent_id?: string | null;
                     image_url?: string | null;
                     description?: string | null;
+                    sort_order?: number;
                     created_at?: string;
                 };
                 Update: {
@@ -59,6 +61,7 @@ export interface Database {
                     parent_id?: string | null;
                     image_url?: string | null;
                     description?: string | null;
+                    sort_order?: number;
                     created_at?: string;
                 };
             };
@@ -98,6 +101,7 @@ export interface Database {
                     variants: VariantsData | null;
                     category_id: string;
                     brand_id: string | null;
+                    is_best_seller: boolean;
                     created_at: string;
                 };
                 Insert: {
@@ -112,6 +116,7 @@ export interface Database {
                     variants?: VariantsData | null;
                     category_id: string;
                     brand_id?: string | null;
+                    is_best_seller?: boolean;
                     created_at?: string;
                 };
                 Update: {
@@ -126,6 +131,7 @@ export interface Database {
                     variants?: VariantsData | null;
                     category_id?: string;
                     brand_id?: string | null;
+                    is_best_seller?: boolean;
                     created_at?: string;
                 };
             };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types/database";
 
@@ -29,6 +29,8 @@ interface ProductToolbarProps {
     onSortChange: (index: number) => void;
     categoryId: string;
     onCategoryChange: (categoryId: string) => void;
+    bestSellerOnly: boolean;
+    onBestSellerChange: (value: boolean) => void;
 }
 
 export default function ProductToolbar({
@@ -38,6 +40,8 @@ export default function ProductToolbar({
     onSortChange,
     categoryId,
     onCategoryChange,
+    bestSellerOnly,
+    onBestSellerChange,
 }: ProductToolbarProps) {
     const supabase = createClient();
 
@@ -81,7 +85,7 @@ export default function ProductToolbar({
     }
 
     // ── Check if any filter is active ───────────────────────────
-    const hasActiveFilters = searchTerm !== "" || categoryId !== "" || sortIndex !== 0;
+    const hasActiveFilters = searchTerm !== "" || categoryId !== "" || sortIndex !== 0 || bestSellerOnly;
 
     return (
         <div className="mb-4 space-y-3">
@@ -138,6 +142,20 @@ export default function ProductToolbar({
                         </option>
                     ))}
                 </select>
+
+                {/* Best seller toggle */}
+                <button
+                    onClick={() => onBestSellerChange(!bestSellerOnly)}
+                    className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium shadow-sm transition-all ${
+                        bestSellerOnly
+                            ? "border-orange-400 bg-orange-50 text-orange-600 ring-1 ring-orange-300"
+                            : "border-gray-300 bg-white text-gray-600 hover:border-orange-300 hover:text-orange-500"
+                    }`}
+                    title={bestSellerOnly ? "Đang lọc: Bán chạy" : "Chỉ hiện sản phẩm bán chạy"}
+                >
+                    <Flame className={`h-4 w-4 ${bestSellerOnly ? "fill-current" : ""}`} />
+                    Bán chạy
+                </button>
             </div>
 
             {/* Active filters indicator */}
@@ -163,6 +181,12 @@ export default function ProductToolbar({
                         <FilterChip
                             label={SORT_OPTIONS[sortIndex].label}
                             onRemove={() => onSortChange(0)}
+                        />
+                    )}
+                    {bestSellerOnly && (
+                        <FilterChip
+                            label="Chỉ bán chạy 🔥"
+                            onRemove={() => onBestSellerChange(false)}
                         />
                     )}
                 </div>

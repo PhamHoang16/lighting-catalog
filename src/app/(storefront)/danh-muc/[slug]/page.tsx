@@ -75,8 +75,8 @@ async function getMetadataRaw(slug: string) {
     // 2. Get all categories
     const { data: allCategoriesRes } = await supabase
         .from("categories")
-        .select("id, name, slug, parent_id, image_url, created_at")
-        .order("name", { ascending: true });
+        .select("id, name, slug, parent_id, image_url, sort_order, created_at")
+        .order("sort_order", { ascending: true });
 
     const categories = (allCategoriesRes as any[]) ?? [];
 

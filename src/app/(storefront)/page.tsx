@@ -14,12 +14,12 @@ export default async function HomePage() {
     // 1. Fetch only essential category fields
     const { data: allCategories = [] } = await supabase
         .from("categories")
-        .select("id, name, slug, parent_id, image_url");
+        .select("id, name, slug, parent_id, image_url, sort_order");
     
     const categoryMap = new Map((allCategories ?? []).map(c => [c.id, c]));
 
     // 2. Fetch Banners, Parent Categories, and "Seed" Products for diversification
-    const [bannersRes, parentCategoriesRes, seedProductsRes] = await Promise.all([
+    const [bannersRes, parentCategoriesRes, bestSellerRes] = await Promise.all([
         supabase
             .from("banners")
             .select("id, title, image_url, link_url, sort_order, is_active, created_at")
@@ -27,50 +27,26 @@ export default async function HomePage() {
             .then((res) => res, () => ({ data: [], error: true })),
         supabase
             .from("categories")
-            .select("id, name, slug, parent_id, image_url, created_at")
+            .select("id, name, slug, parent_id, image_url, sort_order, created_at")
             .is("parent_id", null)
-            .order("name", { ascending: true }),
+            .order("sort_order", { ascending: true }),
         supabase
             .from("products")
-            .select("id, name, slug, price, image_url, category_id, brand_id, created_at")
+            .select("id, name, slug, price, image_url, category_id, brand_id, is_best_seller, created_at")
+            .eq("is_best_seller", true)
             .order("created_at", { ascending: false })
-            .limit(30) // Seed pool for diversification (balanced for cache efficiency)
+            .limit(20)
     ]);
 
     const banners = !bannersRes.error && bannersRes.data ? bannersRes.data : [];
-    const seedProducts = seedProductsRes.data ?? [];
+    const bestSellerProducts = bestSellerRes.data ?? [];
     const parentCategories = parentCategoriesRes.data ?? [];
 
-    // ─────────────────────────────────────────────────────────────
-    // DIVERSIFICATION LOGIC: Pick 20 products with variety
-    // ─────────────────────────────────────────────────────────────
-    const groupedByParent = new Map<string, typeof seedProducts>();
-    
-    seedProducts.forEach(p => {
-        const cat = categoryMap.get(p.category_id);
-        const parentId = cat?.parent_id || p.category_id;
-        if (!groupedByParent.has(parentId)) groupedByParent.set(parentId, []);
-        groupedByParent.get(parentId)!.push(p);
-    });
-
-    const hotProducts: typeof seedProducts = [];
-    const parentIds = Array.from(groupedByParent.keys());
-    let iteration = 0;
-
-    // Round-robin selection
-    while (hotProducts.length < 20 && parentIds.length > 0) {
-        let pickedInThisRound = false;
-        for (const pId of parentIds) {
-            const list = groupedByParent.get(pId)!;
-            if (iteration < list.length) {
-                hotProducts.push(list[iteration]);
-                pickedInThisRound = true;
-            }
-            if (hotProducts.length >= 20) break;
-        }
-        if (!pickedInThisRound) break;
-        iteration++;
-    }
+    // Map best-seller products with category name
+    const hotProducts = bestSellerProducts.map(p => ({
+        ...p,
+        categoryName: categoryMap.get(p.category_id)?.name
+    }));
 
     // 3. Optimized: Fetch all products for showcases in ONE query instead of a loop
     const allParentIds = parentCategories.map(p => p.id);
@@ -109,10 +85,7 @@ export default async function HomePage() {
 
             {hotProducts.length > 0 && (
                 <HotProducts 
-                    products={hotProducts.map(p => ({
-                        ...p,
-                        categoryName: categoryMap.get(p.category_id)?.name
-                    })) as any} 
+                    products={hotProducts as any} 
                 />
             )}
 

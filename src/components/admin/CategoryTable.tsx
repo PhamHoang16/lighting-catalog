@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2, FolderOpen, ChevronRight, ImageOff } from "lucide-react";
+import { ChevronUp, ChevronDown, Pencil, Trash2, FolderOpen, ChevronRight, GripVertical } from "lucide-react";
 import { formatDate, buildCategoryTree } from "@/lib/utils";
 import type { Category, CategoryWithChildren } from "@/lib/types/database";
 
@@ -8,12 +8,17 @@ interface CategoryTableProps {
     categories: Category[];
     onEdit: (category: Category) => void;
     onDelete: (category: Category) => void;
+    // Sort mode
+    sortMode?: boolean;
+    onMove?: (id: string, direction: "up" | "down", parentId: string | null) => void;
 }
 
 export default function CategoryTable({
     categories,
     onEdit,
     onDelete,
+    sortMode = false,
+    onMove,
 }: CategoryTableProps) {
     if (categories.length === 0) {
         return (
@@ -36,33 +41,54 @@ export default function CategoryTable({
     const tree = buildCategoryTree(categories);
 
     return (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className={`overflow-hidden rounded-xl border bg-white shadow-sm transition-colors ${
+            sortMode ? "border-blue-300 ring-2 ring-blue-100" : "border-gray-200"
+        }`}>
+            {/* Sort mode banner */}
+            {sortMode && (
+                <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2.5">
+                    <GripVertical className="h-4 w-4 text-blue-400" />
+                    <p className="text-xs font-medium text-blue-700">
+                        Chế độ sắp xếp — Dùng nút ↑↓ để thay đổi thứ tự. Bấm <strong>Lưu thứ tự</strong> bên dưới khi xong.
+                    </p>
+                </div>
+            )}
+
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead>
                         <tr className="border-b border-gray-100 bg-gray-50/80">
+                            {sortMode && (
+                                <th className="w-10 px-3 py-3.5 font-semibold text-gray-400">#</th>
+                            )}
                             <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
                                 Danh mục
                             </th>
                             <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
                                 Slug
                             </th>
-                            <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
-                                Ngày tạo
-                            </th>
-                            <th className="whitespace-nowrap px-6 py-3.5 text-right font-semibold text-gray-600">
-                                Hành động
+                            {!sortMode && (
+                                <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
+                                    Ngày tạo
+                                </th>
+                            )}
+                            <th className={`whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600 ${sortMode ? "text-center" : "text-right"}`}>
+                                {sortMode ? "Di chuyển" : "Hành động"}
                             </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {tree.map((cat) => (
+                        {tree.map((cat, idx) => (
                             <CategoryRows
                                 key={cat.id}
                                 category={cat}
                                 depth={0}
+                                index={idx}
+                                totalSiblings={tree.length}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                sortMode={sortMode}
+                                onMove={onMove}
                             />
                         ))}
                     </tbody>
@@ -86,23 +112,42 @@ export default function CategoryTable({
 function CategoryRows({
     category,
     depth,
+    index,
+    totalSiblings,
     onEdit,
     onDelete,
+    sortMode,
+    onMove,
 }: {
     category: CategoryWithChildren;
     depth: number;
+    index: number;
+    totalSiblings: number;
     onEdit: (cat: Category) => void;
     onDelete: (cat: Category) => void;
+    sortMode: boolean;
+    onMove?: (id: string, direction: "up" | "down", parentId: string | null) => void;
 }) {
+    const isFirst = index === 0;
+    const isLast = index === totalSiblings - 1;
+
     return (
         <>
-            <tr className="transition-colors hover:bg-gray-50/50">
+            <tr className={`transition-colors ${sortMode ? "hover:bg-blue-50/30" : "hover:bg-gray-50/50"}`}>
+                {/* Position badge — sort mode only */}
+                {sortMode && (
+                    <td className="px-3 py-3 text-center">
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold tabular-nums text-blue-600">
+                            {index + 1}
+                        </span>
+                    </td>
+                )}
+
                 <td className="whitespace-nowrap px-6 py-3">
                     <div
                         className="flex items-center gap-3"
                         style={{ paddingLeft: `${depth * 24}px` }}
                     >
-                        {/* Indent indicator */}
                         {depth > 0 && (
                             <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
                         )}
@@ -134,42 +179,75 @@ function CategoryRows({
                         </div>
                     </div>
                 </td>
+
                 <td className="whitespace-nowrap px-6 py-3">
                     <code className="rounded bg-gray-100 px-2 py-1 text-xs font-mono text-gray-600">
                         {category.slug}
                     </code>
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-gray-500">
-                    {category.created_at ? formatDate(category.created_at) : "—"}
-                </td>
+
+                {/* Date — only in normal mode */}
+                {!sortMode && (
+                    <td className="whitespace-nowrap px-6 py-3 text-gray-500">
+                        {category.created_at ? formatDate(category.created_at) : "—"}
+                    </td>
+                )}
+
                 <td className="whitespace-nowrap px-6 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                        <button
-                            onClick={() => onEdit(category)}
-                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                            title="Chỉnh sửa"
-                        >
-                            <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={() => onDelete(category)}
-                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                            title="Xóa"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
-                    </div>
+                    {sortMode ? (
+                        /* Sort mode: up/down buttons */
+                        <div className="flex items-center justify-center gap-1">
+                            <button
+                                onClick={() => onMove?.(category.id, "up", category.parent_id)}
+                                disabled={isFirst}
+                                className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-blue-100 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                                title="Di chuyển lên"
+                            >
+                                <ChevronUp className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={() => onMove?.(category.id, "down", category.parent_id)}
+                                disabled={isLast}
+                                className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-blue-100 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                                title="Di chuyển xuống"
+                            >
+                                <ChevronDown className="h-5 w-5" />
+                            </button>
+                        </div>
+                    ) : (
+                        /* Normal mode: edit/delete buttons */
+                        <div className="flex items-center justify-end gap-1">
+                            <button
+                                onClick={() => onEdit(category)}
+                                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                                title="Chỉnh sửa"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => onDelete(category)}
+                                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                title="Xóa"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
                 </td>
             </tr>
 
             {/* Children */}
-            {category.children.map((child) => (
+            {category.children.map((child, childIdx) => (
                 <CategoryRows
                     key={child.id}
                     category={child}
                     depth={depth + 1}
+                    index={childIdx}
+                    totalSiblings={category.children.length}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    sortMode={sortMode}
+                    onMove={onMove}
                 />
             ))}
         </>

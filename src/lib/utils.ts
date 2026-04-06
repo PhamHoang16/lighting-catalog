@@ -85,6 +85,16 @@ export function buildCategoryTree(categories: Category[]): CategoryWithChildren[
         }
     }
 
+    // 3. Sort roots and children by sort_order ascending
+    const sortBySortOrder = (a: CategoryWithChildren, b: CategoryWithChildren) =>
+        (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    roots.sort(sortBySortOrder);
+    for (const node of map.values()) {
+        if (node.children.length > 1) {
+            node.children.sort(sortBySortOrder);
+        }
+    }
+
     return roots;
 }
 

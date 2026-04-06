@@ -18,8 +18,8 @@ async function getCategoriesData() {
     const supabase = createStaticClient();
     const { data: allCategories } = await supabase
         .from("categories")
-        .select("id, name, slug, image_url, parent_id")
-        .order("name", { ascending: true });
+        .select("id, name, slug, image_url, parent_id, sort_order")
+        .order("sort_order", { ascending: true });
     
     return (allCategories as any[]) ?? [];
 }

@@ -25,6 +25,7 @@ export interface ProductPayload {
     description?: string | null;
     specs?: SpecItem[] | null;
     variants?: VariantsData | null;
+    is_best_seller?: boolean;
 }
 
 interface ProductFormModalProps {
@@ -50,6 +51,7 @@ export default function ProductFormModal({
     const [categoryId, setCategoryId] = useState("");
     const [brandId, setBrandId] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isBestSeller, setIsBestSeller] = useState(false);
 
     // Categories and Brands
     const [categories, setCategories] = useState<Category[]>([]);
@@ -101,6 +103,7 @@ export default function ProductFormModal({
             setDescription(editingProduct.description ?? "");
             setSpecs(editingProduct.specs ?? []);
             setVariants(editingProduct.variants ?? null);
+            setIsBestSeller(editingProduct.is_best_seller ?? false);
             // Image
             setThumbExisting(editingProduct.image_url ? [editingProduct.image_url] : []);
             setThumbPending([]);
@@ -131,6 +134,7 @@ export default function ProductFormModal({
         setDescription("");
         setSpecs([]);
         setVariants(null);
+        setIsBestSeller(false);
         setThumbExisting([]);
         setThumbPending([]);
         setGalleryExisting([]);
@@ -222,6 +226,7 @@ export default function ProductFormModal({
                 description: description.trim() || null,
                 specs: cleanSpecs.length > 0 ? cleanSpecs : null,
                 variants: finalVariants,
+                is_best_seller: isBestSeller,
             };
 
             await onSubmit(payload);
@@ -384,6 +389,32 @@ export default function ProductFormModal({
                                 </select>
                             )}
                         </div>
+                    </div>
+
+                    {/* Best seller toggle */}
+                    <div className="flex items-center gap-3 pt-1">
+                        <button
+                            type="button"
+                            onClick={() => setIsBestSeller(!isBestSeller)}
+                            disabled={loading}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-60 ${
+                                isBestSeller ? 'bg-orange-500' : 'bg-gray-200'
+                            }`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    isBestSeller ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                            />
+                        </button>
+                        <label className="text-sm font-medium text-gray-700 cursor-pointer" onClick={() => !loading && setIsBestSeller(!isBestSeller)}>
+                            Sản phẩm bán chạy
+                        </label>
+                        {isBestSeller && (
+                            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-600 ring-1 ring-orange-200">
+                                HOT
+                            </span>
+                        )}
                     </div>
                 </fieldset>
 

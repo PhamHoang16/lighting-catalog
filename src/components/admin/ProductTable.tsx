@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, PackageOpen, ImageOff } from "lucide-react";
+import { Pencil, Trash2, PackageOpen, ImageOff, Flame } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import PaginationControls from "@/components/ui/PaginationControls";
@@ -17,6 +17,7 @@ interface ProductTableProps {
     products: ProductWithCategory[];
     onEdit: (product: ProductWithCategory) => void;
     onDelete: (id: string) => Promise<void>;
+    onToggleBestSeller?: (id: string, current: boolean) => Promise<void>;
     pagination?: {
         currentPage: number;
         totalCount: number;
@@ -30,6 +31,7 @@ export default function ProductTable({
     products,
     onEdit,
     onDelete,
+    onToggleBestSeller,
     pagination,
 }: ProductTableProps) {
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -93,6 +95,9 @@ export default function ProductTable({
                                 <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
                                     Ngày tạo
                                 </th>
+                                <th className="whitespace-nowrap px-4 py-3.5 text-center font-semibold text-gray-600">
+                                    Bán chạy
+                                </th>
                                 <th className="whitespace-nowrap px-6 py-3.5 text-right font-semibold text-gray-600">
                                     Thao tác
                                 </th>
@@ -147,6 +152,21 @@ export default function ProductTable({
                                         {product.created_at
                                             ? formatDate(product.created_at)
                                             : "—"}
+                                    </td>
+
+                                    {/* Best seller toggle */}
+                                    <td className="whitespace-nowrap px-4 py-4 text-center">
+                                        <button
+                                            onClick={() => onToggleBestSeller?.(product.id, (product as any).is_best_seller ?? false)}
+                                            className={`rounded-lg p-2 transition-colors ${
+                                                (product as any).is_best_seller
+                                                    ? "bg-orange-50 text-orange-500 hover:bg-orange-100"
+                                                    : "text-gray-300 hover:bg-gray-50 hover:text-gray-400"
+                                            }`}
+                                            title={(product as any).is_best_seller ? "Bỏ bán chạy" : "Đánh dấu bán chạy"}
+                                        >
+                                            <Flame className={`h-4 w-4 ${(product as any).is_best_seller ? 'fill-current' : ''}`} />
+                                        </button>
                                     </td>
 
                                     {/* Thao tác */}

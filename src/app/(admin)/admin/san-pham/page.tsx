@@ -36,6 +36,7 @@ export default function AdminProductsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortIndex, setSortIndex] = useState(0); // default: "Mới nhất"
     const [filterCategoryId, setFilterCategoryId] = useState("");
+    const [bestSellerOnly, setBestSellerOnly] = useState(false);
 
     // ── Fetch products ──────────────────────────────────────────
     const fetchProducts = useCallback(async () => {
@@ -47,7 +48,7 @@ export default function AdminProductsPage() {
 
         let query = supabase
             .from("products")
-            .select("id, name, slug, price, image_url, category_id, brand_id, created_at, categories(name)", { count: "exact" });
+            .select("id, name, slug, price, image_url, category_id, brand_id, is_best_seller, created_at, categories(name)", { count: "exact" });
 
         // Search
         if (searchTerm) {
@@ -57,6 +58,11 @@ export default function AdminProductsPage() {
         // Filter by category
         if (filterCategoryId) {
             query = query.eq("category_id", filterCategoryId);
+        }
+
+        // Filter best sellers only
+        if (bestSellerOnly) {
+            query = query.eq("is_best_seller", true);
         }
 
         // Sort + pagination
@@ -73,12 +79,12 @@ export default function AdminProductsPage() {
             setTotalCount(count ?? 0);
         }
         setIsLoading(false);
-    }, [supabase, toast, currentPage, pageSize, searchTerm, sortIndex, filterCategoryId]);
+    }, [supabase, toast, currentPage, pageSize, searchTerm, sortIndex, filterCategoryId, bestSellerOnly]);
 
     useEffect(() => {
         fetchProducts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, pageSize, searchTerm, sortIndex, filterCategoryId]);
+    }, [currentPage, pageSize, searchTerm, sortIndex, filterCategoryId, bestSellerOnly]);
 
     // ── Search / Filter / Sort handlers ─────────────────────────
     // Khi thay đổi bất kỳ filter nào → reset về trang 0
@@ -94,6 +100,11 @@ export default function AdminProductsPage() {
 
     function handleCategoryChange(catId: string) {
         setFilterCategoryId(catId);
+        setCurrentPage(0);
+    }
+
+    function handleBestSellerChange(value: boolean) {
+        setBestSellerOnly(value);
         setCurrentPage(0);
     }
 
@@ -177,6 +188,27 @@ export default function AdminProductsPage() {
         }
     }
 
+    // ── Toggle best seller ──────────────────────────────────
+    async function handleToggleBestSeller(id: string, currentValue: boolean) {
+        const { error } = await supabase
+            .from("products")
+            .update({ is_best_seller: !currentValue })
+            .eq("id", id);
+
+        if (error) {
+            toast("Lỗi khi cập nhật: " + error.message, "error");
+        } else {
+            toast(
+                !currentValue
+                    ? "Đã đánh dấu sản phẩm bán chạy!"
+                    : "Đã bỏ đánh dấu bán chạy.",
+                "success"
+            );
+            fetchProducts();
+            await revalidateStorefront();
+        }
+    }
+
     // ── Open modals ─────────────────────────────────────────────
     function openCreate() {
         setSelectedProduct(null);
@@ -256,6 +288,8 @@ export default function AdminProductsPage() {
                 onSortChange={handleSortChange}
                 categoryId={filterCategoryId}
                 onCategoryChange={handleCategoryChange}
+                bestSellerOnly={bestSellerOnly}
+                onBestSellerChange={handleBestSellerChange}
             />
 
             {/* Content */}
@@ -269,6 +303,7 @@ export default function AdminProductsPage() {
                     products={products}
                     onEdit={openEdit}
                     onDelete={handleDeleteProduct}
+                    onToggleBestSeller={handleToggleBestSeller}
                     pagination={{
                         currentPage,
                         totalCount,

@@ -15,7 +15,7 @@ async function getFeaturedCategories() {
     const { data } = await supabase
         .from("categories")
         .select("id, name, slug")
-        .order("created_at", { ascending: true })
+        .order("sort_order", { ascending: true })
         .limit(4);
     return data ?? [];
 }

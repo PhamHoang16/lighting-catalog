@@ -109,7 +109,8 @@ export default function AdminPostsPage() {
 
         toast("Đã cập nhật bài viết thành công!", "success");
         setFormOpen(false);
-        setEditingPost(null);
+        // Update editingPost from the mutation response — avoids stale-read on next edit
+        setEditingPost(data[0] as Post ?? null);
         fetchPosts();
     }
 

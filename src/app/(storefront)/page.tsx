@@ -14,7 +14,8 @@ export default async function HomePage() {
     // 1. Fetch only essential category fields
     const { data: allCategories = [] } = await supabase
         .from("categories")
-        .select("id, name, slug, parent_id, image_url, sort_order");
+        .select("id, name, slug, parent_id, image_url, sort_order")
+        .order("sort_order", { ascending: true });
     
     const categoryMap = new Map((allCategories ?? []).map(c => [c.id, c]));
 
@@ -72,7 +73,9 @@ export default async function HomePage() {
 
         return {
             category: parent as any,
-            subcategories: (allCategories ?? []).filter(c => c.parent_id === parent.id) as any,
+            subcategories: (allCategories ?? [])
+                .filter(c => c.parent_id === parent.id)
+                .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)) as any,
             products: products as any,
         };
     });

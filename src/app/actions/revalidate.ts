@@ -34,3 +34,11 @@ export async function revalidateCategory(slug: string) {
     revalidatePath("/", "layout");
     revalidatePath("/danh-muc", "layout");
 }
+
+export async function revalidatePost(slug?: string) {
+    if (slug) {
+        revalidatePath(`/tin-tuc/${slug}`);
+    }
+    revalidatePath("/tin-tuc");
+    revalidatePath("/", "layout");
+}

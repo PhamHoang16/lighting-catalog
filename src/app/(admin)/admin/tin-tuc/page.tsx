@@ -8,6 +8,7 @@ import PostTable from "@/components/admin/PostTable";
 import PostFormModal, { type PostFormData } from "@/components/admin/PostFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Post } from "@/lib/types/database";
+import { revalidatePost } from "@/app/actions/revalidate";
 
 export default function AdminPostsPage() {
     const supabase = createClient();
@@ -73,6 +74,10 @@ export default function AdminPostsPage() {
             return;
         }
 
+        if (data[0]) {
+            await revalidatePost(data[0].slug);
+        }
+
         toast("Đã thêm bài viết thành công!", "success");
         setFormOpen(false);
         fetchPosts();
@@ -107,6 +112,10 @@ export default function AdminPostsPage() {
             return;
         }
 
+        if (data[0]) {
+            await revalidatePost(data[0].slug);
+        }
+
         toast("Đã cập nhật bài viết thành công!", "success");
         setFormOpen(false);
         // Update editingPost from the mutation response — avoids stale-read on next edit
@@ -130,6 +139,9 @@ export default function AdminPostsPage() {
         } else if (!data || data.length === 0) {
             toast("Không thể xoá do giới hạn quyền (Hãy chạy SQL Policy)", "error");
         } else {
+            if (deletingPost) {
+                await revalidatePost(deletingPost.slug);
+            }
             toast("Đã xóa bài viết thành công!", "success");
             fetchPosts();
         }

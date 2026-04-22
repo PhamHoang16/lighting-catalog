@@ -48,7 +48,7 @@ export default function AdminProductsPage() {
 
         let query = supabase
             .from("products")
-            .select("id, name, slug, price, image_url, category_id, brand_id, is_best_seller, created_at, categories(name)", { count: "exact" });
+            .select("id, name, slug, price, image_url, category_id, brand_id, is_best_seller, sort_order, created_at, categories(name)", { count: "exact" });
 
         // Search
         if (searchTerm) {
@@ -209,6 +209,22 @@ export default function AdminProductsPage() {
         }
     }
 
+    // ── Update sort order ───────────────────────────────────────
+    async function handleUpdateSortOrder(id: string, sortOrder: number) {
+        const { error } = await supabase
+            .from("products")
+            .update({ sort_order: sortOrder })
+            .eq("id", id);
+
+        if (error) {
+            toast("Lỗi khi cập nhật thứ tự: " + error.message, "error");
+            throw error;
+        }
+        toast("Đã cập nhật thứ tự hiển thị!", "success");
+        fetchProducts();
+        await revalidateStorefront();
+    }
+
     // ── Open modals ─────────────────────────────────────────────
     function openCreate() {
         setSelectedProduct(null);
@@ -304,6 +320,7 @@ export default function AdminProductsPage() {
                     onEdit={openEdit}
                     onDelete={handleDeleteProduct}
                     onToggleBestSeller={handleToggleBestSeller}
+                    onUpdateSortOrder={handleUpdateSortOrder}
                     pagination={{
                         currentPage,
                         totalCount,

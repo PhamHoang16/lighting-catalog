@@ -19,6 +19,7 @@ export const SORT_OPTIONS: SortOption[] = [
     { label: "Giá giảm dần", column: "price", ascending: false },
     { label: "Tên A → Z", column: "name", ascending: true },
     { label: "Tên Z → A", column: "name", ascending: false },
+    { label: "Thứ tự hiển thị", column: "sort_order", ascending: true },
 ];
 
 // ── Props ───────────────────────────────────────────────────────

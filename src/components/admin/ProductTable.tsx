@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Trash2, PackageOpen, ImageOff, Flame } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Pencil, Trash2, PackageOpen, ImageOff, Flame, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import PaginationControls from "@/components/ui/PaginationControls";
@@ -18,6 +18,7 @@ interface ProductTableProps {
     onEdit: (product: ProductWithCategory) => void;
     onDelete: (id: string) => Promise<void>;
     onToggleBestSeller?: (id: string, current: boolean) => Promise<void>;
+    onUpdateSortOrder?: (id: string, value: number) => Promise<void>;
     pagination?: {
         currentPage: number;
         totalCount: number;
@@ -32,6 +33,7 @@ export default function ProductTable({
     onEdit,
     onDelete,
     onToggleBestSeller,
+    onUpdateSortOrder,
     pagination,
 }: ProductTableProps) {
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -95,6 +97,12 @@ export default function ProductTable({
                                 <th className="whitespace-nowrap px-6 py-3.5 font-semibold text-gray-600">
                                     Ngày tạo
                                 </th>
+                                <th
+                                    className="whitespace-nowrap px-4 py-3.5 text-center font-semibold text-gray-600 cursor-help"
+                                    title="Thứ tự hiển thị trên storefront. Số nhỏ hơn = hiển thị trước. Mặc định 0 = sắp xếp theo ngày tạo."
+                                >
+                                    Thứ tự ↕
+                                </th>
                                 <th className="whitespace-nowrap px-4 py-3.5 text-center font-semibold text-gray-600">
                                     Bán chạy
                                 </th>
@@ -152,6 +160,15 @@ export default function ProductTable({
                                         {product.created_at
                                             ? formatDate(product.created_at)
                                             : "—"}
+                                    </td>
+
+                                    {/* Thứ tự hiển thị */}
+                                    <td className="whitespace-nowrap px-4 py-3 text-center">
+                                        <SortOrderCell
+                                            productId={product.id}
+                                            sortOrder={(product as any).sort_order ?? 0}
+                                            onSave={onUpdateSortOrder}
+                                        />
                                     </td>
 
                                     {/* Best seller toggle */}
@@ -222,6 +239,90 @@ export default function ProductTable({
                 loading={deleting}
             />
         </>
+    );
+}
+
+// ── Sort order inline-edit cell ─────────────────────────────────
+function SortOrderCell({
+    productId,
+    sortOrder,
+    onSave,
+}: {
+    productId: string;
+    sortOrder: number;
+    onSave?: (id: string, value: number) => Promise<void>;
+}) {
+    const [editing, setEditing] = useState(false);
+    const [value, setValue] = useState(String(sortOrder));
+    const [saving, setSaving] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setValue(String(sortOrder));
+    }, [sortOrder]);
+
+    useEffect(() => {
+        if (editing) inputRef.current?.select();
+    }, [editing]);
+
+    async function handleSave() {
+        const num = parseInt(value, 10);
+        if (isNaN(num) || num === sortOrder) {
+            setEditing(false);
+            setValue(String(sortOrder));
+            return;
+        }
+        setSaving(true);
+        try {
+            await onSave?.(productId, num);
+        } catch {
+            setValue(String(sortOrder));
+        }
+        setSaving(false);
+        setEditing(false);
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (e.key === "Enter") { e.preventDefault(); handleSave(); }
+        else if (e.key === "Escape") { setEditing(false); setValue(String(sortOrder)); }
+    }
+
+    if (saving) {
+        return (
+            <div className="flex h-8 w-14 items-center justify-center mx-auto">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+            </div>
+        );
+    }
+
+    if (editing) {
+        return (
+            <input
+                ref={inputRef}
+                type="number"
+                min={0}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+                className="mx-auto block w-16 rounded-lg border border-blue-400 bg-white px-2 py-1 text-center text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                autoFocus
+            />
+        );
+    }
+
+    return (
+        <button
+            onClick={() => setEditing(true)}
+            title="Nhấn để chỉnh thứ tự. Số nhỏ hơn = hiển thị trước. 0 = mặc định theo ngày tạo."
+            className={`mx-auto flex h-8 w-14 items-center justify-center rounded-lg text-sm font-semibold transition-all hover:ring-2 hover:ring-blue-400/40 ${
+                sortOrder === 0
+                    ? "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                    : "bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
+            }`}
+        >
+            {sortOrder === 0 ? "—" : sortOrder}
+        </button>
     );
 }
 

@@ -2,9 +2,10 @@
 
 import { ArrowUpDown } from "lucide-react";
 
-export type SortOption = "newest" | "oldest" | "price-asc" | "price-desc";
+export type SortOption = "featured" | "newest" | "oldest" | "price-asc" | "price-desc";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "featured", label: "Nổi bật" },
     { value: "newest", label: "Mới nhất" },
     { value: "oldest", label: "Cũ nhất" },
     { value: "price-asc", label: "Giá tăng dần" },

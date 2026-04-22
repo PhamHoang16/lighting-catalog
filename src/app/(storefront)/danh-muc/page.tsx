@@ -96,11 +96,16 @@ async function getProductsRaw(
 
     // Sorting
     switch (sort) {
+        case "newest": productsQuery = productsQuery.order("created_at", { ascending: false }); break;
         case "oldest": productsQuery = productsQuery.order("created_at", { ascending: true }); break;
         case "price-asc": productsQuery = productsQuery.order("price", { ascending: true }); break;
         case "price-desc": productsQuery = productsQuery.order("price", { ascending: false }); break;
-        case "newest":
-        default: productsQuery = productsQuery.order("created_at", { ascending: false }); break;
+        case "featured":
+        default:
+            productsQuery = productsQuery
+                .order("sort_order", { ascending: true })
+                .order("created_at", { ascending: false });
+            break;
     }
 
     // Pagination
@@ -127,7 +132,7 @@ const getProducts = unstable_cache(
         searchQuery?: string,
         page: number = 1,
         limit: number = 20,
-        sort: string = "newest"
+        sort: string = "featured"
     ) => {
         const brands = JSON.parse(brandsSerialized);
         const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(",") : undefined;
@@ -182,7 +187,7 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
     const pageParam = search.page;
     const currentPage = typeof pageParam === "string" ? parseInt(pageParam, 10) : 1;
     const sortParam = search.sort;
-    const currentSort = typeof sortParam === "string" ? sortParam : "newest";
+    const currentSort = typeof sortParam === "string" ? sortParam : "featured";
 
     // Parse test search query
     const qParam = search.q;

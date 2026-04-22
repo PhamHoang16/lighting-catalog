@@ -102,6 +102,7 @@ export interface Database {
                     category_id: string;
                     brand_id: string | null;
                     is_best_seller: boolean;
+                    sort_order: number;
                     created_at: string;
                 };
                 Insert: {
@@ -117,6 +118,7 @@ export interface Database {
                     category_id: string;
                     brand_id?: string | null;
                     is_best_seller?: boolean;
+                    sort_order?: number;
                     created_at?: string;
                 };
                 Update: {
@@ -132,6 +134,7 @@ export interface Database {
                     category_id?: string;
                     brand_id?: string | null;
                     is_best_seller?: boolean;
+                    sort_order?: number;
                     created_at?: string;
                 };
             };

@@ -51,12 +51,20 @@ export default async function StorefrontFooter() {
                             </li>
                             <li className="flex items-center gap-2.5">
                                 <Phone className="h-4 w-4 shrink-0 text-amber-500" />
-                                <a
-                                    href={siteConfig.contact.hotlineHref}
-                                    className="transition-colors hover:text-white"
-                                >
-                                    {siteConfig.contact.hotline}
-                                </a>
+                                <div className="flex flex-col gap-0.5">
+                                    <a
+                                        href={siteConfig.contact.hotlineHref}
+                                        className="transition-colors hover:text-white"
+                                    >
+                                        {siteConfig.contact.hotline}
+                                    </a>
+                                    <a
+                                        href={`tel:${siteConfig.contact.hotline2.replace(/\s/g, "")}`}
+                                        className="transition-colors hover:text-white"
+                                    >
+                                        {siteConfig.contact.hotline2}
+                                    </a>
+                                </div>
                             </li>
                             <li className="flex items-center gap-2.5">
                                 <Mail className="h-4 w-4 shrink-0 text-amber-500" />
@@ -145,7 +153,7 @@ export default async function StorefrontFooter() {
                         <div className="overflow-hidden rounded-lg border border-gray-700">
                             <iframe
                                 title="Bản đồ"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3920.0545!2d106.7!3d10.7333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ0JzAwLjAiTiAxMDbCsDQyJzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1"
+                                src="https://maps.google.com/maps?q=21.0546381,105.7452889&z=17&hl=vi&output=embed"
                                 width="100%"
                                 height="140"
                                 style={{ border: 0 }}

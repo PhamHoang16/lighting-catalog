@@ -1,25 +1,25 @@
 export const siteConfig = {
-    name: "Lighting Catalog",
+    name: "Led Xinh",
     description:
         "Hệ thống trưng bày sản phẩm chiếu sáng chuyên nghiệp. Đặt hàng trực tuyến và tư vấn miễn phí.",
     url: "https://lighting-catalog.vn",
 
     // ── Thông tin liên hệ (hardcode) ──────────────────────────────
     contact: {
-        hotline: "0909 123 456",
-        hotline2: "0909 123 456",
-        hotlineHref: "tel:0909123456",
-        zalo: "0909 123 456",
-        zaloHref: "https://zalo.me/0909123456",
+        hotline: "0905 629 333",
+        hotline2: "0984 679 286",
+        hotlineHref: "tel:0905629333",
+        zalo: "0905 629 333",
+        zaloHref: "https://zalo.me/0905629333",
         facebook: "https://www.facebook.com/lightingcatalog",
-        email: "hoangpham1618@gmail.com",
-        address: "48 P. Văn Trì, Minh Khai, Bắc Từ Liêm, Hà Nội, Việt Nam",
+        email: "ledxinh548@gmail.com",
+        address: "48 P. Văn Trì, Minh Khai, Tây Tựu, Hà Nội, Việt Nam",
         workingHours: "Thứ 2 - Thứ 7: 8:00 - 18:00",
     },
 
     // ── SEO defaults ──────────────────────────────────────────────
     seo: {
-        title: "Lighting Catalog - Giải pháp chiếu sáng chuyên nghiệp",
+        title: "Led Xinh - Giải pháp chiếu sáng chuyên nghiệp",
         description:
             "Khám phá bộ sưu tập đèn chiếu sáng đa dạng. Đặt hàng trực tuyến và tư vấn miễn phí từ đội ngũ chuyên gia.",
         keywords: [

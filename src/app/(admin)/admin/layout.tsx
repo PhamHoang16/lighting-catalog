@@ -5,7 +5,7 @@ import AdminShell from "@/components/admin/AdminShell";
 export const metadata: Metadata = {
     title: {
         default: "Admin Dashboard",
-        template: "%s | Admin - Lighting Catalog",
+        template: "%s | Admin - Led Xinh",
     },
     robots: {
         index: false,

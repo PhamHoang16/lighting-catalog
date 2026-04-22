@@ -28,6 +28,8 @@ const CONTACT_INFO = [
         label: "Hotline",
         value: siteConfig.contact.hotline,
         href: siteConfig.contact.hotlineHref,
+        value2: siteConfig.contact.hotline2,
+        href2: `tel:${siteConfig.contact.hotline2.replace(/\s/g, "")}`,
     },
     {
         icon: Mail,
@@ -105,6 +107,14 @@ export default function ContactPage() {
                                 <p className="mt-1 text-sm font-semibold text-gray-900">
                                     {info.value}
                                 </p>
+                            )}
+                            {"value2" in info && info.value2 && info.href2 && (
+                                <a
+                                    href={info.href2}
+                                    className="mt-0.5 block text-sm font-semibold text-gray-900 transition-colors hover:text-amber-600"
+                                >
+                                    {info.value2}
+                                </a>
                             )}
                         </div>
                     ))}
@@ -249,7 +259,7 @@ export default function ContactPage() {
                             {/* Map */}
                             <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
                                 <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3920.024!2d106.7!3d10.73!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQzJzQ4LjAiTiAxMDbCsDQyJzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1700000000000!5m2!1svi!2svn"
+                                    src="https://maps.google.com/maps?q=21.0546381,105.7452889&z=17&hl=vi&output=embed"
                                     width="100%"
                                     height="300"
                                     style={{ border: 0 }}
@@ -269,13 +279,22 @@ export default function ContactPage() {
                                 <p className="mt-1 text-xs text-gray-500">
                                     Gọi hotline để được hỗ trợ trực tiếp.
                                 </p>
-                                <a
-                                    href={siteConfig.contact.hotlineHref}
-                                    className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/25 transition-all hover:from-amber-600 hover:to-orange-700"
-                                >
-                                    <Phone className="h-4 w-4" />
-                                    {siteConfig.contact.hotline}
-                                </a>
+                                <div className="mt-3 flex flex-col gap-2">
+                                    <a
+                                        href={siteConfig.contact.hotlineHref}
+                                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/25 transition-all hover:from-amber-600 hover:to-orange-700"
+                                    >
+                                        <Phone className="h-4 w-4" />
+                                        {siteConfig.contact.hotline}
+                                    </a>
+                                    <a
+                                        href={`tel:${siteConfig.contact.hotline2.replace(/\s/g, "")}`}
+                                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-amber-500/25 transition-all hover:from-amber-600 hover:to-orange-700"
+                                    >
+                                        <Phone className="h-4 w-4" />
+                                        {siteConfig.contact.hotline2}
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -56,7 +56,7 @@ export default function LoginPage() {
                         </div>
                         <div className="text-center">
                             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                Lighting Catalog
+                                Led Xinh
                             </h1>
                             <p className="mt-1 text-sm text-gray-500">
                                 Đăng nhập vào trang quản trị
@@ -145,7 +145,7 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <p className="mt-6 text-center text-xs text-gray-400">
-                    © 2026 Lighting Catalog. Hệ thống quản trị nội bộ.
+                    © 2026 Led Xinh. Hệ thống quản trị nội bộ.
                 </p>
             </div>
         </div>

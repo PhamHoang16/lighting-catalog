@@ -62,16 +62,7 @@ export default async function StorefrontHeader() {
                 <div className="bg-white px-6">
                     <div className="mx-auto flex h-28 max-w-[1440px] items-center gap-12">
                         <Link href="/" className="group shrink-0 transition-opacity hover:opacity-80 flex flex-col justify-center">
-                            {/* 
-                              Thay thế cấu trúc text này bằng thẻ img logo thực tế của bạn khi có file:
-                              <img src="/logo-ngang.png" className="h-12 w-auto object-contain" alt="Logo" />
-                            */}
-                            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
-                                {siteConfig.name}
-                            </h1>
-                            <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] text-gray-500 mt-1 uppercase hidden sm:block">
-                                THƯƠNG HIỆU ĐÈN SỐ 1
-                            </span>
+                            <img src="/logo.jpg" className="h-20 w-auto object-contain" alt="LED Xinh Logo" />
                         </Link>
 
                         {/* Box Giữa: Thanh Search Dài */}
@@ -272,9 +263,7 @@ export default async function StorefrontHeader() {
 
                     {/* Logo (Center) */}
                     <Link href="/" className="flex items-center justify-center transition-opacity hover:opacity-80">
-                        <h1 className="text-xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 whitespace-nowrap">
-                            {siteConfig.name}
-                        </h1>
+                        <img src="/logo.jpg" className="h-10 w-auto object-contain" alt="LED Xinh Logo" />
                     </Link>
 
                     {/* Actions (Right) Search & Cart */}

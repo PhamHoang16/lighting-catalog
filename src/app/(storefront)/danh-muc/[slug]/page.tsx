@@ -193,7 +193,7 @@ const getProducts = unstable_cache(
         return getProductsRaw(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, page, limit, sort);
     },
     ["category-detail-products"],
-    { revalidate: 60, tags: ["products"] }
+    { revalidate: 3600, tags: ["products"] }
 );
 
 // ── Intermediate Server Components for Suspense ────────────────

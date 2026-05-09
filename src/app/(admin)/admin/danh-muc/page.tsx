@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import { Plus, Loader2, FolderTree, RefreshCw, ArrowUpDown, Check, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import CategoryTable from "@/components/admin/CategoryTable";
 import CategoryFormModal, { type CategoryFormData } from "@/components/admin/CategoryFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Category } from "@/lib/types/database";
-import { revalidateCategory, revalidateStorefront } from "@/app/actions/revalidate";
+import {
+    getCategoriesAction,
+    getCategoryByIdAction,
+    saveCategoryAction,
+    deleteCategoryAction,
+    saveCategorySortOrderAction,
+} from "@/app/actions/admin";
 
 export default function AdminCategoriesPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     // ── State ───────────────────────────────────────────────────
     const [categories, setCategories] = useState<Category[]>([]);
@@ -28,26 +33,21 @@ export default function AdminCategoriesPage() {
     const [deleting, setDeleting] = useState(false);
 
     // ── Inline sort state ────────────────────────────────────────
-    // Local copy of categories for reordering (without hitting the server)
     const [sortMode, setSortMode] = useState(false);
     const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
     const [saving, setSaving] = useState(false);
 
-    // ── Fetch categories (Thin Row) ────────────────────────────
+    // ── Fetch categories ────────────────────────────────────────
     const fetchCategories = useCallback(async () => {
         setLoadingData(true);
-        const { data, error } = await supabase
-            .from("categories")
-            .select("id, name, slug, parent_id, image_url, sort_order, created_at")
-            .order("sort_order", { ascending: true });
-
-        if (error) {
-            toast("Không thể tải danh mục: " + error.message, "error");
-        } else {
-            setCategories((data as any[]) ?? []);
+        try {
+            const data = await getCategoriesAction();
+            setCategories(data as Category[]);
+        } catch (e) {
+            toast("Không thể tải danh mục: " + (e as Error).message, "error");
         }
         setLoadingData(false);
-    }, [supabase, toast]);
+    }, [toast]);
 
     useEffect(() => {
         fetchCategories();
@@ -56,69 +56,55 @@ export default function AdminCategoriesPage() {
 
     // ── Create ──────────────────────────────────────────────────
     async function handleCreate(formData: CategoryFormData) {
-        const siblings = categories.filter(
-            (c) => c.parent_id === formData.parent_id
-        );
-        const maxSortOrder = siblings.reduce(
-            (max, c) => Math.max(max, c.sort_order ?? 0),
-            -1
-        );
+        const siblings = categories.filter(c => c.parent_id === formData.parent_id);
 
-        const { error } = await supabase
-            .from("categories")
-            .insert({
-                name: formData.name,
-                slug: formData.slug,
-                parent_id: formData.parent_id,
-                image_url: formData.image_url,
-                description: formData.description,
-                sort_order: maxSortOrder + 1,
-            });
+        const result = await saveCategoryAction(null, {
+            name: formData.name,
+            slug: formData.slug,
+            parent_id: formData.parent_id,
+            image_url: formData.image_url,
+            description: formData.description,
+        });
 
-        if (error) {
-            if (error.code === "23505") {
+        if (result?.error) {
+            if (result.error.includes("Slug")) {
                 toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
             } else {
-                toast("Lỗi khi thêm danh mục: " + error.message, "error");
+                toast("Lỗi khi thêm danh mục: " + result.error, "error");
             }
-            throw error;
+            throw new Error(result.error);
         }
 
         toast("Đã thêm danh mục thành công!", "success");
         setFormOpen(false);
-        fetchCategories();
-        await revalidateStorefront();
+        startTransition(() => { fetchCategories(); });
     }
 
     // ── Update ──────────────────────────────────────────────────
     async function handleUpdate(formData: CategoryFormData) {
         if (!editingCategory) return;
 
-        const { error } = await supabase
-            .from("categories")
-            .update({
-                name: formData.name,
-                slug: formData.slug,
-                parent_id: formData.parent_id,
-                image_url: formData.image_url,
-                description: formData.description,
-            })
-            .eq("id", editingCategory.id);
+        const result = await saveCategoryAction(editingCategory.id, {
+            name: formData.name,
+            slug: formData.slug,
+            parent_id: formData.parent_id,
+            image_url: formData.image_url,
+            description: formData.description,
+        });
 
-        if (error) {
-            if (error.code === "23505") {
+        if (result?.error) {
+            if (result.error.includes("Slug")) {
                 toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
             } else {
-                toast("Lỗi khi cập nhật: " + error.message, "error");
+                toast("Lỗi khi cập nhật: " + result.error, "error");
             }
-            throw error;
+            throw new Error(result.error);
         }
 
         toast("Đã cập nhật danh mục thành công!", "success");
         setEditingCategory(null);
         setFormOpen(false);
-        fetchCategories();
-        await revalidateCategory(formData.slug);
+        startTransition(() => { fetchCategories(); });
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -126,22 +112,18 @@ export default function AdminCategoriesPage() {
         if (!deletingCategory) return;
         setDeleting(true);
 
-        const { error } = await supabase
-            .from("categories")
-            .delete()
-            .eq("id", deletingCategory.id);
+        const result = await deleteCategoryAction(deletingCategory.id);
 
-        if (error) {
-            toast("Lỗi khi xóa: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi xóa: " + result.error, "error");
         } else {
             toast(`Đã xóa danh mục "${deletingCategory.name}".`, "success");
-            await revalidateCategory(deletingCategory.slug);
+            startTransition(() => { fetchCategories(); });
         }
 
         setDeleting(false);
         setConfirmOpen(false);
         setDeletingCategory(null);
-        fetchCategories();
     }
 
     // ── Open modals ─────────────────────────────────────────────
@@ -151,17 +133,11 @@ export default function AdminCategoriesPage() {
     }
 
     async function openEdit(category: Category) {
-        const { data, error } = await supabase
-            .from("categories")
-            .select("*")
-            .eq("id", category.id)
-            .single();
-
-        if (error) {
-            toast("Không thể lấy thông tin chi tiết: " + error.message, "error");
+        const data = await getCategoryByIdAction(category.id);
+        if (!data) {
+            toast("Không thể lấy thông tin chi tiết.", "error");
             return;
         }
-
         setEditingCategory(data as Category);
         setFormOpen(true);
     }
@@ -173,7 +149,6 @@ export default function AdminCategoriesPage() {
 
     // ── Inline sort: enter/exit sort mode ───────────────────────
     function enterSortMode() {
-        // Clone current list as local working copy
         setSortedCategories([...categories]);
         setSortMode(true);
     }
@@ -183,10 +158,8 @@ export default function AdminCategoriesPage() {
         setSortedCategories([]);
     }
 
-    // Move a category up or down among its siblings (local state only)
     function handleMove(id: string, direction: "up" | "down", parentId: string | null) {
         setSortedCategories((prev) => {
-            // 1. Get siblings sorted by their current sort_order (= visual order in tree)
             const siblings = [...prev]
                 .filter((c) => c.parent_id === parentId)
                 .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
@@ -197,29 +170,21 @@ export default function AdminCategoriesPage() {
             const swapIdx = direction === "up" ? idx - 1 : idx + 1;
             if (swapIdx < 0 || swapIdx >= siblings.length) return prev;
 
-            // 2. Assign clean sequential sort_orders (0, 1, 2...) so values are never ambiguous
             const reordered = siblings.map((c, i) => ({ ...c, sort_order: i }));
-
-            // 3. Swap the two items
             const tmp = reordered[idx].sort_order;
             reordered[idx] = { ...reordered[idx], sort_order: reordered[swapIdx].sort_order };
             reordered[swapIdx] = { ...reordered[swapIdx], sort_order: tmp };
 
-            // 4. Build lookup map of updated sort_orders
             const newOrders = new Map(reordered.map((c) => [c.id, c.sort_order]));
-
-            // 5. Apply back to full list (non-siblings untouched)
             return prev.map((c) =>
                 newOrders.has(c.id) ? { ...c, sort_order: newOrders.get(c.id)! } : c
             );
         });
     }
 
-    // Save the reordered list to Supabase
     async function handleSaveSort() {
         setSaving(true);
         try {
-            // Group by parent, renumber sequentially per group
             const parentGroups = new Map<string, Category[]>();
             for (const cat of sortedCategories) {
                 const key = cat.parent_id ?? "__root__";
@@ -235,28 +200,20 @@ export default function AdminCategoriesPage() {
                 sorted.forEach((cat, idx) => updates.push({ id: cat.id, sort_order: idx }));
             }
 
-            // Batch update (parallel)
-            const results = await Promise.all(
-                updates.map(({ id, sort_order }) =>
-                    supabase.from("categories").update({ sort_order }).eq("id", id)
-                )
-            );
-
-            if (results.some((r) => r.error)) {
-                toast("Có lỗi khi cập nhật thứ tự.", "error");
+            const result = await saveCategorySortOrderAction(updates);
+            if (result?.error) {
+                toast("Có lỗi khi cập nhật thứ tự: " + result.error, "error");
             } else {
                 toast("Đã lưu thứ tự danh mục!", "success");
                 setSortMode(false);
                 setSortedCategories([]);
-                fetchCategories();
-                await revalidateStorefront();
+                startTransition(() => { fetchCategories(); });
             }
         } finally {
             setSaving(false);
         }
     }
 
-    // Which list to display: sorted copy (sort mode) or server data
     const displayCategories = sortMode ? sortedCategories : categories;
 
     // ── Render ──────────────────────────────────────────────────
@@ -281,7 +238,7 @@ export default function AdminCategoriesPage() {
                         <>
                             <button
                                 onClick={fetchCategories}
-                                disabled={loadingData}
+                                disabled={loadingData || isPending}
                                 className="rounded-lg border border-gray-300 bg-white p-2.5 text-gray-500 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
                                 title="Tải lại"
                             >

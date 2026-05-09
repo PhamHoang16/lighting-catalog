@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import { Plus, Loader2, Images, RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import BannerTable from "@/components/admin/BannerTable";
 import BannerFormModal, { type BannerFormData } from "@/components/admin/BannerFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Banner } from "@/lib/types/database";
+import {
+    getBannersAction,
+    saveBannerAction,
+    deleteBannerAction,
+} from "@/app/actions/admin";
 
 export default function AdminBannersPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     // ── State ───────────────────────────────────────────────────
     const [banners, setBanners] = useState<Banner[]>([]);
@@ -29,19 +33,14 @@ export default function AdminBannersPage() {
     // ── Fetch banners ───────────────────────────────────────────
     const fetchBanners = useCallback(async () => {
         setLoadingData(true);
-        const { data, error } = await supabase
-            .from("banners")
-            .select("id, title, image_url, link_url, sort_order, is_active, created_at")
-            .order("sort_order", { ascending: true })
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            toast("Không thể tải banner: " + error.message, "error");
-        } else {
-            setBanners(data ?? []);
+        try {
+            const data = await getBannersAction();
+            setBanners(data);
+        } catch (e) {
+            toast("Không thể tải banner: " + (e as Error).message, "error");
         }
         setLoadingData(false);
-    }, [supabase, toast]);
+    }, [toast]);
 
     useEffect(() => {
         fetchBanners();
@@ -50,62 +49,45 @@ export default function AdminBannersPage() {
 
     // ── Create ──────────────────────────────────────────────────
     async function handleCreate(formData: BannerFormData) {
-        const { data, error } = await supabase
-            .from("banners")
-            .insert({
-                title: formData.title,
-                image_url: formData.image_url,
-                link_url: formData.link_url,
-                is_active: formData.is_active,
-                sort_order: formData.sort_order,
-            })
-            .select();
+        const result = await saveBannerAction(null, {
+            title: formData.title,
+            image_url: formData.image_url,
+            link_url: formData.link_url,
+            is_active: formData.is_active,
+            sort_order: formData.sort_order,
+        });
 
-        if (error) {
-            toast("Lỗi khi thêm banner: " + error.message, "error");
-            throw error;
-        }
-        
-        if (!data || data.length === 0) {
-            toast("Thêm thất bại do lỗi phân quyền (Hãy chạy SQL Policy)", "error");
-            return;
+        if (result?.error) {
+            toast("Lỗi khi thêm banner: " + result.error, "error");
+            throw new Error(result.error);
         }
 
         toast("Đã thêm banner thành công!", "success");
         setFormOpen(false);
-        fetchBanners();
+        startTransition(() => { fetchBanners(); });
     }
 
     // ── Update ──────────────────────────────────────────────────
     async function handleUpdate(formData: BannerFormData) {
         if (!editingBanner) return;
 
-        const { data, error } = await supabase
-            .from("banners")
-            .update({
-                title: formData.title,
-                image_url: formData.image_url,
-                link_url: formData.link_url,
-                is_active: formData.is_active,
-                sort_order: formData.sort_order,
-            })
-            .eq("id", editingBanner.id)
-            .select();
+        const result = await saveBannerAction(editingBanner.id, {
+            title: formData.title,
+            image_url: formData.image_url,
+            link_url: formData.link_url,
+            is_active: formData.is_active,
+            sort_order: formData.sort_order,
+        });
 
-        if (error) {
-            toast("Lỗi khi cập nhật banner: " + error.message, "error");
-            throw error;
-        }
-        
-        if (!data || data.length === 0) {
-            toast("Cập nhật thất bại do lỗi phân quyền (Hãy chạy SQL Policy)", "error");
-            return;
+        if (result?.error) {
+            toast("Lỗi khi cập nhật banner: " + result.error, "error");
+            throw new Error(result.error);
         }
 
         toast("Đã cập nhật banner thành công!", "success");
         setFormOpen(false);
         setEditingBanner(null);
-        fetchBanners();
+        startTransition(() => { fetchBanners(); });
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -113,19 +95,13 @@ export default function AdminBannersPage() {
         if (!deletingBanner) return;
 
         setDeleting(true);
-        const { data, error } = await supabase
-            .from("banners")
-            .delete()
-            .eq("id", deletingBanner.id)
-            .select();
+        const result = await deleteBannerAction(deletingBanner.id);
 
-        if (error) {
-            toast("Lỗi khi xóa banner: " + error.message, "error");
-        } else if (!data || data.length === 0) {
-            toast("Không thể xoá do giới hạn quyền (Hãy chạy SQL Policy đã hướng dẫn)", "error");
+        if (result?.error) {
+            toast("Lỗi khi xóa banner: " + result.error, "error");
         } else {
             toast("Đã xóa banner thành công!", "success");
-            fetchBanners();
+            startTransition(() => { fetchBanners(); });
         }
 
         setDeleting(false);
@@ -171,7 +147,7 @@ export default function AdminBannersPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchBanners}
-                        disabled={loadingData}
+                        disabled={loadingData || isPending}
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
                     >
                         <RefreshCw

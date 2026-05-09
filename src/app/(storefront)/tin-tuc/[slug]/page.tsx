@@ -2,39 +2,22 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Calendar, ArrowLeft, Newspaper } from "lucide-react";
 import Link from "next/link";
-import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { formatDate } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
+import { getPostBySlug, getPostSlugs } from "@/lib/db/queries/posts";
 import type { Post } from "@/lib/types/database";
 
 export const revalidate = 86400; // 1 day - max caching for egress protection
 
 export async function generateStaticParams() {
-    const supabase = createStaticClient();
-    const { data: posts } = await supabase
-        .from("posts")
-        .select("slug")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-    return (posts ?? []).map((post) => ({
-        slug: post.slug,
-    }));
+    const slugs = await getPostSlugs(10);
+    return slugs.map((p) => ({ slug: p.slug }));
 }
 
-// ── Fetch ───────────────────────────────────────────────────────
-async function getPost(slug: string) {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("slug", slug)
-        .eq("is_published", true)
-        .single();
-
-    return data as Post | null;
+// ── Fetch ──────────────────────────────────────────────────
+async function getPost(slug: string): Promise<Post | null> {
+    return getPostBySlug(slug);
 }
 
 // ── SEO ─────────────────────────────────────────────────────────

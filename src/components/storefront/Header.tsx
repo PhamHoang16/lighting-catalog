@@ -2,25 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, ShieldCheck, Truck, Menu, Search, ChevronDown, Home, ChevronRight } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
-import { createStaticClient } from "@/lib/supabase/static";
-import { buildCategoryTree } from "@/lib/utils";
+import { getAllCategories, buildCategoryTree } from "@/lib/db/queries/categories";
 import MobileMenu from "@/components/storefront/MobileMenu";
 import CartHeaderIcon from "@/components/storefront/CartHeaderIcon";
 import MobileNav from "@/components/storefront/home/MobileQuickNav";
 import MobileSearch from "@/components/storefront/MobileSearch";
 
-// Server Component — fetch categories using static client (ISR-safe)
-async function getCategories() {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("categories")
-        .select("id, name, slug, parent_id, image_url, sort_order")
-        .order("sort_order", { ascending: true });
-    return (data as any[]) ?? [];
-}
-
 export default async function StorefrontHeader() {
-    const categories = await getCategories();
+    const categories = await getAllCategories();
     const tree = buildCategoryTree(categories);
     const topCategories = categories.filter(c => !c.parent_id).slice(0, 6);
 

@@ -1,21 +1,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
 import ProductCard from "@/components/storefront/ProductCard";
-import type { ProductWithCategory } from "@/lib/types/database";
-
-async function getLatestProducts() {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, category_id, categories(name)")
-        .order("created_at", { ascending: false })
-        .limit(8);
-    return (data as any[]) ?? [];
-}
+import { getLatestProducts } from "@/lib/db/queries/products";
 
 export default async function LatestProducts() {
-    const products = await getLatestProducts();
+    const products = await getLatestProducts(8);
 
     if (products.length === 0) return null;
 
@@ -47,7 +36,7 @@ export default async function LatestProducts() {
                         <ProductCard
                             key={product.id}
                             product={product}
-                            categoryName={product.categories?.name}
+                            categoryName={product.categories?.name ?? undefined}
                         />
                     ))}
                 </div>

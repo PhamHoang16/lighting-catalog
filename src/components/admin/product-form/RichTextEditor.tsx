@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { Loader2, Link as LinkIcon, Upload, Image as ImageIcon } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
 import Modal from "@/components/ui/Modal";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 
 // Dynamic import react-quill-new (SSR incompatible)
@@ -51,7 +50,6 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
     const quillRef = useRef<any>(null);
     const { toast } = useToast();
-    const supabase = createClient();
 
     // ── Image Modal State ──────────────────────────────────────────
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -149,23 +147,19 @@ export default function RichTextEditor({
             const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
             const fileName = `editor-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
 
-            // Upload to Supabase bucket 'product-images' 
-            // (dùng chung cho cả bài viết vì cấu hình cho phép public access ảnh dài hạn)
-            const { error, data } = await supabase.storage
-                .from("product-images")
-                .upload(fileName, file, { cacheControl: "3600", upsert: false });
+            // Upload via /api/upload
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("folder", "posts");
 
-            if (error) {
-                console.error("Upload error:", error);
-                throw new Error("Lỗi khi tải ảnh. Vui lòng thử lại.");
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const json = await res.json();
+
+            if (!res.ok || json.error) {
+                throw new Error(json.error ?? "Lỗi khi tải ảnh. Vui lòng thử lại.");
             }
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from("product-images")
-                .getPublicUrl(fileName);
-
-            insertImageContent(publicUrl);
+            insertImageContent(json.url);
             setIsImageModalOpen(false);
             toast("Đã thêm ảnh thành công!", "success");
         } catch (error: any) {

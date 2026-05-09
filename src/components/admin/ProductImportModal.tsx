@@ -5,9 +5,10 @@ import Papa from "papaparse";
 import { Download, UploadCloud, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { createClient } from "@/lib/supabase/client";
 import { toSlug } from "@/lib/utils";
 import { revalidateStorefront } from "@/app/actions/revalidate";
+import { bulkImportProductsAction, getCategoriesAction, getBrandsAction } from "@/app/actions/admin";
+import type { Category, Brand } from "@/lib/types/database";
 
 interface ProductImportModalProps {
     open: boolean;
@@ -26,7 +27,6 @@ interface CSVRow {
 }
 
 export default function ProductImportModal({ open, onClose, onSuccess }: ProductImportModalProps) {
-    const supabase = createClient();
     const { toast } = useToast();
 
     const [isDragging, setIsDragging] = useState(false);
@@ -91,14 +91,22 @@ export default function ProductImportModal({ open, onClose, onSuccess }: Product
             const categorySlugs = Array.from(new Set(data.map(r => r.category_slug).filter(Boolean)));
             const brandSlugs = Array.from(new Set(data.map(r => r.brand_slug).filter(Boolean)));
 
-            // Fetch mappings
-            const [categoriesRes, brandsRes] = await Promise.all([
-                supabase.from("categories").select("id, slug").in("slug", categorySlugs),
-                supabase.from("brands").select("id, slug").in("slug", brandSlugs)
+            // Fetch all categories/brands via Server Actions then filter client-side
+            const [allCategories, allBrands] = await Promise.all([
+                getCategoriesAction(),
+                getBrandsAction(),
             ]);
 
-            const mapCategories = new Map(categoriesRes.data?.map(c => [c.slug, c.id]) ?? []);
-            const mapBrands = new Map(brandsRes.data?.map(b => [b.slug, b.id]) ?? []);
+            const mapCategories = new Map<string, string>(
+                (allCategories ?? [])
+                    .filter((c: Category) => categorySlugs.includes(c.slug))
+                    .map((c: Category) => [c.slug, c.id])
+            );
+            const mapBrands = new Map<string, string>(
+                (allBrands ?? [])
+                    .filter((b: Brand) => brandSlugs.includes(b.slug))
+                    .map((b: Brand) => [b.slug, b.id])
+            );
 
             const productsToInsert = [];
             let errorCount = 0;
@@ -148,10 +156,10 @@ export default function ProductImportModal({ open, onClose, onSuccess }: Product
 
             setStatus({ message: `Đang lưu ${productsToInsert.length} sản phẩm vào cơ sở dữ liệu...`, type: 'info' });
 
-            const { error: insertError } = await supabase.from("products").insert(productsToInsert);
+            const result = await bulkImportProductsAction(productsToInsert);
 
-            if (insertError) {
-                throw insertError;
+            if (result?.error) {
+                throw new Error(result.error);
             }
 
             setStatus({

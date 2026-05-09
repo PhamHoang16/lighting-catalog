@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, SlidersHorizontal, X, Flame } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types/database";
+import { getCategoriesAction } from "@/app/actions/admin";
 
 // ── Sort options ────────────────────────────────────────────────
 export interface SortOption {
@@ -44,8 +44,6 @@ export default function ProductToolbar({
     bestSellerOnly,
     onBestSellerChange,
 }: ProductToolbarProps) {
-    const supabase = createClient();
-
     // ── Categories cho filter dropdown ──────────────────────────
     const [categories, setCategories] = useState<Category[]>([]);
     const [loadingCats, setLoadingCats] = useState(true);
@@ -53,15 +51,16 @@ export default function ProductToolbar({
     useEffect(() => {
         async function fetchCategories() {
             setLoadingCats(true);
-            const { data } = await supabase
-                .from("categories")
-                .select("id, name")
-                .order("name", { ascending: true });
-            setCategories((data as any[]) ?? []);
+            try {
+                const data = await getCategoriesAction();
+                setCategories(data as Category[]);
+            } catch {
+                // Silently fail — filter will show empty
+            }
             setLoadingCats(false);
         }
         fetchCategories();
-    }, [supabase]);
+    }, []);
 
     // ── Debounced search ────────────────────────────────────────
     const [localSearch, setLocalSearch] = useState(searchTerm);

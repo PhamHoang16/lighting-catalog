@@ -1,27 +1,19 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ShieldCheck, Truck, Clock, Star, Zap, Info, FileText, Sparkles } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
+import { ShieldCheck, Truck, Clock, Star, Zap, FileText, Sparkles } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import ProductGallery from "@/components/storefront/product/ProductGallery";
 import SpecsTable from "@/components/storefront/product/SpecsTable";
 import ProductActions from "@/components/storefront/product/ProductActions";
 import ProductCard from "@/components/storefront/ProductCard";
-import type { ProductWithRelations, Product } from "@/lib/types/database";
+import { getProductBySlug, getRelatedProducts, getProductSlugs } from "@/lib/db/queries/products";
+import type { ProductWithRelations } from "@/lib/types/database";
 
 export async function generateStaticParams() {
-    const supabase = createStaticClient();
-    const { data: products } = await supabase
-        .from("products")
-        .select("slug")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-    return (products ?? []).map((product) => ({
-        slug: product.slug,
-    }));
+    const slugs = await getProductSlugs(20);
+    return slugs.map((p) => ({ slug: p.slug }));
 }
 
 // ── Formatter VND ───────────────────────────────────────────────
@@ -29,31 +21,6 @@ const vndFormat = new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
 });
-
-// ── Fetch ───────────────────────────────────────────────────────
-async function getProduct(slug: string) {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("products")
-        .select("*, categories(name, slug), brands(name, logo_url)")
-        .eq("slug", slug)
-        .single();
-
-    return data as ProductWithRelations | null;
-}
-
-async function getRelatedProducts(currentId: string, categoryId: string) {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, category_id")
-        .eq("category_id", categoryId)
-        .neq("id", currentId)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-    return (data ?? []) as any[];
-}
 
 // ── SEO ─────────────────────────────────────────────────────────
 interface PageProps {
@@ -64,7 +31,7 @@ export async function generateMetadata({
     params,
 }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const product = await getProduct(slug);
+    const product = await getProductBySlug(slug);
 
     if (!product) return { title: "Sản phẩm không tồn tại" };
 
@@ -80,7 +47,7 @@ export async function generateMetadata({
 // ── Page ────────────────────────────────────────────────────────
 export default async function ProductDetailPage({ params }: PageProps) {
     const { slug } = await params;
-    const product = await getProduct(slug);
+    const product = await getProductBySlug(slug) as ProductWithRelations | null;
 
     if (!product) notFound();
 

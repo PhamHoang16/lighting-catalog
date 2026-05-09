@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import {
     Loader2,
     ShoppingCart,
@@ -9,7 +9,6 @@ import {
     Trash2,
     Inbox,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate } from "@/lib/utils";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -17,6 +16,11 @@ import PaginationControls from "@/components/ui/PaginationControls";
 import OrderStatusBadge from "@/components/admin/OrderStatusBadge";
 import OrderDetailModal from "@/components/admin/OrderDetailModal";
 import type { Order } from "@/lib/types/database";
+import {
+    getOrdersAction,
+    getOrderByIdAction,
+    deleteOrderAction,
+} from "@/app/actions/admin";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -26,8 +30,8 @@ const vndFormat = new Intl.NumberFormat("vi-VN", {
 });
 
 export default function AdminOrdersPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,24 +50,16 @@ export default function AdminOrdersPage() {
     const fetchOrders = useCallback(
         async (page = currentPage, size = pageSize) => {
             setIsLoading(true);
-            const from = page * size;
-            const to = from + size - 1;
-
-            const { data, error, count } = await supabase
-                .from("orders")
-                .select("id, customer_name, title, phone, total_amount, status, created_at, delivery_method", { count: "exact" })
-                .order("created_at", { ascending: false })
-                .range(from, to);
-
-            if (error) {
-                toast("Không thể tải đơn hàng: " + error.message, "error");
-            } else {
-                setOrders((data as any[]) ?? []);
-                setTotalCount(count ?? 0);
+            try {
+                const result = await getOrdersAction({ page, pageSize: size });
+                setOrders(result.data as Order[]);
+                setTotalCount(result.count);
+            } catch (e) {
+                toast("Không thể tải đơn hàng: " + (e as Error).message, "error");
             }
             setIsLoading(false);
         },
-        [supabase, toast, currentPage, pageSize]
+        [toast, currentPage, pageSize]
     );
 
     useEffect(() => {
@@ -80,19 +76,16 @@ export default function AdminOrdersPage() {
         if (!deletingOrder) return;
         setDeleting(true);
 
-        const { error } = await supabase
-            .from("orders")
-            .delete()
-            .eq("id", deletingOrder.id);
+        const result = await deleteOrderAction(deletingOrder.id);
 
-        if (error) {
-            toast("Lỗi khi xóa: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi xóa: " + result.error, "error");
         } else {
             toast("Đã xóa đơn hàng.", "success");
             if (orders.length === 1 && currentPage > 0) {
                 setCurrentPage((prev) => prev - 1);
             } else {
-                fetchOrders();
+                startTransition(() => { fetchOrders(); });
             }
         }
 
@@ -121,7 +114,7 @@ export default function AdminOrdersPage() {
 
                 <button
                     onClick={() => fetchOrders()}
-                    disabled={isLoading}
+                    disabled={isLoading || isPending}
                     className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
                 >
                     <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
@@ -165,7 +158,6 @@ export default function AdminOrdersPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {orders.map((order) => {
-                                    const itemCount = order.items?.length ?? 0;
                                     return (
                                         <tr key={order.id} className="transition-colors hover:bg-gray-50/50">
                                             <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">
@@ -200,15 +192,10 @@ export default function AdminOrdersPage() {
                                                     <button
                                                         onClick={async () => {
                                                             setIsLoading(true);
-                                                            const { data, error } = await supabase
-                                                                .from("orders")
-                                                                .select("*")
-                                                                .eq("id", order.id)
-                                                                .single();
+                                                            const data = await getOrderByIdAction(order.id);
                                                             setIsLoading(false);
-
-                                                            if (error) {
-                                                                toast("Lỗi khi lấy chi tiết: " + error.message, "error");
+                                                            if (!data) {
+                                                                toast("Lỗi khi lấy chi tiết đơn hàng.", "error");
                                                                 return;
                                                             }
                                                             setSelectedOrder(data as Order);
@@ -257,7 +244,7 @@ export default function AdminOrdersPage() {
                 }}
                 order={selectedOrder}
                 onStatusUpdated={() => {
-                    fetchOrders();
+                    startTransition(() => { fetchOrders(); });
                     setDetailOpen(false);
                     setSelectedOrder(null);
                 }}

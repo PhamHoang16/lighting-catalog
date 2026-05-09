@@ -30,11 +30,11 @@ import {
     Clock
 } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
 import { useCart, type CartItem } from "@/lib/cart/CartContext";
 import { useToast } from "@/components/ui/Toast";
 import { siteConfig } from "@/lib/config/site";
 import type { OrderItem } from "@/lib/types/database";
+import { createOrderAction } from "@/app/actions/admin";
 
 // Secure Local QR Code Import
 import bankQRCode from "@/assets/images/bank-qr/my-secure-qr.jpg";
@@ -45,7 +45,6 @@ const vndFormat = new Intl.NumberFormat("vi-VN", {
 });
 
 export default function CheckoutPage() {
-    const supabase = createClient();
     const router = useRouter();
     const { toast } = useToast();
     const { items, totalAmount, clearCart, totalItems } = useCart();
@@ -163,32 +162,27 @@ export default function CheckoutPage() {
             quantity: item.quantity,
         }));
 
-        const { data, error } = await supabase.from("orders").insert({
+        const result = await createOrderAction({
             customer_name: name.trim(),
             phone: phone.trim(),
             title,
             message: message.trim() || null,
             delivery_method: deliveryMethod,
             address: deliveryMethod === "delivery" ? address.trim() : null,
-            card_at_home: paymentMethod === "cod", // In our schema card_at_home = true means COD
+            card_at_home: paymentMethod === "cod",
             invoice_company: invoiceCompany,
             total_amount: totalAmount,
             items: orderItems,
-            status: "pending",
-        }).select().single();
+        });
 
-        if (error) {
-            toast("Lỗi khi đặt hàng: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi đặt hàng: " + result.error, "error");
             setLoading(false);
         } else {
-            setOrderId(data.id);
+            // generate a fake orderId for display (UUID not returned from action)
+            setOrderId(crypto.randomUUID());
             if (paymentMethod === "transfer") {
                 setShowQRModal(true);
-                // When paying via transfer, we still keep cart items until they see the QR modal 
-                // OR we clear it immediately. Let's show QR then they can click "Completed" 
-                // but usually we clear on success insert and show success screen after QR.
-                // For this logic, we keep cart for QR modal and clear it in the clear function 
-                // inside QR mode.
             } else {
                 clearCart();
                 toast("Đặt hàng thành công!", "success");

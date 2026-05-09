@@ -4,8 +4,8 @@ import { useState, useEffect, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { createClient } from "@/lib/supabase/client";
 import { toSlug } from "@/lib/utils";
+import { getCategoriesAction, getBrandsAction } from "@/app/actions/admin";
 import ImageUploader from "./product-form/ImageUploader";
 import type { PendingImage } from "./product-form/ImageUploader";
 import SpecsEditor from "./product-form/SpecsEditor";
@@ -41,7 +41,6 @@ export default function ProductFormModal({
     onSubmit,
     editingProduct,
 }: ProductFormModalProps) {
-    const supabase = createClient();
     const { toast } = useToast();
 
     // ── Basic fields ────────────────────────────────────────────
@@ -76,21 +75,21 @@ export default function ProductFormModal({
 
     const isEdit = !!editingProduct;
 
-    // ── Fetch categories and brands ─────────────────────────────
+    // ── Fetch categories and brands ──────────────────────────────────
     useEffect(() => {
         if (!open) return;
         async function fetchData() {
             setLoadingCategories(true);
             const [categoriesRes, brandsRes] = await Promise.all([
-                supabase.from("categories").select("id, name").order("name", { ascending: true }),
-                supabase.from("brands").select("id, name").order("name", { ascending: true }),
+                getCategoriesAction(),
+                getBrandsAction(),
             ]);
-            setCategories((categoriesRes.data as any[]) ?? []);
-            setBrands((brandsRes.data as any[]) ?? []);
+            setCategories(categoriesRes ?? []);
+            setBrands(brandsRes ?? []);
             setLoadingCategories(false);
         }
         fetchData();
-    }, [open, supabase]);
+    }, [open]);
 
     // ── Populate khi edit ───────────────────────────────────────
     useEffect(() => {
@@ -141,22 +140,20 @@ export default function ProductFormModal({
         setGalleryPending([]);
     }
 
-    // ── Upload a single file → return public URL ────────────────
+    // ── Upload a single file → return public URL ─────────────────────
     async function uploadFile(file: File): Promise<string> {
-        const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const fileName = `${slug || "product"}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "products");
 
-        const { error } = await supabase.storage
-            .from("product-images")
-            .upload(fileName, file, { cacheControl: "3600", upsert: false });
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = await res.json();
 
-        if (error) throw error;
+        if (!res.ok || json.error) {
+            throw new Error(json.error ?? "Upload thất bại");
+        }
 
-        const {
-            data: { publicUrl },
-        } = supabase.storage.from("product-images").getPublicUrl(fileName);
-
-        return publicUrl;
+        return json.url as string;
     }
 
     // ── Resolve pending images → URLs ───────────────────────────

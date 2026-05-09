@@ -2,12 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { loginAction } from "@/lib/auth/login";
 import { Lightbulb, Mail, Lock, LogIn, Loader2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
-    const supabase = createClient();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -19,17 +18,10 @@ export default function LoginPage() {
         setError(null);
         setLoading(true);
 
-        const { error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        const result = await loginAction(email, password);
 
-        if (authError) {
-            setError(
-                authError.message === "Invalid login credentials"
-                    ? "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
-                    : authError.message
-            );
+        if (result.error) {
+            setError(result.error);
             setLoading(false);
             return;
         }

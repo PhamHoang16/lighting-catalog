@@ -7,22 +7,12 @@ import {
     Facebook,
     ExternalLink,
 } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import type { Category } from "@/lib/types/database";
-
-// Fetch only root categories
-async function getCategories() {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("categories")
-        .select("id, name, slug, parent_id")
-        .order("name", { ascending: true });
-    return data ?? [];
-}
+import { getAllCategories } from "@/lib/db/queries/categories";
 
 export default async function StorefrontFooter() {
-    const categories = await getCategories();
+    const categories = await getAllCategories();
     const currentYear = new Date().getFullYear();
 
     return (

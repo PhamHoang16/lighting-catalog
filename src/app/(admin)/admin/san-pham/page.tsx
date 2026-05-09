@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import { Plus, Loader2, Package, RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import ProductTable from "@/components/admin/ProductTable";
 import ProductFormModal, { type ProductPayload } from "@/components/admin/ProductFormModal";
@@ -11,13 +10,21 @@ import ProductToolbar, {
     SORT_OPTIONS,
 } from "@/components/admin/ProductToolbar";
 import type { ProductWithCategory } from "@/lib/types/database";
-import { revalidateProduct, revalidateStorefront } from "@/app/actions/revalidate";
+import {
+    getProductsForAdminAction,
+    getProductByIdAction,
+    saveProductAction,
+    deleteProductAction,
+    toggleBestSellerAction,
+    updateProductSortOrderAction,
+    bulkImportProductsAction,
+} from "@/app/actions/admin";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 export default function AdminProductsPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     // ── Data state ──────────────────────────────────────────────
     const [products, setProducts] = useState<ProductWithCategory[]>([]);
@@ -34,52 +41,31 @@ export default function AdminProductsPage() {
 
     // ── Search / Filter / Sort state ────────────────────────────
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortIndex, setSortIndex] = useState(0); // default: "Mới nhất"
+    const [sortIndex, setSortIndex] = useState(0);
     const [filterCategoryId, setFilterCategoryId] = useState("");
     const [bestSellerOnly, setBestSellerOnly] = useState(false);
 
     // ── Fetch products ──────────────────────────────────────────
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
-
         const sort = SORT_OPTIONS[sortIndex];
-        const from = currentPage * pageSize;
-        const to = from + pageSize - 1;
-
-        let query = supabase
-            .from("products")
-            .select("id, name, slug, price, image_url, category_id, brand_id, is_best_seller, sort_order, created_at, categories(name)", { count: "exact" });
-
-        // Search
-        if (searchTerm) {
-            query = query.ilike("name", `%${searchTerm}%`);
-        }
-
-        // Filter by category
-        if (filterCategoryId) {
-            query = query.eq("category_id", filterCategoryId);
-        }
-
-        // Filter best sellers only
-        if (bestSellerOnly) {
-            query = query.eq("is_best_seller", true);
-        }
-
-        // Sort + pagination
-        query = query
-            .order(sort.column, { ascending: sort.ascending })
-            .range(from, to);
-
-        const { data, error, count } = await query;
-
-        if (error) {
-            toast("Không thể tải sản phẩm: " + error.message, "error");
-        } else {
-            setProducts((data as any[]) ?? []);
-            setTotalCount(count ?? 0);
+        try {
+            const result = await getProductsForAdminAction({
+                searchTerm: searchTerm || undefined,
+                categoryId: filterCategoryId || undefined,
+                bestSellerOnly: bestSellerOnly || undefined,
+                sortColumn: sort.column,
+                sortAscending: sort.ascending,
+                page: currentPage,
+                pageSize,
+            });
+            setProducts(result.data as ProductWithCategory[]);
+            setTotalCount(result.count);
+        } catch (e) {
+            toast("Không thể tải sản phẩm: " + (e as Error).message, "error");
         }
         setIsLoading(false);
-    }, [supabase, toast, currentPage, pageSize, searchTerm, sortIndex, filterCategoryId, bestSellerOnly]);
+    }, [toast, currentPage, pageSize, searchTerm, sortIndex, filterCategoryId, bestSellerOnly]);
 
     useEffect(() => {
         fetchProducts();
@@ -87,7 +73,6 @@ export default function AdminProductsPage() {
     }, [currentPage, pageSize, searchTerm, sortIndex, filterCategoryId, bestSellerOnly]);
 
     // ── Search / Filter / Sort handlers ─────────────────────────
-    // Khi thay đổi bất kỳ filter nào → reset về trang 0
     function handleSearchChange(term: string) {
         setSearchTerm(term);
         setCurrentPage(0);
@@ -120,83 +105,51 @@ export default function AdminProductsPage() {
 
     // ── Create / Update ─────────────────────────────────────────
     async function handleSaveProduct(formData: ProductPayload) {
-        if (selectedProduct) {
-            const { error } = await supabase
-                .from("products")
-                .update(formData)
-                .eq("id", selectedProduct.id);
+        const result = await saveProductAction(
+            selectedProduct ? selectedProduct.id : null,
+            formData
+        );
 
-            if (error) {
-                if (error.code === "23505") {
-                    toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
-                } else {
-                    toast("Lỗi khi cập nhật: " + error.message, "error");
-                }
-                throw error;
+        if (result?.error) {
+            if (result.error.includes("Slug")) {
+                toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
+            } else {
+                toast((selectedProduct ? "Lỗi khi cập nhật: " : "Lỗi khi thêm sản phẩm: ") + result.error, "error");
             }
-            toast("Đã cập nhật sản phẩm thành công!", "success");
-        } else {
-            const { error } = await supabase.from("products").insert(formData);
-
-            if (error) {
-                if (error.code === "23505") {
-                    toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
-                } else {
-                    toast("Lỗi khi thêm sản phẩm: " + error.message, "error");
-                }
-                throw error;
-            }
-            toast("Đã thêm sản phẩm thành công!", "success");
+            throw new Error(result.error);
         }
 
+        toast(selectedProduct ? "Đã cập nhật sản phẩm thành công!" : "Đã thêm sản phẩm thành công!", "success");
         setIsModalOpen(false);
         setSelectedProduct(null);
-        fetchProducts();
-
-        // ── Revalidation (On-demand) ────────────────────────────
-        if (formData.slug) {
-            await revalidateProduct(formData.slug);
-        } else {
-            await revalidateStorefront();
-        }
+        startTransition(() => { fetchProducts(); });
     }
 
     // ── Delete ──────────────────────────────────────────────────
     async function handleDeleteProduct(id: string) {
         const productToDelete = products.find(p => p.id === id);
+        const slug = productToDelete?.slug ?? "";
 
-        const { error } = await supabase
-            .from("products")
-            .delete()
-            .eq("id", id);
+        const result = await deleteProductAction(id, slug);
 
-        if (error) {
-            toast("Lỗi khi xóa: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi xóa: " + result.error, "error");
         } else {
             toast("Đã xóa sản phẩm thành công!", "success");
-            
-            // Revalidate storefront path
-            if (productToDelete) {
-                await revalidateProduct(productToDelete.slug);
-            }
-
             if (products.length === 1 && currentPage > 0) {
                 setCurrentPage((prev) => prev - 1);
             } else {
-                fetchProducts();
+                startTransition(() => { fetchProducts(); });
             }
         }
     }
 
-    // ── Toggle best seller ──────────────────────────────────
+    // ── Toggle best seller ──────────────────────────────────────
     async function handleToggleBestSeller(id: string, currentValue: boolean) {
-        const { error } = await supabase
-            .from("products")
-            .update({ is_best_seller: !currentValue })
-            .eq("id", id);
+        const result = await toggleBestSellerAction(id, !currentValue);
 
-        if (error) {
-            toast("Lỗi khi cập nhật: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi cập nhật: " + result.error, "error");
         } else {
             toast(
                 !currentValue
@@ -204,25 +157,20 @@ export default function AdminProductsPage() {
                     : "Đã bỏ đánh dấu bán chạy.",
                 "success"
             );
-            fetchProducts();
-            await revalidateStorefront();
+            startTransition(() => { fetchProducts(); });
         }
     }
 
     // ── Update sort order ───────────────────────────────────────
     async function handleUpdateSortOrder(id: string, sortOrder: number) {
-        const { error } = await supabase
-            .from("products")
-            .update({ sort_order: sortOrder })
-            .eq("id", id);
+        const result = await updateProductSortOrderAction(id, sortOrder);
 
-        if (error) {
-            toast("Lỗi khi cập nhật thứ tự: " + error.message, "error");
-            throw error;
+        if (result?.error) {
+            toast("Lỗi khi cập nhật thứ tự: " + result.error, "error");
+            throw new Error(result.error);
         }
         toast("Đã cập nhật thứ tự hiển thị!", "success");
-        fetchProducts();
-        await revalidateStorefront();
+        startTransition(() => { fetchProducts(); });
     }
 
     // ── Open modals ─────────────────────────────────────────────
@@ -233,18 +181,11 @@ export default function AdminProductsPage() {
 
     async function openEdit(product: ProductWithCategory) {
         setIsLoading(true);
-        
-        // Fetch full product data before opening modal
-        const { data, error } = await supabase
-            .from("products")
-            .select("*")
-            .eq("id", product.id)
-            .single();
-
+        const data = await getProductByIdAction(product.id);
         setIsLoading(false);
 
-        if (error) {
-            toast("Không thể lấy thông tin chi tiết: " + error.message, "error");
+        if (!data) {
+            toast("Không thể lấy thông tin chi tiết sản phẩm.", "error");
             return;
         }
 
@@ -272,7 +213,7 @@ export default function AdminProductsPage() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => fetchProducts()}
-                        disabled={isLoading}
+                        disabled={isLoading || isPending}
                         className="rounded-lg border border-gray-300 bg-white p-2.5 text-gray-500 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
                         title="Tải lại"
                     >
@@ -346,7 +287,7 @@ export default function AdminProductsPage() {
             <ProductImportModal
                 open={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
-                onSuccess={() => fetchProducts()}
+                onSuccess={() => startTransition(() => { fetchProducts(); })}
             />
         </div>
     );

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
-import { buildCategoryTree } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
-import type { Category } from "@/lib/types/database";
+import { getCategoryTree } from "@/lib/db/queries/categories";
 
 export const revalidate = 86400; // 1 day - max caching for egress protection
 
@@ -14,19 +12,8 @@ export const metadata: Metadata = {
     description: `Khám phá toàn bộ danh mục sản phẩm chiếu sáng tại ${siteConfig.name}.`,
 };
 
-async function getCategoriesData() {
-    const supabase = createStaticClient();
-    const { data: allCategories } = await supabase
-        .from("categories")
-        .select("id, name, slug, image_url, parent_id, sort_order")
-        .order("sort_order", { ascending: true });
-    
-    return (allCategories as any[]) ?? [];
-}
-
 export default async function AllCategoriesDirectoryPage() {
-    const categories = await getCategoriesData();
-    const tree = buildCategoryTree(categories);
+    const tree = await getCategoryTree();
     
     const subtleBgs = [
         "bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 border-amber-500/20",

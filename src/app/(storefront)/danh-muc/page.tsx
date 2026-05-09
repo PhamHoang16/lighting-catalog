@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FolderOpen, X, SlidersHorizontal } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
-import { buildCategoryTree } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import CategorySidebarAdvanced from "@/components/storefront/category/CategorySidebarAdvanced";
 import ProductGrid from "@/components/storefront/category/ProductGrid";
 import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
-import type { Category, CategoryWithChildren, Brand, Product } from "@/lib/types/database";
+import { getAllCategories } from "@/lib/db/queries/categories";
+import { getAllBrands } from "@/lib/db/queries/brands";
+import { getProductsByCategory } from "@/lib/db/queries/products";
+import type { Category, Brand, Product } from "@/lib/types/database";
 
 export const metadata: Metadata = {
     title: "Danh mục sản phẩm",
@@ -23,109 +24,23 @@ interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// ── Raw Data Functions (Uncached) ──────────────────────────
-async function getMetadataRaw() {
-    const supabase = createStaticClient();
-    console.log("Supabase: Fetching Metadata (Categories & Brands)");
-
-    const { data: allCategories } = await supabase
-        .from("categories")
-        .select("id, name, slug, parent_id, image_url, sort_order, created_at")
-        .order("sort_order", { ascending: true });
-
-    const categories = (allCategories as Category[]) ?? [];
-
-    const { data: allBrands } = await supabase
-        .from("brands")
-        .select("id, name, slug, logo_url, created_at")
-        .order("name", { ascending: true });
-
-    return {
-        categories: categories,
-        brands: (allBrands as Brand[]) ?? []
-    };
-}
-
-// ── Cached Metadata ──────────────────────────────────────────
+// ── Cached Metadata ──────────────────────────────────────────────────
 const getMetadata = unstable_cache(
-    async () => getMetadataRaw(),
+    async () => {
+        const [categories, brands] = await Promise.all([
+            getAllCategories(),
+            getAllBrands(),
+        ]);
+        return { categories, brands };
+    },
     ["all-listing-metadata"],
     { revalidate: 3600, tags: ["categories", "brands"] }
 );
 
-async function getProductsRaw(
-    brands: Brand[],
-    brandSlugs?: string[],
-    minPrice?: number,
-    maxPrice?: number,
-    searchQuery?: string,
-    page: number = 1,
-    limit: number = 20,
-    sort: string = "newest"
-) {
-    const supabase = createStaticClient();
-    console.log(`Supabase: Fetching Products (page: ${page}, sort: ${sort})`);
-
-    // Get products with count
-    let productsQuery = supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, category_id, brand_id, created_at", { count: "exact" });
-
-    if (brandSlugs && brandSlugs.length > 0) {
-        const brandIds = brands
-            .filter((b) => brandSlugs.includes(b.slug))
-            .map((b) => b.id);
-
-        if (brandIds.length > 0) {
-            productsQuery = productsQuery.in("brand_id", brandIds);
-        }
-    }
-
-    // Apply price filter
-    if (minPrice !== undefined && !isNaN(minPrice)) {
-        productsQuery = productsQuery.gte("price", minPrice);
-    }
-    if (maxPrice !== undefined && !isNaN(maxPrice)) {
-        productsQuery = productsQuery.lte("price", maxPrice);
-    }
-
-    // Apply text search
-    if (searchQuery) {
-        productsQuery = productsQuery.ilike("name", `%${searchQuery}%`);
-    }
-
-    // Sorting
-    switch (sort) {
-        case "newest": productsQuery = productsQuery.order("created_at", { ascending: false }); break;
-        case "oldest": productsQuery = productsQuery.order("created_at", { ascending: true }); break;
-        case "price-asc": productsQuery = productsQuery.order("price", { ascending: true }); break;
-        case "price-desc": productsQuery = productsQuery.order("price", { ascending: false }); break;
-        case "featured":
-        default:
-            productsQuery = productsQuery
-                .order("sort_order", { ascending: true })
-                .order("created_at", { ascending: false });
-            break;
-    }
-
-    // Pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    productsQuery = productsQuery.range(from, to);
-
-    const { data: products, count } = await productsQuery;
-
-    return {
-        products: (products as Product[]) ?? [],
-        totalCount: count ?? 0,
-        totalPages: count ? Math.ceil(count / limit) : 1
-    };
-}
-
-// ── Cached Products ──────────────────────────────────────────
+// ── Cached Products (all categories) ─────────────────────────
 const getProducts = unstable_cache(
     async (
-        brandsSerialized: string, // Need to pass strings/primitives to cache keys
+        brandsSerialized: string,
         brandSlugsSerialized: string = "",
         minPrice?: number,
         maxPrice?: number,
@@ -134,9 +49,22 @@ const getProducts = unstable_cache(
         limit: number = 20,
         sort: string = "featured"
     ) => {
-        const brands = JSON.parse(brandsSerialized);
+        const brands: Brand[] = JSON.parse(brandsSerialized);
         const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(",") : undefined;
-        return getProductsRaw(brands, brandSlugs, minPrice, maxPrice, searchQuery, page, limit, sort);
+        const brandIds = brandSlugs && brandSlugs.length > 0
+            ? brands.filter(b => brandSlugs.includes(b.slug)).map(b => b.id)
+            : undefined;
+
+        return getProductsByCategory({
+            categoryIds: [],
+            brandIds,
+            minPrice: minPrice && !isNaN(minPrice) ? minPrice : undefined,
+            maxPrice: maxPrice && !isNaN(maxPrice) ? maxPrice : undefined,
+            searchQuery,
+            page,
+            limit,
+            sort: sort as any,
+        });
     },
     ["all-products-listing"],
     { revalidate: 3600, tags: ["products"] }

@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import { Plus, Loader2, Newspaper, RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import PostTable from "@/components/admin/PostTable";
 import PostFormModal, { type PostFormData } from "@/components/admin/PostFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Post } from "@/lib/types/database";
-import { revalidatePost } from "@/app/actions/revalidate";
+import {
+    getPostsAction,
+    savePostAction,
+    deletePostAction,
+} from "@/app/actions/admin";
 
 export default function AdminPostsPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     // ── State ───────────────────────────────────────────────────
     const [posts, setPosts] = useState<Post[]>([]);
@@ -27,21 +30,17 @@ export default function AdminPostsPage() {
     const [deletingPost, setDeletingPost] = useState<Post | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    // ── Fetch posts (Thin Row) ─────────────────────────────
+    // ── Fetch posts ─────────────────────────────────────────────
     const fetchPosts = useCallback(async () => {
         setLoadingData(true);
-        const { data, error } = await supabase
-            .from("posts")
-            .select("id, title, slug, thumbnail_url, is_published, created_at, summary")
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            toast("Không thể tải bài viết: " + error.message, "error");
-        } else {
-            setPosts((data as any[]) ?? []);
+        try {
+            const data = await getPostsAction();
+            setPosts(data as Post[]);
+        } catch (e) {
+            toast("Không thể tải bài viết: " + (e as Error).message, "error");
         }
         setLoadingData(false);
-    }, [supabase, toast]);
+    }, [toast]);
 
     useEffect(() => {
         fetchPosts();
@@ -50,77 +49,51 @@ export default function AdminPostsPage() {
 
     // ── Create ──────────────────────────────────────────────────
     async function handleCreate(formData: PostFormData) {
-        const { data, error } = await supabase
-            .from("posts")
-            .insert({
-                title: formData.title,
-                slug: formData.slug,
-                thumbnail_url: formData.thumbnail_url,
-                summary: formData.summary,
-                content: formData.content,
-                is_published: formData.is_published,
-                is_featured: formData.is_featured,
-                is_popular: formData.is_popular,
-            })
-            .select();
+        const result = await savePostAction(null, {
+            title: formData.title,
+            slug: formData.slug,
+            thumbnail_url: formData.thumbnail_url,
+            summary: formData.summary,
+            content: formData.content,
+            is_published: formData.is_published,
+            is_featured: formData.is_featured,
+            is_popular: formData.is_popular,
+        });
 
-        if (error) {
-            toast("Lỗi khi thêm bài viết: " + error.message, "error");
-            throw error;
-        }
-
-        if (!data || data.length === 0) {
-            toast("Thêm thất bại do lỗi phân quyền (Hãy chạy SQL Policy)", "error");
-            return;
-        }
-
-        if (data[0]) {
-            await revalidatePost(data[0].slug);
+        if (result?.error) {
+            toast("Lỗi khi thêm bài viết: " + result.error, "error");
+            throw new Error(result.error);
         }
 
         toast("Đã thêm bài viết thành công!", "success");
         setFormOpen(false);
-        fetchPosts();
+        startTransition(() => { fetchPosts(); });
     }
 
     // ── Update ──────────────────────────────────────────────────
     async function handleUpdate(formData: PostFormData) {
         if (!editingPost) return;
 
-        const { data, error } = await supabase
-            .from("posts")
-            .update({
-                title: formData.title,
-                slug: formData.slug,
-                thumbnail_url: formData.thumbnail_url,
-                summary: formData.summary,
-                content: formData.content,
-                is_published: formData.is_published,
-                is_featured: formData.is_featured,
-                is_popular: formData.is_popular,
-            })
-            .eq("id", editingPost.id)
-            .select();
+        const result = await savePostAction(editingPost.id, {
+            title: formData.title,
+            slug: formData.slug,
+            thumbnail_url: formData.thumbnail_url,
+            summary: formData.summary,
+            content: formData.content,
+            is_published: formData.is_published,
+            is_featured: formData.is_featured,
+            is_popular: formData.is_popular,
+        });
 
-        if (error) {
-            toast("Lỗi khi cập nhật bài viết: " + error.message, "error");
-            throw error;
-        }
-
-        if (!data || data.length === 0) {
-            toast("Cập nhật thất bại do lỗi phân quyền (Hãy chạy SQL Policy)", "error");
-            return;
-        }
-
-        if (data[0]) {
-            await revalidatePost(data[0].slug);
+        if (result?.error) {
+            toast("Lỗi khi cập nhật bài viết: " + result.error, "error");
+            throw new Error(result.error);
         }
 
         toast("Đã cập nhật bài viết thành công!", "success");
         setFormOpen(false);
-        // Update editingPost from the mutation response — avoids stale-read on next edit
-        setEditingPost(data[0] as Post ?? null);
-        fetchPosts();
+        setEditingPost(null);
+        startTransition(() => { fetchPosts(); });
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -128,22 +101,13 @@ export default function AdminPostsPage() {
         if (!deletingPost) return;
 
         setDeleting(true);
-        const { data, error } = await supabase
-            .from("posts")
-            .delete()
-            .eq("id", deletingPost.id)
-            .select();
+        const result = await deletePostAction(deletingPost.id, deletingPost.slug);
 
-        if (error) {
-            toast("Lỗi khi xóa bài viết: " + error.message, "error");
-        } else if (!data || data.length === 0) {
-            toast("Không thể xoá do giới hạn quyền (Hãy chạy SQL Policy)", "error");
+        if (result?.error) {
+            toast("Lỗi khi xóa bài viết: " + result.error, "error");
         } else {
-            if (deletingPost) {
-                await revalidatePost(deletingPost.slug);
-            }
             toast("Đã xóa bài viết thành công!", "success");
-            fetchPosts();
+            startTransition(() => { fetchPosts(); });
         }
 
         setDeleting(false);
@@ -158,19 +122,8 @@ export default function AdminPostsPage() {
     }
 
     async function openEditForm(post: Post) {
-        // Fetch full project data before opening modal to avoid missing content
-        const { data, error } = await supabase
-            .from("posts")
-            .select("*")
-            .eq("id", post.id)
-            .single();
-
-        if (error) {
-            toast("Không thể lấy nội dung chi tiết: " + error.message, "error");
-            return;
-        }
-
-        setEditingPost(data as Post);
+        // Post list already has full data (getAllPostsForAdmin returns all columns)
+        setEditingPost(post);
         setFormOpen(true);
     }
 
@@ -204,7 +157,7 @@ export default function AdminPostsPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchPosts}
-                        disabled={loadingData}
+                        disabled={loadingData || isPending}
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
                     >
                         <RefreshCw

@@ -6,7 +6,10 @@ import {
     Bell,
     Loader2,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/db";
+import { categories, products, orders } from "@/lib/db/schema";
+import { eq, desc, count } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import StatCard from "@/components/admin/dashboard/StatCard";
 import RecentOrders from "@/components/admin/dashboard/RecentOrders";
 import QuickActions from "@/components/admin/dashboard/QuickActions";
@@ -14,36 +17,33 @@ import type { Order } from "@/lib/types/database";
 
 // ── Data fetching (Server-side) ─────────────────────────────────
 async function getDashboardStats() {
-    const supabase = await createClient();
+    await requireAdmin();
 
-    const [categoriesRes, productsRes, ordersRes, pendingOrdersRes, recentRes] =
+    const [categoryCount, productCount, orderCount, pendingOrderCount, recentRes] =
         await Promise.all([
-            supabase
-                .from("categories")
-                .select("id", { count: "exact", head: true }),
-            supabase
-                .from("products")
-                .select("id", { count: "exact", head: true }),
-            supabase
-                .from("orders")
-                .select("id", { count: "exact", head: true }),
-            supabase
-                .from("orders")
-                .select("id", { count: "exact", head: true })
-                .eq("status", "pending"),
-            supabase
-                .from("orders")
-                .select("id, customer_name, total_amount, status, created_at")
-                .order("created_at", { ascending: false })
-                .limit(5),
+            db.select({ count: count() }).from(categories).then(r => Number(r[0]?.count ?? 0)),
+            db.select({ count: count() }).from(products).then(r => Number(r[0]?.count ?? 0)),
+            db.select({ count: count() }).from(orders).then(r => Number(r[0]?.count ?? 0)),
+            db.select({ count: count() }).from(orders).where(eq(orders.status, "pending")).then(r => Number(r[0]?.count ?? 0)),
+            db.select({
+                id: orders.id,
+                customer_name: orders.customer_name,
+                total_amount: orders.total_amount,
+                status: orders.status,
+                created_at: orders.created_at,
+            }).from(orders).orderBy(desc(orders.created_at)).limit(5),
         ]);
 
     return {
-        categoryCount: categoriesRes.count ?? 0,
-        productCount: productsRes.count ?? 0,
-        orderCount: ordersRes.count ?? 0,
-        pendingOrderCount: pendingOrdersRes.count ?? 0,
-        recentOrders: (recentRes.data as Order[]) ?? [],
+        categoryCount,
+        productCount,
+        orderCount,
+        pendingOrderCount,
+        recentOrders: recentRes.map(r => ({
+            ...r,
+            total_amount: Number(r.total_amount),
+            created_at: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+        })) as Order[],
     };
 }
 

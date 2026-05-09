@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { logoutAction } from "@/lib/auth/logout";
 import { Menu, LogOut, Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -11,12 +11,11 @@ interface HeaderProps {
 
 export default function AdminHeader({ onMenuToggle }: HeaderProps) {
     const router = useRouter();
-    const supabase = createClient();
     const [loggingOut, setLoggingOut] = useState(false);
 
     async function handleLogout() {
         setLoggingOut(true);
-        await supabase.auth.signOut();
+        await logoutAction();
         router.push("/login");
         router.refresh();
     }

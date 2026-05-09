@@ -1,18 +1,30 @@
-import { updateSession } from "@/lib/supabase/middleware";
-import type { NextRequest } from "next/server";
+import { getIronSession } from "iron-session";
+import { NextResponse, type NextRequest } from "next/server";
+import type { SessionData } from "@/lib/auth/session";
 
 export async function middleware(request: NextRequest) {
-    return await updateSession(request);
+    const response = NextResponse.next();
+
+    if (request.nextUrl.pathname.startsWith("/admin")) {
+        const session = await getIronSession<SessionData>(request, response, {
+            cookieName: "lc_session",
+            password: process.env.SESSION_SECRET!,
+            cookieOptions: {
+                secure: process.env.NODE_ENV === "production",
+                httpOnly: true,
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 7,
+            },
+        });
+
+        if (!session.userId) {
+            return NextResponse.redirect(new URL("/login", request.url));
+        }
+    }
+
+    return response;
 }
 
 export const config = {
-    matcher: [
-        /*
-         * Match only /admin and /login paths (and their children)
-         * to prevent storefront pages from being forced into dynamic rendering
-         * by session management cookies.
-         */
-        "/admin/:path*",
-        "/login",
-    ],
+    matcher: ["/admin/:path*", "/login"],
 };

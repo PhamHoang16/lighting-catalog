@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { X, MapPin, Phone, CreditCard, FileText, Truck, Store, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate } from "@/lib/utils";
 import OrderStatusBadge from "./OrderStatusBadge";
 import type { Order, OrderStatus } from "@/lib/types/database";
+import { updateOrderStatusAction } from "@/app/actions/admin";
 
 const vndFormat = new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -33,23 +33,19 @@ export default function OrderDetailModal({
     order,
     onStatusUpdated,
 }: OrderDetailModalProps) {
-    const supabase = createClient();
     const { toast } = useToast();
     const [updatingStatus, setUpdatingStatus] = useState(false);
 
     if (!open || !order) return null;
 
-    async function handleStatusChange(newStatus: string) {
+    async function handleStatusChange(newStatus: OrderStatus) {
         if (!order) return;
         setUpdatingStatus(true);
 
-        const { error } = await supabase
-            .from("orders")
-            .update({ status: newStatus })
-            .eq("id", order.id);
+        const result = await updateOrderStatusAction(order.id, newStatus);
 
-        if (error) {
-            toast("Lỗi cập nhật trạng thái: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi cập nhật trạng thái: " + result.error, "error");
         } else {
             toast("Đã cập nhật trạng thái đơn hàng!", "success");
             onStatusUpdated();

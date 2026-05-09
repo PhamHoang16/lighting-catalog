@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Grid3X3 } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
+import { getAllCategories } from "@/lib/db/queries/categories";
 
 // ── Accent colors cho mỗi card ─────────────────────────────────
 const CARD_ACCENTS = [
@@ -10,18 +10,9 @@ const CARD_ACCENTS = [
     { bg: "bg-violet-50", icon: "text-violet-500", hover: "hover:border-violet-300" },
 ];
 
-async function getFeaturedCategories() {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("categories")
-        .select("id, name, slug")
-        .order("sort_order", { ascending: true })
-        .limit(4);
-    return data ?? [];
-}
-
 export default async function FeaturedCategories() {
-    const categories = await getFeaturedCategories();
+    const all = await getAllCategories();
+    const categories = all.filter(c => !c.parent_id).slice(0, 4);
 
     if (categories.length === 0) return null;
 

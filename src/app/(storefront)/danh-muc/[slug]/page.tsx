@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { X, SlidersHorizontal } from "lucide-react";
-import { createStaticClient } from "@/lib/supabase/static";
 import { siteConfig } from "@/lib/config/site";
 import { getDescendantIds } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
@@ -11,22 +10,16 @@ import ProductGrid from "@/components/storefront/category/ProductGrid";
 import ProductGridLoading from "@/components/storefront/category/ProductGridLoading";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
-import type { Category, Product, Brand } from "@/lib/types/database";
+import { getAllCategories, getCategoryBySlug } from "@/lib/db/queries/categories";
+import { getAllBrands } from "@/lib/db/queries/brands";
+import { getProductsByCategory } from "@/lib/db/queries/products";
+import type { Category, Brand } from "@/lib/types/database";
 
-export const revalidate = 86400; // 1 day - max caching for egress protection
-// export const dynamic = "force-static"; 
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
-    const supabase = createStaticClient();
-    const { data: categories } = await supabase
-        .from("categories")
-        .select("slug")
-        .order("name", { ascending: true })
-        .limit(20);
-
-    return (categories ?? []).map((cat) => ({
-        slug: cat.slug,
-    }));
+    const categories = await getAllCategories();
+    return categories.slice(0, 20).map((cat) => ({ slug: cat.slug }));
 }
 
 interface PageProps {
@@ -35,21 +28,11 @@ interface PageProps {
 }
 
 // ── SEO ─────────────────────────────────────────────────────────
-export async function generateMetadata({
-    params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const supabase = createStaticClient();
+    const category = await getCategoryBySlug(slug);
 
-    const { data: category } = await supabase
-        .from("categories")
-        .select("name")
-        .eq("slug", slug)
-        .single();
-
-    if (!category) {
-        return { title: "Danh mục không tồn tại" };
-    }
+    if (!category) return { title: "Danh mục không tồn tại" };
 
     return {
         title: category.name,
@@ -57,127 +40,32 @@ export async function generateMetadata({
     };
 }
 
-// ── Data ────────────────────────────────────────────────────────
-// ── Raw Data Functions (Uncached) ──────────────────────────
-async function getMetadataRaw(slug: string) {
-    const supabase = createStaticClient();
-    console.log(`Supabase: Fetching Category Detail Metadata [${slug}]`);
-
-    // 1. Get the target category
-    const { data: activeCategory } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-
-    if (!activeCategory) return null;
-
-    // 2. Get all categories
-    const { data: allCategoriesRes } = await supabase
-        .from("categories")
-        .select("id, name, slug, parent_id, image_url, sort_order, created_at")
-        .order("sort_order", { ascending: true });
-
-    const categories = (allCategoriesRes as any[]) ?? [];
-
-    const { data: allBrandsRes } = await supabase
-        .from("brands")
-        .select("id, name, slug, logo_url, created_at")
-        .order("name", { ascending: true });
-
-    const brands = (allBrandsRes as any[]) ?? [];
-
-    const parentCategory = activeCategory.parent_id
-        ? categories.find((c) => c.id === activeCategory.parent_id) ?? null
-        : null;
-
-    return {
-        activeCategory: activeCategory as Category,
-        parentCategory,
-        categories,
-        brands: brands
-    };
-}
-
-// ── Cached Metadata ──────────────────────────────────────────
+// ── Cached Metadata ──────────────────────────────────────────────
 const getMetadata = unstable_cache(
-    async (slug: string) => getMetadataRaw(slug),
+    async (slug: string) => {
+        const [activeCategory, allCategories, brands] = await Promise.all([
+            getCategoryBySlug(slug),
+            getAllCategories(),
+            getAllBrands(),
+        ]);
+
+        if (!activeCategory) return null;
+
+        const parentCategory = activeCategory.parent_id
+            ? allCategories.find((c) => c.id === activeCategory.parent_id) ?? null
+            : null;
+
+        return { activeCategory, parentCategory, categories: allCategories, brands };
+    },
     ["category-detail-metadata"],
     { revalidate: 3600, tags: ["categories", "brands"] }
 );
 
-async function getProductsRaw(
-    activeCategoryId: string,
-    categories: Category[],
-    brands: Brand[],
-    brandSlugs?: string[],
-    minPrice?: number,
-    maxPrice?: number,
-    searchQuery?: string,
-    page: number = 1,
-    limit: number = 20,
-    sort: string = "newest"
-) {
-    const supabase = createStaticClient();
-    console.log(`Supabase: Fetching Category Products [${activeCategoryId}] (page: ${page})`);
-
-    const categoryIds = getDescendantIds(activeCategoryId, categories);
-
-    let productsQuery = supabase
-        .from("products")
-        .select("id, name, slug, price, image_url, category_id, brand_id, created_at", { count: "exact" })
-        .in("category_id", categoryIds);
-
-    if (brandSlugs && brandSlugs.length > 0) {
-        const brandIds = brands
-            .filter((b) => brandSlugs.includes(b.slug))
-            .map((b) => b.id);
-        if (brandIds.length > 0) {
-            productsQuery = productsQuery.in("brand_id", brandIds);
-        }
-    }
-
-    if (minPrice !== undefined && !isNaN(minPrice)) {
-        productsQuery = productsQuery.gte("price", minPrice);
-    }
-    if (maxPrice !== undefined && !isNaN(maxPrice)) {
-        productsQuery = productsQuery.lte("price", maxPrice);
-    }
-    if (searchQuery) {
-        productsQuery = productsQuery.ilike("name", `%${searchQuery}%`);
-    }
-
-    switch (sort) {
-        case "newest": productsQuery = productsQuery.order("created_at", { ascending: false }); break;
-        case "oldest": productsQuery = productsQuery.order("created_at", { ascending: true }); break;
-        case "price-asc": productsQuery = productsQuery.order("price", { ascending: true }); break;
-        case "price-desc": productsQuery = productsQuery.order("price", { ascending: false }); break;
-        case "featured":
-        default:
-            productsQuery = productsQuery
-                .order("sort_order", { ascending: true })
-                .order("created_at", { ascending: false });
-            break;
-    }
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    productsQuery = productsQuery.range(from, to);
-
-    const { data: products, count } = await productsQuery;
-
-    return {
-        products: (products as Product[]) ?? [],
-        totalCount: count ?? 0,
-        totalPages: count ? Math.ceil(count / limit) : 1
-    };
-}
-
-// ── Cached Products ──────────────────────────────────────────
+// ── Cached Products ──────────────────────────────────────────────
 const getProducts = unstable_cache(
     async (
         activeCategoryId: string,
-        categoriesSerialized: string, // Serialize for cache key
+        categoriesSerialized: string,
         brandsSerialized: string,
         brandSlugsSerialized: string = "",
         minPrice?: number,
@@ -187,10 +75,25 @@ const getProducts = unstable_cache(
         limit: number = 20,
         sort: string = "featured"
     ) => {
-        const categories = JSON.parse(categoriesSerialized);
-        const brands = JSON.parse(brandsSerialized);
-        const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(',') : undefined;
-        return getProductsRaw(activeCategoryId, categories, brands, brandSlugs, minPrice, maxPrice, searchQuery, page, limit, sort);
+        const allCategories: Category[] = JSON.parse(categoriesSerialized);
+        const brands: Brand[] = JSON.parse(brandsSerialized);
+        const brandSlugs = brandSlugsSerialized ? brandSlugsSerialized.split(",") : undefined;
+        const brandIds = brandSlugs && brandSlugs.length > 0
+            ? brands.filter(b => brandSlugs.includes(b.slug)).map(b => b.id)
+            : undefined;
+
+        const categoryIds = getDescendantIds(activeCategoryId, allCategories);
+
+        return getProductsByCategory({
+            categoryIds,
+            brandIds,
+            minPrice: minPrice && !isNaN(minPrice) ? minPrice : undefined,
+            maxPrice: maxPrice && !isNaN(maxPrice) ? maxPrice : undefined,
+            searchQuery,
+            page,
+            limit,
+            sort: sort as any,
+        });
     },
     ["category-detail-products"],
     { revalidate: 3600, tags: ["products"] }
@@ -227,20 +130,17 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
     const { slug } = await params;
     const search = await searchParams;
 
-    // Parse brand filters from query params
     const brandParam = search.brands;
     const brandSlugs = typeof brandParam === "string"
         ? brandParam.split(",").filter(Boolean)
         : undefined;
 
-    // Parse price filters
     const minPriceParam = search.minPrice;
     const minPrice = typeof minPriceParam === "string" ? parseInt(minPriceParam, 10) : undefined;
 
     const maxPriceParam = search.maxPrice;
     const maxPrice = typeof maxPriceParam === "string" ? parseInt(maxPriceParam, 10) : undefined;
 
-    // Parse pagination and sorting
     const pageParam = search.page;
     const currentPage = typeof pageParam === "string" ? parseInt(pageParam, 10) : 1;
     const sortParam = search.sort;
@@ -256,7 +156,6 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
     const hasFilters = (brandSlugs && brandSlugs.length > 0) || !isNaN(minPrice ?? NaN) || !isNaN(maxPrice ?? NaN) || !!searchQuery;
 
     const buildQueryString = (keyToUpdate: string, newValue: string | null) => {
-        // Safe cast since we know our URL structure uses simple strings
         const params = new URLSearchParams(search as Record<string, string>);
         if (newValue === null || newValue === "") {
             params.delete(keyToUpdate);
@@ -268,15 +167,13 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
 
     return (
         <div className="bg-slate-50 min-h-screen pb-12">
-            {/* ── Dynamic Hero Header ────────────────────────────────────────── */}
+            {/* ── Dynamic Hero Header ── */}
             <div className="relative overflow-hidden bg-white border-b border-gray-200">
-                {/* Decorative Pattern / Glow */}
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
                 <div className="relative mx-auto max-w-[1440px] px-4 py-6 sm:px-6">
-                    {/* Breadcrumbs integraded inside Hero */}
                     <div className="mb-6">
                         <Breadcrumbs
                             items={[
@@ -288,7 +185,7 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                             ]}
                         />
                     </div>
-                    
+
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4">
                         <div className="flex items-center gap-4">
                             {activeCategory.image_url && (
@@ -305,24 +202,24 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                                     {searchQuery ? `Tìm kiếm: "${searchQuery}"` : activeCategory.name}
                                 </h1>
                                 <p className="mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
-                                    {activeCategory.description 
-                                        ? activeCategory.description 
+                                    {(activeCategory as any).description
+                                        ? (activeCategory as any).description
                                         : `Khám phá các sản phẩm ${activeCategory.name.toLowerCase()} chất lượng cao, đa dạng mẫu mã và bảo hành dài hạn.`}
                                 </p>
                             </div>
                         </div>
                         <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
                             <Suspense fallback={<div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />}>
-                                <ProductsCountInHeaderDetail 
+                                <ProductsCountInHeaderDetail
                                     activeCategoryId={activeCategory.id}
                                     categories={categories}
                                     brands={brands}
-                                    brandSlugs={brandSlugs} 
-                                    minPrice={minPrice} 
-                                    maxPrice={maxPrice} 
-                                    searchQuery={searchQuery} 
-                                    currentPage={currentPage} 
-                                    currentSort={currentSort} 
+                                    brandSlugs={brandSlugs}
+                                    minPrice={minPrice}
+                                    maxPrice={maxPrice}
+                                    searchQuery={searchQuery}
+                                    currentPage={currentPage}
+                                    currentSort={currentSort}
                                 />
                             </Suspense>
                         </div>
@@ -330,11 +227,10 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                 </div>
             </div>
 
-            {/* ── Main content (Filters & Grid) ────────────────────────────── */}
+            {/* ── Main content ── */}
             <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-                    
-                    {/* Sidebar Filter */}
+
                     <div className="lg:w-[280px] lg:shrink-0">
                         <CategorySidebarAdvanced
                             categories={categories}
@@ -343,25 +239,23 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                         />
                     </div>
 
-                    {/* Product Grid Area */}
                     <div className="flex-1 flex flex-col min-w-0">
-                        
-                        {/* Active Filters Display Toolbar (if any) */}
+
                         {hasFilters && (
                             <div className="mb-6 flex flex-wrap items-center gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                                 <span className="text-xs font-semibold uppercase text-gray-400 mr-2 flex items-center gap-1.5 shrink-0">
                                     <SlidersHorizontal className="w-3.5 h-3.5" /> Bộ lọc đang chọn:
                                 </span>
-                                
+
                                 {brandSlugs?.map(slug => {
                                     const b = brands.find(br => br.slug === slug);
                                     if (!b) return null;
                                     const newBrands = brandSlugs.filter(s => s !== slug).join(',');
                                     return (
-                                        <Link 
-                                            key={slug} 
+                                        <Link
+                                            key={slug}
                                             href={buildQueryString('brands', newBrands)}
-                                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
                                         >
                                             Thương hiệu: {b.name} <X className="h-3 w-3" />
                                         </Link>
@@ -369,28 +263,22 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                                 })}
 
                                 {minPrice !== undefined && (
-                                    <Link 
-                                        href={buildQueryString('minPrice', null)}
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
-                                    >
-                                        Từ: {(minPrice).toLocaleString()}đ <X className="h-3 w-3" />
+                                    <Link href={buildQueryString('minPrice', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors">
+                                        Từ: {minPrice.toLocaleString()}đ <X className="h-3 w-3" />
                                     </Link>
                                 )}
 
                                 {maxPrice !== undefined && (
-                                    <Link 
-                                        href={buildQueryString('maxPrice', null)}
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
-                                    >
-                                        Đến: {(maxPrice).toLocaleString()}đ <X className="h-3 w-3" />
+                                    <Link href={buildQueryString('maxPrice', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors">
+                                        Đến: {maxPrice.toLocaleString()}đ <X className="h-3 w-3" />
                                     </Link>
                                 )}
-                                
+
                                 {searchQuery && (
-                                    <Link 
-                                        href={buildQueryString('q', null)}
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:text-amber-900 transition-colors"
-                                    >
+                                    <Link href={buildQueryString('q', null)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors">
                                         Từ khóa: "{searchQuery}" <X className="h-3 w-3" />
                                     </Link>
                                 )}
@@ -401,7 +289,6 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                             </div>
                         )}
 
-                        {/* Grid */}
                         <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm border border-gray-100 flex-1">
                             <Suspense key={JSON.stringify(search)} fallback={<ProductGridLoading />}>
                                 <ProductGridLoaderDetail

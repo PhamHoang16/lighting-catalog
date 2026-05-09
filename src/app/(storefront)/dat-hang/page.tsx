@@ -15,11 +15,11 @@ import {
     Package,
     MapPin,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useCart, type CartItem } from "@/lib/cart/CartContext";
 import { useToast } from "@/components/ui/Toast";
 import { siteConfig } from "@/lib/config/site";
 import type { OrderItem } from "@/lib/types/database";
+import { createOrderAction } from "@/app/actions/admin";
 
 const vndFormat = new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -27,7 +27,6 @@ const vndFormat = new Intl.NumberFormat("vi-VN", {
 });
 
 export default function CheckoutPage() {
-    const supabase = createClient();
     const router = useRouter();
     const { toast } = useToast();
     const { items, totalAmount, clearCart } = useCart();
@@ -109,7 +108,7 @@ export default function CheckoutPage() {
             quantity: item.quantity,
         }));
 
-        const { error } = await supabase.from("orders").insert({
+        const result = await createOrderAction({
             customer_name: name.trim(),
             phone: phone.trim(),
             title,
@@ -120,11 +119,10 @@ export default function CheckoutPage() {
             invoice_company: deliveryMethod === "delivery" ? invoiceCompany : false,
             total_amount: totalAmount,
             items: orderItems,
-            status: "pending",
         });
 
-        if (error) {
-            toast("Lỗi khi đặt hàng: " + error.message, "error");
+        if (result?.error) {
+            toast("Lỗi khi đặt hàng: " + result.error, "error");
         } else {
             clearCart();
             setSuccess(true);

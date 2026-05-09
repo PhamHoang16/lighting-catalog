@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useTransition } from "react";
 import { Plus, Loader2, Tag, RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import BrandTable from "@/components/admin/BrandTable";
 import BrandFormModal, { type BrandFormData } from "@/components/admin/BrandFormModal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { Brand } from "@/lib/types/database";
+import {
+    getBrandsAction,
+    saveBrandAction,
+    deleteBrandAction,
+} from "@/app/actions/admin";
 
 export default function AdminBrandsPage() {
-    const supabase = createClient();
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     // ── State ───────────────────────────────────────────────────
     const [brands, setBrands] = useState<Brand[]>([]);
@@ -29,18 +33,14 @@ export default function AdminBrandsPage() {
     // ── Fetch brands ────────────────────────────────────────────
     const fetchBrands = useCallback(async () => {
         setLoadingData(true);
-        const { data, error } = await supabase
-            .from("brands")
-            .select("id, name, slug, logo_url, created_at")
-            .order("name", { ascending: true });
-
-        if (error) {
-            toast("Không thể tải thương hiệu: " + error.message, "error");
-        } else {
-            setBrands(data ?? []);
+        try {
+            const data = await getBrandsAction();
+            setBrands(data);
+        } catch (e) {
+            toast("Không thể tải thương hiệu: " + (e as Error).message, "error");
         }
         setLoadingData(false);
-    }, [supabase, toast]);
+    }, [toast]);
 
     useEffect(() => {
         fetchBrands();
@@ -49,54 +49,49 @@ export default function AdminBrandsPage() {
 
     // ── Create ──────────────────────────────────────────────────
     async function handleCreate(formData: BrandFormData) {
-        const { error } = await supabase
-            .from("brands")
-            .insert({
-                name: formData.name,
-                slug: formData.slug,
-                logo_url: formData.logo_url,
-            });
+        const result = await saveBrandAction(null, {
+            name: formData.name,
+            slug: formData.slug,
+            logo_url: formData.logo_url,
+        });
 
-        if (error) {
-            if (error.code === "23505") {
+        if (result?.error) {
+            if (result.error.includes("Slug")) {
                 toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
             } else {
-                toast("Lỗi khi thêm thương hiệu: " + error.message, "error");
+                toast("Lỗi khi thêm thương hiệu: " + result.error, "error");
             }
-            throw error;
+            throw new Error(result.error);
         }
 
         toast("Đã thêm thương hiệu thành công!", "success");
         setFormOpen(false);
-        fetchBrands();
+        startTransition(() => { fetchBrands(); });
     }
 
     // ── Update ──────────────────────────────────────────────────
     async function handleUpdate(formData: BrandFormData) {
         if (!editingBrand) return;
 
-        const { error } = await supabase
-            .from("brands")
-            .update({
-                name: formData.name,
-                slug: formData.slug,
-                logo_url: formData.logo_url,
-            })
-            .eq("id", editingBrand.id);
+        const result = await saveBrandAction(editingBrand.id, {
+            name: formData.name,
+            slug: formData.slug,
+            logo_url: formData.logo_url,
+        });
 
-        if (error) {
-            if (error.code === "23505") {
+        if (result?.error) {
+            if (result.error.includes("Slug")) {
                 toast("Slug đã tồn tại. Vui lòng đổi tên khác.", "error");
             } else {
-                toast("Lỗi khi cập nhật: " + error.message, "error");
+                toast("Lỗi khi cập nhật: " + result.error, "error");
             }
-            throw error;
+            throw new Error(result.error);
         }
 
         toast("Đã cập nhật thương hiệu thành công!", "success");
         setFormOpen(false);
         setEditingBrand(null);
-        fetchBrands();
+        startTransition(() => { fetchBrands(); });
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -104,23 +99,17 @@ export default function AdminBrandsPage() {
         if (!deletingBrand) return;
 
         setDeleting(true);
-        const { error } = await supabase
-            .from("brands")
-            .delete()
-            .eq("id", deletingBrand.id);
+        const result = await deleteBrandAction(deletingBrand.id);
 
-        if (error) {
-            if (error.code === "23503") {
-                toast(
-                    "Không thể xóa thương hiệu này vì đang có sản phẩm liên kết.",
-                    "error"
-                );
+        if (result?.error) {
+            if (result.error.includes("sản phẩm liên kết")) {
+                toast("Không thể xóa thương hiệu này vì đang có sản phẩm liên kết.", "error");
             } else {
-                toast("Lỗi khi xóa: " + error.message, "error");
+                toast("Lỗi khi xóa: " + result.error, "error");
             }
         } else {
             toast("Đã xóa thương hiệu thành công!", "success");
-            fetchBrands();
+            startTransition(() => { fetchBrands(); });
         }
 
         setDeleting(false);
@@ -166,7 +155,7 @@ export default function AdminBrandsPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchBrands}
-                        disabled={loadingData}
+                        disabled={loadingData || isPending}
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
                     >
                         <RefreshCw

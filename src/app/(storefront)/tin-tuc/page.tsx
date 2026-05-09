@@ -1,49 +1,36 @@
-import { createStaticClient } from "@/lib/supabase/static";
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/config/site";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import NewsHeroBlock from "@/components/storefront/news/NewsHeroBlock";
 import NewsPopularScroll from "@/components/storefront/news/NewsPopularScroll";
 import NewsListBlock from "@/components/storefront/news/NewsListBlock";
+import { getPublishedPosts } from "@/lib/db/queries/posts";
 import type { Post } from "@/lib/types/database";
 
-export const revalidate = 86400; // 1 day - max caching for egress protection
+export const revalidate = 86400; // 1 day
 
 export const metadata: Metadata = {
     title: `Tin tức & Kiến thức chiếu sáng | ${siteConfig.name}`,
     description: `Cập nhật tin tức mới nhất, chia sẻ kiến thức về đèn chiếu sáng, thiết kế ánh sáng và giải pháp lighting từ ${siteConfig.name}.`,
 };
 
-async function getPosts() {
-    const supabase = createStaticClient();
-    const { data } = await supabase
-        .from("posts")
-        .select("id, title, slug, thumbnail_url, is_published, created_at, summary, is_featured, is_popular")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false });
-
-    return (data ?? []) as any[];
-}
-
 export default async function NewsListPage() {
-    const allPosts = await getPosts();
+    const allPosts = await getPublishedPosts(100) as Post[];
 
     // Khối 1: Nổi bật (is_featured = true)
     const featuredPosts = allPosts.filter(p => p.is_featured);
-    // Nếu chưa đủ 3 bài nổi bật thì lấy đại bài mới nhất bù vào
-    const heroPosts = featuredPosts.length >= 3 
-        ? featuredPosts.slice(0, 3) 
+    const heroPosts = featuredPosts.length >= 3
+        ? featuredPosts.slice(0, 3)
         : [...featuredPosts, ...allPosts.filter(p => !p.is_featured)].slice(0, 3);
 
     // Khối 2: Xem nhiều (is_popular = true)
     const popularPosts = allPosts.filter(p => p.is_popular);
-    // Tương tự, nếu không đủ lấy đại list còn lại
-    const scrollPosts = popularPosts.length >= 4 
-        ? popularPosts.slice(0, 10) 
+    const scrollPosts = popularPosts.length >= 4
+        ? popularPosts.slice(0, 10)
         : [...popularPosts, ...allPosts.filter(p => !p.is_popular)].slice(0, 10);
 
     // Khối 3: Tất cả bài viết
-    const listPosts = allPosts; // (thực tế sau này nối API sẽ có phân trang ở đây)
+    const listPosts = allPosts;
 
     return (
         <div className="bg-gray-50/50 min-h-screen">
@@ -56,37 +43,26 @@ export default async function NewsListPage() {
 
             {/* Container */}
             <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
-                
-                {/* ════════════════════════════════════════════════════════
-                    KHỐI 1: TIN NỔI BẬT NHẤT (HERO BLOCK)
-                    Nằm vị trí cao nhất
-                   ════════════════════════════════════════════════════════ */}
+
+                {/* KHỐI 1: TIN NỔI BẬT NHẤT (HERO BLOCK) */}
                 {heroPosts.length > 0 && (
                     <section className="pt-8 pb-10 md:pt-10 md:pb-12">
                         <NewsHeroBlock posts={heroPosts} />
                     </section>
                 )}
 
-                {/* Divider Line */}
                 <div className="h-px bg-gray-200" />
 
-                {/* ════════════════════════════════════════════════════════
-                    KHỐI 2: XEM NHIỀU TUẦN QUA (HORIZONTAL SCROLL)
-                    Nằm ở giữa
-                   ════════════════════════════════════════════════════════ */}
+                {/* KHỐI 2: XEM NHIỀU TUẦN QUA (HORIZONTAL SCROLL) */}
                 {scrollPosts.length > 0 && (
                     <section className="py-10 md:py-12">
                         <NewsPopularScroll posts={scrollPosts} />
                     </section>
                 )}
 
-                {/* Divider Line */}
                 <div className="h-px bg-gray-200" />
 
-                {/* ════════════════════════════════════════════════════════
-                    KHỐI 3: TẤT CẢ BÀI VIẾT (LIST VIEW)
-                    Dạng dọc truyền thống
-                   ════════════════════════════════════════════════════════ */}
+                {/* KHỐI 3: TẤT CẢ BÀI VIẾT (LIST VIEW) */}
                 {listPosts.length > 0 && (
                     <section className="py-10 md:py-16">
                         <NewsListBlock posts={listPosts} />

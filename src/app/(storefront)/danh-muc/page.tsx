@@ -144,23 +144,21 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
-                <div className="relative mx-auto max-w-[1440px] px-4 py-6 sm:px-6">
-                    <div className="mb-6">
+                <div className="relative mx-auto max-w-[1440px] px-4 py-3 sm:py-6 sm:px-6">
+                    <div className="mb-2 sm:mb-6">
                         <Breadcrumbs items={[{ label: "Tất cả sản phẩm" }]} />
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <h1 className="text-3xl font-black text-gray-900 tracking-tight sm:text-4xl">
-                                    {searchQuery ? `Tìm kiếm: "${searchQuery}"` : "Tất cả sản phẩm"}
-                                </h1>
-                                <p className="mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
-                                    Duyệt qua không gian trưng bày kỹ thuật số của chúng tôi. Hàng nghìn mã sản phẩm đa dạng đang chờ bạn khám phá.
-                                </p>
-                            </div>
+                    <div className="flex flex-row items-center justify-between gap-3 pb-3 sm:flex-row sm:items-end sm:gap-6 sm:pb-4">
+                        <div className="min-w-0">
+                            <h1 className="text-xl font-black text-gray-900 tracking-tight sm:text-4xl truncate">
+                                {searchQuery ? `Tìm kiếm: "${searchQuery}"` : "Tất cả sản phẩm"}
+                            </h1>
+                            <p className="hidden sm:block mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
+                                Duyệt qua không gian trưng bày kỹ thuật số của chúng tôi. Hàng nghìn mã sản phẩm đa dạng đang chờ bạn khám phá.
+                            </p>
                         </div>
-                        <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
+                        <div className="shrink-0 bg-gray-50/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
                             <Suspense fallback={<div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />}>
                                 <ProductsCountInHeader 
                                     brands={brands} 
@@ -177,8 +175,8 @@ export default async function AllCategoriesPage({ searchParams }: PageProps) {
                 </div>
             </div>
 
-            {/* ── Main content (Filters & Grid) ────────────────────────────── */}
-            <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6">
+            {/* ── Main content (Filters & Grid) ────────────────────── */}
+            <div className="mx-auto max-w-[1440px] px-4 py-4 sm:py-8 sm:px-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
                     
                     <div className="lg:w-[280px] lg:shrink-0">

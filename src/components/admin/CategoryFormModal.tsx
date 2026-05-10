@@ -5,6 +5,8 @@ import { Loader2, ImageIcon } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { toSlug } from "@/lib/utils";
 import type { Category } from "@/lib/types/database";
+import ImageUploader from "./product-form/ImageUploader";
+import type { PendingImage } from "./product-form/ImageUploader";
 
 export interface CategoryFormData {
     name: string;
@@ -32,9 +34,11 @@ export default function CategoryFormModal({
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [parentId, setParentId] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
     const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const [thumbExisting, setThumbExisting] = useState<string[]>([]);
+    const [thumbPending, setThumbPending] = useState<PendingImage[]>([]);
 
     const isEdit = !!editingCategory;
 
@@ -51,14 +55,16 @@ export default function CategoryFormModal({
             setName(editingCategory.name);
             setSlug(editingCategory.slug);
             setParentId(editingCategory.parent_id ?? "");
-            setImageUrl(editingCategory.image_url ?? "");
             setDescription(editingCategory.description ?? "");
+            setThumbExisting(editingCategory.image_url ? [editingCategory.image_url] : []);
+            setThumbPending([]);
         } else {
             setName("");
             setSlug("");
             setParentId("");
-            setImageUrl("");
             setDescription("");
+            setThumbExisting([]);
+            setThumbPending([]);
         }
     }, [editingCategory, open]);
 
@@ -70,6 +76,35 @@ export default function CategoryFormModal({
         }
     }, [name, isEdit, editingCategory?.name]);
 
+    // ── Upload a single file → return public URL ─────────────────────
+    async function uploadFile(file: File): Promise<string> {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "categories");
+
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+            throw new Error(json.error ?? "Upload thất bại");
+        }
+
+        return json.url as string;
+    }
+
+    async function resolvePendingImages(pending: PendingImage[]): Promise<string[]> {
+        const urls: string[] = [];
+        for (const img of pending) {
+            if (img.type === "url") {
+                urls.push(img.url);
+            } else if (img.file) {
+                const url = await uploadFile(img.file);
+                urls.push(url);
+            }
+        }
+        return urls;
+    }
+
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         if (!name.trim()) return;
@@ -78,18 +113,22 @@ export default function CategoryFormModal({
 
         setLoading(true);
         try {
+            const newThumbUrls = await resolvePendingImages(thumbPending);
+            const finalThumbUrl = newThumbUrls[0] ?? thumbExisting[0] ?? null;
+
             await onSubmit({
                 name: name.trim(),
                 slug: finalSlug,
                 parent_id: parentId || null,
-                image_url: imageUrl.trim() || null,
+                image_url: finalThumbUrl,
                 description: description.trim() || null,
             });
             setName("");
             setSlug("");
             setParentId("");
-            setImageUrl("");
             setDescription("");
+            setThumbExisting([]);
+            setThumbPending([]);
         } finally {
             setLoading(false);
         }
@@ -100,8 +139,9 @@ export default function CategoryFormModal({
             setName("");
             setSlug("");
             setParentId("");
-            setImageUrl("");
             setDescription("");
+            setThumbExisting([]);
+            setThumbPending([]);
             onClose();
         }
     }
@@ -166,33 +206,17 @@ export default function CategoryFormModal({
                     </p>
                 </div>
 
-                {/* Image URL */}
-                <div>
-                    <label htmlFor="cat-image" className="mb-1.5 block text-sm font-medium text-gray-700">
-                        Link ảnh danh mục
-                    </label>
-                    <input
-                        id="cat-image"
-                        type="url"
-                        placeholder="https://example.com/image.jpg"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
+                {/* Image Upload */}
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <ImageUploader
+                        label="Ảnh danh mục"
+                        multiple={false}
+                        existingUrls={thumbExisting}
+                        pendingImages={thumbPending}
+                        onPendingChange={setThumbPending}
+                        onExistingRemove={() => setThumbExisting([])}
                         disabled={loading}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                     />
-                    {imageUrl && (
-                        <div className="mt-2 flex items-center gap-2">
-                            <div className="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                                <img
-                                    src={imageUrl}
-                                    alt="Preview"
-                                    className="h-full w-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                />
-                            </div>
-                            <span className="text-xs text-gray-500">Xem trước</span>
-                        </div>
-                    )}
                 </div>
 
                 {/* Description */}

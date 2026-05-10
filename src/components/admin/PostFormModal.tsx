@@ -6,6 +6,8 @@ import Modal from "@/components/ui/Modal";
 import type { Post } from "@/lib/types/database";
 import { toSlug } from "@/lib/utils";
 import RichTextEditor from "./product-form/RichTextEditor";
+import ImageUploader from "./product-form/ImageUploader";
+import type { PendingImage } from "./product-form/ImageUploader";
 
 export interface PostFormData {
     title: string;
@@ -33,9 +35,11 @@ export default function PostFormModal({
 }: PostFormModalProps) {
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
-    const [thumbnailUrl, setThumbnailUrl] = useState("");
     const [summary, setSummary] = useState("");
     const [content, setContent] = useState("");
+
+    const [thumbExisting, setThumbExisting] = useState<string[]>([]);
+    const [thumbPending, setThumbPending] = useState<PendingImage[]>([]);
     const [isPublished, setIsPublished] = useState(false);
     const [isFeatured, setIsFeatured] = useState(false);
     const [isPopular, setIsPopular] = useState(false);
@@ -48,7 +52,8 @@ export default function PostFormModal({
         if (editingPost) {
             setTitle(editingPost.title);
             setSlug(editingPost.slug);
-            setThumbnailUrl(editingPost.thumbnail_url ?? "");
+            setThumbExisting(editingPost.thumbnail_url ? [editingPost.thumbnail_url] : []);
+            setThumbPending([]);
             setSummary(editingPost.summary ?? "");
             setContent(editingPost.content ?? "");
             setIsPublished(editingPost.is_published);
@@ -63,7 +68,8 @@ export default function PostFormModal({
     function reset() {
         setTitle("");
         setSlug("");
-        setThumbnailUrl("");
+        setThumbExisting([]);
+        setThumbPending([]);
         setSummary("");
         setContent("");
         setIsPublished(false);
@@ -91,10 +97,13 @@ export default function PostFormModal({
 
         setLoading(true);
         try {
+            const newThumbUrls = await resolvePendingImages(thumbPending);
+            const finalThumbUrl = newThumbUrls[0] ?? thumbExisting[0] ?? null;
+
             await onSubmit({
                 title: title.trim(),
                 slug: slug.trim(),
-                thumbnail_url: thumbnailUrl.trim() || null,
+                thumbnail_url: finalThumbUrl,
                 summary: summary.trim() || null,
                 content: content.trim() || null,
                 is_published: isPublished,
@@ -112,6 +121,35 @@ export default function PostFormModal({
     function handleClose() {
         reset();
         onClose();
+    }
+
+    // ── Upload a single file → return public URL ─────────────────────
+    async function uploadFile(file: File): Promise<string> {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "posts");
+
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+            throw new Error(json.error ?? "Upload thất bại");
+        }
+
+        return json.url as string;
+    }
+
+    async function resolvePendingImages(pending: PendingImage[]): Promise<string[]> {
+        const urls: string[] = [];
+        for (const img of pending) {
+            if (img.type === "url") {
+                urls.push(img.url);
+            } else if (img.file) {
+                const url = await uploadFile(img.file);
+                urls.push(url);
+            }
+        }
+        return urls;
     }
 
     return (
@@ -169,38 +207,17 @@ export default function PostFormModal({
                     </p>
                 </div>
 
-                {/* Thumbnail URL */}
-                <div>
-                    <label
-                        htmlFor="post-thumbnail"
-                        className="mb-1.5 block text-sm font-medium text-gray-700"
-                    >
-                        URL Ảnh bìa (Thumbnail)
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="post-thumbnail"
-                            type="url"
-                            value={thumbnailUrl}
-                            onChange={(e) => setThumbnailUrl(e.target.value)}
-                            placeholder="https://example.com/thumbnail.jpg"
-                            className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            disabled={loading}
-                        />
-                        <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    </div>
-                    {thumbnailUrl && thumbnailUrl.startsWith("http") && (
-                        <div className="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                            <img
-                                src={thumbnailUrl}
-                                alt="Thumbnail preview"
-                                className="w-full object-cover max-h-[140px]"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/800x400/eeeeee/999999?text=Image+Not+Found";
-                                }}
-                            />
-                        </div>
-                    )}
+                {/* Image Upload */}
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <ImageUploader
+                        label="Ảnh bìa (Thumbnail)"
+                        multiple={false}
+                        existingUrls={thumbExisting}
+                        pendingImages={thumbPending}
+                        onPendingChange={setThumbPending}
+                        onExistingRemove={() => setThumbExisting([])}
+                        disabled={loading}
+                    />
                 </div>
 
                 {/* Summary */}

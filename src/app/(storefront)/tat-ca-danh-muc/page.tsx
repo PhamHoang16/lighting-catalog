@@ -28,23 +28,23 @@ export default async function AllCategoriesDirectoryPage() {
                 {/* Decorative Glow Blob */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[160px] bg-gradient-to-b from-amber-400/10 to-transparent blur-3xl rounded-full pointer-events-none" />
 
-                <div className="relative mx-auto max-w-[1440px] px-6 py-10 lg:py-12 text-center flex flex-col items-center">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-700 shadow-sm">
-                        <Sparkles className="h-4 w-4 text-amber-500" />
+                <div className="relative mx-auto max-w-[1440px] px-6 py-5 sm:py-10 lg:py-12 text-center flex flex-col items-center">
+                    <div className="mb-2 sm:mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-amber-700 shadow-sm">
+                        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
                         <span>Hệ Sinh Thái Chiếu Sáng</span>
-                        <Sparkles className="h-4 w-4 text-amber-500" />
+                        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
                     </div>
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-gray-900 mb-4">
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-gray-900 mb-2 sm:mb-4">
                         Danh Sách <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Ngành Hàng</span>
                     </h1>
-                    <p className="max-w-2xl text-[15px] sm:text-base text-gray-500 leading-relaxed font-medium">
+                    <p className="hidden sm:block max-w-2xl text-[15px] sm:text-base text-gray-500 leading-relaxed font-medium">
                         Khám phá hệ sinh thái sản phẩm chiếu sáng cao cấp. <br />
                         Từ dân dụng đến dự án chuyên nghiệp.
                     </p>
                 </div>
             </div>
             {/* Main Content: Row-based Split Layout */}
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 mt-10 space-y-10">
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-6 mt-5 sm:mt-10 space-y-6 sm:space-y-10">
                 {tree.map((parent, index) => {
                     const bgClass = subtleBgs[index % subtleBgs.length];
                     return (

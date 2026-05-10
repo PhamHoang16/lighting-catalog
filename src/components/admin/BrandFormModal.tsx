@@ -5,6 +5,8 @@ import { Loader2, ImageIcon } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { toSlug } from "@/lib/utils";
 import type { Brand } from "@/lib/types/database";
+import ImageUploader from "./product-form/ImageUploader";
+import type { PendingImage } from "./product-form/ImageUploader";
 
 export interface BrandFormData {
     name: string;
@@ -27,8 +29,10 @@ export default function BrandFormModal({
 }: BrandFormModalProps) {
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
-    const [logoUrl, setLogoUrl] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const [thumbExisting, setThumbExisting] = useState<string[]>([]);
+    const [thumbPending, setThumbPending] = useState<PendingImage[]>([]);
 
     const isEdit = !!editingBrand;
 
@@ -36,7 +40,8 @@ export default function BrandFormModal({
         if (editingBrand) {
             setName(editingBrand.name);
             setSlug(editingBrand.slug);
-            setLogoUrl(editingBrand.logo_url ?? "");
+            setThumbExisting(editingBrand.logo_url ? [editingBrand.logo_url] : []);
+            setThumbPending([]);
         }
     }, [editingBrand]);
 
@@ -49,7 +54,37 @@ export default function BrandFormModal({
     function reset() {
         setName("");
         setSlug("");
-        setLogoUrl("");
+        setThumbExisting([]);
+        setThumbPending([]);
+    }
+
+    // ── Upload a single file → return public URL ─────────────────────
+    async function uploadFile(file: File): Promise<string> {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "brands");
+
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+            throw new Error(json.error ?? "Upload thất bại");
+        }
+
+        return json.url as string;
+    }
+
+    async function resolvePendingImages(pending: PendingImage[]): Promise<string[]> {
+        const urls: string[] = [];
+        for (const img of pending) {
+            if (img.type === "url") {
+                urls.push(img.url);
+            } else if (img.file) {
+                const url = await uploadFile(img.file);
+                urls.push(url);
+            }
+        }
+        return urls;
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -58,10 +93,13 @@ export default function BrandFormModal({
 
         setLoading(true);
         try {
+            const newThumbUrls = await resolvePendingImages(thumbPending);
+            const finalThumbUrl = newThumbUrls[0] ?? thumbExisting[0] ?? null;
+
             await onSubmit({
                 name: name.trim(),
                 slug: slug.trim(),
-                logo_url: logoUrl.trim() || null,
+                logo_url: finalThumbUrl,
             });
             reset();
         } catch {
@@ -127,35 +165,17 @@ export default function BrandFormModal({
                     </p>
                 </div>
 
-                {/* Logo URL */}
-                <div>
-                    <label
-                        htmlFor="brand-logo"
-                        className="mb-1.5 block text-sm font-medium text-gray-700"
-                    >
-                        URL logo
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="brand-logo"
-                            type="url"
-                            value={logoUrl}
-                            onChange={(e) => setLogoUrl(e.target.value)}
-                            placeholder="https://example.com/logo.png"
-                            className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            disabled={loading}
-                        />
-                        <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    </div>
-                    {logoUrl && (
-                        <div className="mt-2 h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white p-2">
-                            <img
-                                src={logoUrl}
-                                alt="Logo preview"
-                                className="h-full w-full object-contain"
-                            />
-                        </div>
-                    )}
+                {/* Image Upload */}
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <ImageUploader
+                        label="Logo thương hiệu"
+                        multiple={false}
+                        existingUrls={thumbExisting}
+                        pendingImages={thumbPending}
+                        onPendingChange={setThumbPending}
+                        onExistingRemove={() => setThumbExisting([])}
+                        disabled={loading}
+                    />
                 </div>
 
 

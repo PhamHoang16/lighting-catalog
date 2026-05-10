@@ -89,10 +89,10 @@ export default function ProductGrid({
 
     return (
         <div>
-            {/* ── Toolbar ──────────────────────────────────────── */}
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
-                <p className="text-[15px] font-medium text-gray-600">
-                    Tìm thấy <span className="font-bold text-gray-900">{totalCount}</span> sản phẩm
+            {/* ── Toolbar (Hidden on Mobile for cleaner UI) ── */}
+            <div className="mb-4 hidden sm:flex flex-row items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                <p className="text-sm font-medium text-gray-500">
+                    <span className="font-bold text-gray-900">{totalCount}</span> sản phẩm
                 </p>
                 <div className={`transition-opacity ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
                     <SortDropdown value={currentSort} onChange={handleSortChange} />

@@ -4,6 +4,8 @@ import { useState, useEffect, type FormEvent } from "react";
 import { Loader2, ImageIcon, Link as LinkIcon, AlertCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import type { Banner } from "@/lib/types/database";
+import ImageUploader from "./product-form/ImageUploader";
+import type { PendingImage } from "./product-form/ImageUploader";
 
 export interface BannerFormData {
     title: string | null;
@@ -27,43 +29,83 @@ export default function BannerFormModal({
     editingBanner,
 }: BannerFormModalProps) {
     const [title, setTitle] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
     const [isActive, setIsActive] = useState(true);
     const [sortOrder, setSortOrder] = useState<number>(0);
     const [loading, setLoading] = useState(false);
+
+    const [thumbExisting, setThumbExisting] = useState<string[]>([]);
+    const [thumbPending, setThumbPending] = useState<PendingImage[]>([]);
 
     const isEdit = !!editingBanner;
 
     useEffect(() => {
         if (editingBanner) {
             setTitle(editingBanner.title ?? "");
-            setImageUrl(editingBanner.image_url);
             setLinkUrl(editingBanner.link_url ?? "");
             setIsActive(editingBanner.is_active);
             setSortOrder(editingBanner.sort_order);
+            setThumbExisting(editingBanner.image_url ? [editingBanner.image_url] : []);
+            setThumbPending([]);
         } else {
             reset();
         }
     }, [editingBanner, open]);
 
     function reset() {
-        setTitle("");
-        setImageUrl("");
-        setLinkUrl("");
-        setIsActive(true);
-        setSortOrder(0);
+            setTitle("");
+            setLinkUrl("");
+            setIsActive(true);
+            setSortOrder(0);
+            setThumbExisting([]);
+            setThumbPending([]);
+    }
+
+    // ── Upload a single file → return public URL ─────────────────────
+    async function uploadFile(file: File): Promise<string> {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "banners");
+
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+            throw new Error(json.error ?? "Upload thất bại");
+        }
+
+        return json.url as string;
+    }
+
+    async function resolvePendingImages(pending: PendingImage[]): Promise<string[]> {
+        const urls: string[] = [];
+        for (const img of pending) {
+            if (img.type === "url") {
+                urls.push(img.url);
+            } else if (img.file) {
+                const url = await uploadFile(img.file);
+                urls.push(url);
+            }
+        }
+        return urls;
     }
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
-        if (!imageUrl.trim()) return;
-
+        
         setLoading(true);
         try {
+            const newThumbUrls = await resolvePendingImages(thumbPending);
+            const finalThumbUrl = newThumbUrls[0] ?? thumbExisting[0] ?? "";
+            
+            if (!finalThumbUrl.trim()) {
+                setLoading(false);
+                return;
+            }
+
             await onSubmit({
                 title: title.trim() || null,
-                image_url: imageUrl.trim(),
+                image_url: finalThumbUrl.trim(),
                 link_url: linkUrl.trim() || null,
                 is_active: isActive,
                 sort_order: sortOrder,
@@ -89,39 +131,17 @@ export default function BannerFormModal({
             closeOnClickOutside={false}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Image URL */}
-                <div>
-                    <label
-                        htmlFor="banner-image"
-                        className="mb-1.5 block text-sm font-medium text-gray-700"
-                    >
-                        URL Ảnh (Image URL) <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="banner-image"
-                            type="url"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            placeholder="https://example.com/banner.jpg"
-                            className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            required
-                            disabled={loading}
-                        />
-                        <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    </div>
-                    {imageUrl && imageUrl.startsWith("http") && (
-                        <div className="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                            <img
-                                src={imageUrl}
-                                alt="Banner preview"
-                                className="w-full object-cover max-h-[160px]"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/1200x400/eeeeee/999999?text=Image+Not+Found";
-                                }}
-                            />
-                        </div>
-                    )}
+                {/* Image Upload */}
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <ImageUploader
+                        label="Ảnh Banner (Image)"
+                        multiple={false}
+                        existingUrls={thumbExisting}
+                        pendingImages={thumbPending}
+                        onPendingChange={setThumbPending}
+                        onExistingRemove={() => setThumbExisting([])}
+                        disabled={loading}
+                    />
                 </div>
 
                 {/* Title */}
@@ -216,7 +236,7 @@ export default function BannerFormModal({
                     </button>
                     <button
                         type="submit"
-                        disabled={loading || !imageUrl.trim()}
+                        disabled={loading || (thumbExisting.length === 0 && thumbPending.length === 0)}
                         className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {loading && <Loader2 className="h-4 w-4 animate-spin" />}

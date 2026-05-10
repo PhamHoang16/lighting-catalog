@@ -39,9 +39,19 @@ export default function CategorySidebar({
     const [openCategory, setOpenCategory] = useState(true);
     const [openBrand, setOpenBrand] = useState(true);
     const [openPrice, setOpenPrice] = useState(true);
+    const [openSort, setOpenSort] = useState(true);
 
     const tree = buildCategoryTree(categories);
     const selectedBrands = searchParams.get("brands")?.split(",").filter(Boolean) ?? [];
+    const currentSort = searchParams.get("sort") || "featured";
+
+    const SORT_OPTIONS = [
+        { value: "featured", label: "Nổi bật" },
+        { value: "newest", label: "Mới nhất" },
+        { value: "oldest", label: "Cũ nhất" },
+        { value: "price-asc", label: "Giá tăng dần" },
+        { value: "price-desc", label: "Giá giảm dần" },
+    ];
 
     // Price filter state
     const parsedMinPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
@@ -97,7 +107,23 @@ export default function CategorySidebar({
             params.delete("maxPrice");
             setMaxPriceInput("");
         }
+        params.set("page", "1");
 
+        const basePath = activeSlug ? `/danh-muc/${activeSlug}` : "/danh-muc";
+        startTransition(() => {
+            router.push(params.toString() ? `${basePath}?${params.toString()}` : basePath);
+        });
+    }
+
+    function applySort(sortValue: string) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (sortValue === "featured") {
+            params.delete("sort");
+        } else {
+            params.set("sort", sortValue);
+        }
+        params.set("page", "1");
+        
         const basePath = activeSlug ? `/danh-muc/${activeSlug}` : "/danh-muc";
         startTransition(() => {
             router.push(params.toString() ? `${basePath}?${params.toString()}` : basePath);
@@ -120,12 +146,52 @@ export default function CategorySidebar({
         });
     }
 
-    const hasActiveFilters = selectedBrands.length > 0 || parsedMinPrice !== undefined || parsedMaxPrice !== undefined;
+    const hasActiveFilters = selectedBrands.length > 0 || parsedMinPrice !== undefined || parsedMaxPrice !== undefined || currentSort !== "featured";
     let activeFilterCount = selectedBrands.length;
     if (parsedMinPrice !== undefined || parsedMaxPrice !== undefined) activeFilterCount++;
+    if (currentSort !== "featured") activeFilterCount++;
 
     const content = (
         <div className="space-y-6">
+            {/* Sort Filters (Mobile Only in drawer) */}
+            <div className="relative lg:hidden">
+                <button 
+                    onClick={() => setOpenSort(!openSort)}
+                    className="group flex w-full items-center justify-between pb-2 text-[15px] font-black uppercase tracking-wider text-gray-900"
+                >
+                    <div className="flex items-center gap-2 relative">
+                        Sắp xếp
+                        {currentSort !== "featured" && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 absolute -right-3 top-1"></span>
+                        )}
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${openSort ? "rotate-180" : "group-hover:translate-y-0.5"}`} />
+                </button>
+                
+                <div className={`transition-all duration-300 overflow-hidden ${openSort ? 'max-h-[500px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                    <div className="grid grid-cols-2 gap-2">
+                        {SORT_OPTIONS.map((opt) => {
+                            const isSelected = currentSort === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => applySort(opt.value)}
+                                    disabled={isPending}
+                                    className={`flex items-center justify-center rounded-xl border px-2 py-2.5 text-xs text-center font-bold tracking-tight transition-all disabled:opacity-50 disabled:cursor-wait ${isSelected
+                                            ? "border-amber-400 bg-gradient-to-b from-amber-50 to-orange-50/50 text-amber-900 shadow-sm"
+                                            : "border-gray-200 bg-white text-gray-600 hover:border-amber-300/50 hover:bg-gray-50/50 hover:text-gray-900 shadow-sm"
+                                        }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent lg:hidden" />
+
             {/* Categories */}
             <div className="relative">
                 <button 
@@ -308,16 +374,16 @@ export default function CategorySidebar({
                 </div>
             </aside>
 
-            {/* ── Mobile Filter Button ─────────────────────────── */}
-            <div className="lg:hidden mb-6 flex justify-end">
+            {/* ── Mobile Filter Button (Circular Icon FAB) ── */}
+            <div className="lg:hidden fixed bottom-5 left-4 sm:left-6 z-[55]">
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white border border-dashed border-gray-300 px-5 py-3.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400"
+                    className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/95 backdrop-blur-md text-gray-700 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] border border-gray-200/80 ring-1 ring-black/5 transition-all hover:bg-gray-50 active:scale-95"
+                    aria-label="Lọc và Sắp xếp"
                 >
-                    <Filter className="h-4 w-4 text-gray-500" />
-                    Bộ lọc & Tìm kiếm
+                    <Filter className="h-[22px] w-[22px] text-gray-600" />
                     {activeFilterCount > 0 && (
-                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-black text-white">
+                        <span className="absolute -top-1.5 -right-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white border-2 border-white shadow-sm">
                             {activeFilterCount}
                         </span>
                     )}

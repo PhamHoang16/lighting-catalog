@@ -53,8 +53,8 @@ export default function ProductCard({
     return (
         <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-amber-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
             {/* The Invisible Overlay Link */}
-            <Link 
-                href={`/san-pham/${product.slug}`} 
+            <Link
+                href={`/san-pham/${product.slug}`}
                 className="absolute inset-0 z-10"
                 aria-label={`Xem chi tiết ${product.name}`}
             />
@@ -77,12 +77,12 @@ export default function ProductCard({
                 )}
 
                 {/* E-commerce Badges */}
-                <div className="absolute left-0 top-0 z-20">
+                {/* <div className="absolute left-0 top-0 z-20">
                     <div className="rounded-br-xl bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1 text-[10px] sm:text-xs font-bold text-white shadow-sm flex items-center gap-1 uppercase">
                         <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4" />
                         Chính hãng
                     </div>
-                </div>
+                </div> */}
 
                 {categoryName && (
                     <span className="absolute bottom-2 left-2 z-20 rounded-md bg-white/95 px-2 py-0.5 text-[9px] font-black uppercase text-gray-500 shadow-sm backdrop-blur-md tracking-tighter border border-gray-100">
@@ -126,13 +126,13 @@ export default function ProductCard({
                 </h3>
 
                 {/* Specs / Variants */}
-                <div className="mb-2 flex flex-wrap items-center gap-1.5 min-h-[20px]">
+                {/* <div className="mb-2 flex flex-wrap items-center gap-1.5 min-h-[20px]">
                     {Array.isArray(product.specs) && product.specs.length > 0 && (
                         <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-400 border border-gray-100 truncate max-w-full">
                             {product.specs[0].name}: {product.specs[0].value}
                         </span>
                     )}
-                </div>
+                </div> */}
 
                 {/* Ratings & Sold */}
                 <div className="mb-3 flex items-center justify-between mt-auto">
@@ -159,7 +159,7 @@ export default function ProductCard({
                             {priceDisplay}
                         </span>
                     </div>
-                    
+
                     <ProductCardCartButton
                         product={{
                             id: product.id,

@@ -34,9 +34,38 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!category) return { title: "Danh mục không tồn tại" };
 
+    const description = `Sản phẩm ${category.name} tại ${siteConfig.name}. Nhận báo giá và tư vấn miễn phí.`;
+    const url = `${siteConfig.url}/danh-muc/${slug}`;
+    const imageUrl = category.image_url || `${siteConfig.url}/icon.jpg`;
+
     return {
         title: category.name,
-        description: `Sản phẩm ${category.name} tại ${siteConfig.name}. Nhận báo giá và tư vấn miễn phí.`,
+        description: description,
+        alternates: {
+            canonical: url,
+        },
+        openGraph: {
+            title: category.name,
+            description: description,
+            url: url,
+            siteName: siteConfig.name,
+            images: [
+                {
+                    url: imageUrl,
+                    width: 800,
+                    height: 600,
+                    alt: category.name,
+                },
+            ],
+            locale: "vi_VN",
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: category.name,
+            description: description,
+            images: [imageUrl],
+        },
     };
 }
 
@@ -173,8 +202,8 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
-                <div className="relative mx-auto max-w-[1440px] px-4 py-6 sm:px-6">
-                    <div className="mb-6">
+                <div className="relative mx-auto max-w-[1440px] px-4 py-3 sm:py-6 sm:px-6">
+                    <div className="mb-2 sm:mb-6">
                         <Breadcrumbs
                             items={[
                                 { label: "Danh mục", href: "/danh-muc" },
@@ -186,29 +215,29 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                         />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4">
-                        <div className="flex items-center gap-4">
+                    <div className="flex flex-row items-center justify-between gap-3 pb-3 sm:flex-col sm:items-start sm:flex-row sm:items-end sm:gap-6 sm:pb-4">
+                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
                             {activeCategory.image_url && (
-                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm p-1">
+                                <div className="h-10 w-10 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-white shadow-sm p-0.5 sm:p-1">
                                     <img
                                         src={activeCategory.image_url}
                                         alt={activeCategory.name}
-                                        className="h-full w-full object-cover rounded-xl"
+                                        className="h-full w-full object-cover rounded-lg sm:rounded-xl"
                                     />
                                 </div>
                             )}
-                            <div>
-                                <h1 className="text-3xl font-black text-gray-900 tracking-tight sm:text-4xl">
+                            <div className="min-w-0">
+                                <h1 className="text-xl font-black text-gray-900 tracking-tight sm:text-4xl truncate">
                                     {searchQuery ? `Tìm kiếm: "${searchQuery}"` : activeCategory.name}
                                 </h1>
-                                <p className="mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
+                                <p className="hidden sm:block mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
                                     {(activeCategory as any).description
                                         ? (activeCategory as any).description
                                         : `Khám phá các sản phẩm ${activeCategory.name.toLowerCase()} chất lượng cao, đa dạng mẫu mã và bảo hành dài hạn.`}
                                 </p>
                             </div>
                         </div>
-                        <div className="shrink-0 bg-gray-50/80 px-4 py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
+                        <div className="shrink-0 bg-gray-50/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-gray-200/60 inline-flex items-center justify-center">
                             <Suspense fallback={<div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />}>
                                 <ProductsCountInHeaderDetail
                                     activeCategoryId={activeCategory.id}
@@ -228,7 +257,7 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
             </div>
 
             {/* ── Main content ── */}
-            <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6">
+            <div className="mx-auto max-w-[1440px] px-4 py-4 sm:py-8 sm:px-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
 
                     <div className="lg:w-[280px] lg:shrink-0">

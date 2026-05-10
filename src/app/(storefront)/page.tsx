@@ -9,6 +9,14 @@ import { getBestSellers, getAllProductsForShowcase } from "@/lib/db/queries/prod
 
 export const revalidate = 3600;
 
+export function generateMetadata() {
+    return {
+        alternates: {
+            canonical: siteConfig.url,
+        },
+    };
+}
+
 export default async function HomePage() {
     // 1. Fetch all categories (flat list)
     const allCategories = await getAllCategories();

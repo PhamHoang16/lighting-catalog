@@ -13,12 +13,26 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: siteConfig.seo.title,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.seo.description,
   keywords: [...siteConfig.seo.keywords],
+  openGraph: {
+    title: siteConfig.seo.title,
+    description: siteConfig.seo.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    locale: "vi_VN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.seo.title,
+    description: siteConfig.seo.description,
+  },
 };
 
 export default function RootLayout({

@@ -37,10 +37,38 @@ export async function generateMetadata({
 
     const priceText =
         product.price > 0 ? vndFormat.format(product.price) : "Liên hệ";
+    const description = `${product.name} - ${priceText}. ${siteConfig.seo.description}`;
+    const url = `${siteConfig.url}/san-pham/${slug}`;
+    const imageUrl = product.image_url || `${siteConfig.url}/icon.jpg`;
 
     return {
         title: product.name,
-        description: `${product.name} - ${priceText}. ${siteConfig.description}`,
+        description: description,
+        alternates: {
+            canonical: url,
+        },
+        openGraph: {
+            title: product.name,
+            description: description,
+            url: url,
+            siteName: siteConfig.name,
+            images: [
+                {
+                    url: imageUrl,
+                    width: 800,
+                    height: 600,
+                    alt: product.name,
+                },
+            ],
+            locale: "vi_VN",
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: product.name,
+            description: description,
+            images: [imageUrl],
+        },
     };
 }
 
@@ -84,8 +112,36 @@ export default async function ProductDetailPage({ params }: PageProps) {
     const brandName = product.brands?.name ?? null;
     const brandLogo = product.brands?.logo_url ?? null;
 
+    // ── Generate JSON-LD Schema ────────────────────────────────────
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "image": product.image_url ? [product.image_url, ...(product.gallery || [])] : undefined,
+        "description": product.description ? product.description.replace(/<[^>]*>?/gm, '') : undefined,
+        "sku": product.id,
+        ...(brandName && {
+            "brand": {
+                "@type": "Brand",
+                "name": brandName
+            }
+        }),
+        "offers": {
+            "@type": "Offer",
+            "url": `${siteConfig.url}/san-pham/${product.slug}`,
+            "priceCurrency": "VND",
+            "price": product.price > 0 ? product.price : 0,
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition"
+        }
+    };
+
     return (
         <div className="bg-white">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             {/* ── Breadcrumbs ────────────────────────────────────── */}
             <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6">
@@ -102,8 +158,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* ── Main Content ───────────────────────────────────── */}
-            <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:py-12">
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
+            <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 sm:py-8 lg:py-12">
+                <div className="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-2 lg:gap-10">
                     {/* ── Left: Gallery ─────────────────────────────── */}
                     <div>
                         <ProductGallery

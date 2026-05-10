@@ -16,9 +16,13 @@ function buildPool() {
     if (!url) {
         throw new Error("DATABASE_URL chưa được cấu hình trong env.");
     }
+    
+    // Giảm số lượng kết nối xuống 1-2 khi đang build tĩnh để tránh lỗi "too many clients"
+    const isBuild = process.env.npm_lifecycle_event === "build";
+    
     return new Pool({
         connectionString: url,
-        max: 10,
+        max: isBuild ? 1 : 10,
         idleTimeoutMillis: 30_000,
     });
 }

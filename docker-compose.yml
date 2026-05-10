@@ -1,16 +1,16 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: lighting-postgres
+    container_name: postgres-16
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-lighting}
-      POSTGRES_USER: ${POSTGRES_USER:-lighting}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123123@
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - lighting-pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     command:
       - "postgres"
       - "-c"
@@ -22,11 +22,11 @@ services:
       - "-c"
       - "max_connections=20"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lighting} -d ${POSTGRES_DB:-lighting}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  lighting-pgdata:
-    name: lighting-pgdata
+  pgdata:
+    name: pgdata

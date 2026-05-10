@@ -18,16 +18,21 @@ export default function LoginPage() {
         setError(null);
         setLoading(true);
 
-        const result = await loginAction(email, password);
+        try {
+            const result = await loginAction(email, password);
 
-        if (result.error) {
-            setError(result.error);
+            if (result.error) {
+                setError(result.error);
+                setLoading(false);
+                return;
+            }
+
+            router.push("/admin");
+            router.refresh();
+        } catch (error) {
+            setError("Lỗi máy chủ (Cấu hình thiếu SESSION_SECRET). Xem log server để biết chi tiết.");
             setLoading(false);
-            return;
         }
-
-        router.push("/admin");
-        router.refresh();
     }
 
     return (

@@ -141,7 +141,7 @@ async function migrateTable(table: string, conflictColumn = "id") {
 async function main() {
     console.log("→ Bắt đầu migrate Supabase → Postgres");
     console.log(`  Source: ${SUPABASE_URL}`);
-    console.log(`  Target: ${DATABASE_URL.replace(/:[^:@]+@/, ":***@")}`);
+    console.log(`  Target: ${DATABASE_URL!.replace(/:[^:@]+@/, ":***@")}`);
 
     // Thứ tự đảm bảo FK: brands, categories (self-ref ok do ON DELETE SET NULL),
     // products (FK category + brand), banners, posts, orders.

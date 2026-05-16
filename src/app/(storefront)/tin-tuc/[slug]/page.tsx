@@ -8,6 +8,7 @@ import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import Image from "next/image";
 import { getPostBySlug, getPostSlugs } from "@/lib/db/queries/posts";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
+import { buildArticleJsonLd, buildBreadcrumbListJsonLd } from "@/lib/seo/jsonld";
 import type { Post } from "@/lib/types/database";
 
 export const revalidate = 86400; // 1 day - max caching for egress protection
@@ -62,6 +63,18 @@ export default async function PostDetailPage({ params }: PageProps) {
 
     if (!post) notFound();
 
+    const articleJsonLd = buildArticleJsonLd({
+        title: post.title,
+        slug,
+        summary: post.summary,
+        thumbnail_url: post.thumbnail_url,
+        created_at: post.created_at,
+    });
+    const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+        { label: "Tin tức", href: "/tin-tuc" },
+        { label: post.title },
+    ]);
+
     const hasContent =
         post.content &&
         post.content.trim() !== "" &&
@@ -69,6 +82,8 @@ export default async function PostDetailPage({ params }: PageProps) {
 
     return (
         <div className="bg-white min-h-screen">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             {/* Breadcrumbs */}
             <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6">

@@ -14,6 +14,7 @@ import { getAllCategories, getCategoryBySlug } from "@/lib/db/queries/categories
 import { getAllBrands } from "@/lib/db/queries/brands";
 import { getProductsByCategory } from "@/lib/db/queries/products";
 import Image from "next/image";
+import { buildBreadcrumbListJsonLd } from "@/lib/seo/jsonld";
 import type { Category, Brand } from "@/lib/types/database";
 
 export const revalidate = 86400;
@@ -195,8 +196,17 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
         return `?${params.toString()}`;
     };
 
+    const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+        { label: "Danh mục", href: "/danh-muc" },
+        ...(parentCategory
+            ? [{ label: parentCategory.name, href: `/danh-muc/${parentCategory.slug}` }]
+            : []),
+        { label: activeCategory.name },
+    ]);
+
     return (
         <div className="bg-slate-50 min-h-screen pb-12">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             {/* ── Dynamic Hero Header ── */}
             <div className="relative overflow-hidden bg-white border-b border-gray-200">
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />

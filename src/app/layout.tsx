@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import { siteConfig } from "@/lib/config/site";
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo/jsonld";
 
 import { ToastProvider } from "@/components/ui/Toast";
 import { CartProvider } from "@/lib/cart/CartContext";
@@ -40,9 +41,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const orgJsonLd = buildOrganizationJsonLd();
+  const siteJsonLd = buildWebSiteJsonLd();
+
   return (
     <html lang="vi" className={inter.variable}>
       <body className="min-h-screen bg-gray-50 font-sans antialiased" suppressHydrationWarning>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
         <NextTopLoader
           color="#d97706" // amber-600
           initialPosition={0.08}

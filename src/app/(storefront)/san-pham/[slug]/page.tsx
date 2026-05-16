@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Truck, Clock, Star, Zap, FileText, Sparkles } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
+import { buildProductJsonLd, buildBreadcrumbListJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import ProductGallery from "@/components/storefront/product/ProductGallery";
 import SpecsTable from "@/components/storefront/product/SpecsTable";
@@ -115,35 +116,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
     const brandLogo = product.brands?.logo_url ?? null;
 
     // ── Generate JSON-LD Schema ────────────────────────────────────
-    const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "Product",
-        "name": product.name,
-        "image": product.image_url ? [product.image_url, ...(product.gallery || [])] : undefined,
-        "description": product.description ? product.description.replace(/<[^>]*>?/gm, '') : undefined,
-        "sku": product.id,
-        ...(brandName && {
-            "brand": {
-                "@type": "Brand",
-                "name": brandName
-            }
-        }),
-        "offers": {
-            "@type": "Offer",
-            "url": `${siteConfig.url}/san-pham/${product.slug}`,
-            "priceCurrency": "VND",
-            "price": product.price > 0 ? product.price : 0,
-            "availability": "https://schema.org/InStock",
-            "itemCondition": "https://schema.org/NewCondition"
-        }
-    };
+    const jsonLd = buildProductJsonLd({
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        image_url: product.image_url,
+        gallery: product.gallery,
+        price: product.price,
+        id: product.id,
+        brandName,
+    });
+    const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+        { label: "Sản phẩm", href: "/danh-muc" },
+        ...(categoryName && categorySlug
+            ? [{ label: categoryName, href: `/danh-muc/${categorySlug}` }]
+            : []),
+        { label: product.name },
+    ]);
 
     return (
         <div className="bg-white">
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             {/* ── Breadcrumbs ────────────────────────────────────── */}
             <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6">

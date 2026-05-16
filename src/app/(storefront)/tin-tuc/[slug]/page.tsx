@@ -6,6 +6,7 @@ import { siteConfig } from "@/lib/config/site";
 import { formatDate } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
 import { getPostBySlug, getPostSlugs } from "@/lib/db/queries/posts";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 import type { Post } from "@/lib/types/database";
 
 export const revalidate = 86400; // 1 day - max caching for egress protection
@@ -139,7 +140,7 @@ export default async function PostDetailPage({ params }: PageProps) {
                             prose-td:p-3 prose-td:border-t prose-td:border-gray-100
                             break-words [&_*]:break-words"
                         dangerouslySetInnerHTML={{
-                            __html: post.content!,
+                            __html: sanitizeHtml(post.content!),
                         }}
                     />
                 )}

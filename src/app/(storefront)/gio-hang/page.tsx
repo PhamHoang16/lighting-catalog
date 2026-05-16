@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
     ShoppingCart,
     Trash2,
@@ -113,8 +114,8 @@ export default function CartPage() {
                         <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                             <div className="flex -space-x-3 overflow-hidden">
                                 {items.slice(0, 3).map((item, idx) => (
-                                    <div key={idx} className="inline-block h-10 w-10 rounded-full border-2 border-gray-900 bg-gray-100 overflow-hidden shadow-md">
-                                        <img src={item.image_url || "/placeholder.jpg"} alt="" className="h-full w-full object-cover" />
+                                    <div key={idx} className="relative inline-block h-10 w-10 rounded-full border-2 border-gray-900 bg-gray-100 overflow-hidden shadow-md">
+                                        <Image src={item.image_url || "/placeholder.jpg"} alt="" fill sizes="40px" className="object-cover" />
                                     </div>
                                 ))}
                                 {totalItems > 3 && (
@@ -191,10 +192,12 @@ export default function CartPage() {
                                             href={`/san-pham/${item.slug}`}
                                             className="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 group-hover:shadow-inner transition-shadow"
                                         >
-                                            <img
+                                            <Image
                                                 src={item.image_url || "/placeholder.jpg"}
                                                 alt={item.name}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                fill
+                                                sizes="112px"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
                                             />
                                             {/* Glow overlay */}
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

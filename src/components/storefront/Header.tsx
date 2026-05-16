@@ -51,7 +51,7 @@ export default async function StorefrontHeader() {
                 <div className="bg-white px-6">
                     <div className="mx-auto flex h-28 max-w-[1440px] items-center gap-12">
                         <Link href="/" className="group shrink-0 transition-opacity hover:opacity-80 flex flex-col justify-center">
-                            <img src="/logo.jpg" className="h-20 w-auto object-contain" alt="LED Xinh Logo" />
+                            <Image src="/logo.jpg" width={160} height={80} className="h-20 w-auto object-contain" alt="LED Xinh Logo" priority />
                         </Link>
 
                         {/* Box Giữa: Thanh Search Dài */}
@@ -252,7 +252,7 @@ export default async function StorefrontHeader() {
 
                     {/* Logo (Center) */}
                     <Link href="/" className="flex items-center justify-center transition-opacity hover:opacity-80">
-                        <img src="/logo.jpg" className="h-10 w-auto object-contain" alt="LED Xinh Logo" />
+                        <Image src="/logo.jpg" width={80} height={40} className="h-10 w-auto object-contain" alt="LED Xinh Logo" priority />
                     </Link>
 
                     {/* Actions (Right) Search & Cart */}

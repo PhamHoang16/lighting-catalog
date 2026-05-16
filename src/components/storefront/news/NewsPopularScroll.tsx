@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Newspaper, Flame } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Post } from "@/lib/types/database";
@@ -30,11 +31,12 @@ export default function NewsPopularScroll({ posts }: { posts: Post[] }) {
                         {/* Ảnh trên */}
                         <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
                             {post.thumbnail_url ? (
-                                <img
+                                <Image
                                     src={post.thumbnail_url}
                                     alt={post.title}
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    loading="lazy"
+                                    fill
+                                    sizes="280px"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
                             ) : (
                                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100">

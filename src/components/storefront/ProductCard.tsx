@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ImageOff, Star, ShieldCheck, ShoppingCart } from "lucide-react";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import ProductCardCartButton from "@/components/storefront/ProductCardCartButton";
@@ -62,11 +63,12 @@ export default function ProductCard({
             {/* ── Image Section ────────────────────────────────── */}
             <div className="relative aspect-square overflow-hidden bg-gray-50/50 p-2">
                 {hasImage ? (
-                    <img
+                    <Image
                         src={product.image_url!}
                         alt={product.name}
-                        className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-contain transition-transform duration-700 group-hover:scale-105"
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center">

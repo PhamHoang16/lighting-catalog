@@ -8,6 +8,7 @@ import ProductGallery from "@/components/storefront/product/ProductGallery";
 import SpecsTable from "@/components/storefront/product/SpecsTable";
 import ProductActions from "@/components/storefront/product/ProductActions";
 import ProductCard from "@/components/storefront/ProductCard";
+import Image from "next/image";
 import { getProductBySlug, getRelatedProducts, getProductSlugs } from "@/lib/db/queries/products";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
 import type { ProductWithRelations } from "@/lib/types/database";
@@ -186,7 +187,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             {brandName && (
                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
                                     {brandLogo && (
-                                        <img src={brandLogo} alt={brandName} className="h-3.5 w-3.5 rounded-full object-contain" />
+                                        <Image src={brandLogo} alt={brandName} width={14} height={14} className="rounded-full object-contain" />
                                     )}
                                     {brandName}
                                 </span>

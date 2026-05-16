@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     Filter,
@@ -261,11 +262,13 @@ export default function CategorySidebar({
                                     >
                                         {/* Logo or Icon */}
                                         {brand.logo_url ? (
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-100/50 bg-white p-0.5">
-                                                <img
+                                            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-100/50 bg-white p-0.5">
+                                                <Image
                                                     src={brand.logo_url}
                                                     alt={brand.name}
-                                                    className="h-full w-full object-contain"
+                                                    fill
+                                                    sizes="32px"
+                                                    className="object-contain p-0.5"
                                                 />
                                             </div>
                                         ) : (
@@ -475,7 +478,7 @@ function CategoryNode({
                 >
                     <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-sm ${isActive ? 'bg-white ring-1 ring-amber-100 text-amber-500' : 'bg-white border border-gray-100 text-gray-400 group-hover:border-gray-200 group-hover:text-amber-500 transition-colors'}`}>
                         {category.image_url ? (
-                            <img src={category.image_url} alt={category.name} className="h-7 w-7 object-cover rounded-lg" />
+                            <Image src={category.image_url} alt={category.name} width={28} height={28} className="h-7 w-7 object-cover rounded-lg" />
                         ) : (
                             <span className="flex h-7 w-7 items-center justify-center">
                                 <FolderOpen className="h-4 w-4" />

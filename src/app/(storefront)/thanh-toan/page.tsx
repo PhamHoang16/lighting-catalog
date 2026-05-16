@@ -473,8 +473,8 @@ export default function CheckoutPage() {
                                 <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                                     {items.map((item) => (
                                         <div key={`${item.id}::${item.variant_label}`} className="flex gap-4 group">
-                                            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 group-hover:shadow-inner transition-shadow">
-                                                <img src={item.image_url || "/placeholder.jpg"} alt="" className="h-full w-full object-cover" />
+                                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 group-hover:shadow-inner transition-shadow">
+                                                <Image src={item.image_url || "/placeholder.jpg"} alt="" fill sizes="64px" className="object-cover" />
                                             </div>
                                             <div className="min-w-0 flex-1 flex flex-col justify-center">
                                                 <p className="truncate text-sm font-bold text-gray-900 group-hover:text-amber-600 transition-colors">{item.name}</p>

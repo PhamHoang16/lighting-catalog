@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Newspaper, Library } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Post } from "@/lib/types/database";
@@ -33,13 +34,14 @@ export default function NewsListBlock({ posts }: { posts: Post[] }) {
                             href={`/tin-tuc/${post.slug}`}
                             className="block shrink-0 overflow-hidden rounded-2xl w-full md:w-72 lg:w-80 relative"
                         >
-                            <div className="aspect-[16/9] w-full bg-gray-50 border border-gray-100/60 overflow-hidden">
+                            <div className="relative aspect-[16/9] w-full bg-gray-50 border border-gray-100/60 overflow-hidden">
                                 {post.thumbnail_url ? (
-                                    <img
+                                    <Image
                                         src={post.thumbnail_url}
                                         alt={post.title}
-                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        loading="lazy"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 320px"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                 ) : (
                                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "@/components/storefront/ProductCard";
 import type { Product, Category } from "@/lib/types/database";
@@ -21,11 +22,12 @@ export default function CategoryShowcaseBlock({ data }: { data: CategoryShowcase
                     {/* Background Image (if any) with Overlay */}
                     {data.category.image_url && (
                         <div className="absolute inset-0 z-0">
-                            <img
+                            <Image
                                 src={data.category.image_url}
                                 alt={data.category.name}
-                                className="h-full w-full object-cover opacity-20 mix-blend-luminosity duration-700 hover:scale-105 transition-transform"
-                                loading="lazy"
+                                fill
+                                sizes="(max-width: 1024px) 100vw, 320px"
+                                className="object-cover opacity-20 mix-blend-luminosity"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-br from-slate-950 via-slate-900/40 to-transparent" />
                         </div>

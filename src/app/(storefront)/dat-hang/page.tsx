@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
     Truck,
@@ -328,9 +329,9 @@ export default function CheckoutPage() {
                             <div className="space-y-3">
                                 {items.map((item) => (
                                     <div key={`${item.id}::${item.variant_label ?? "d"}`} className="flex gap-3">
-                                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
                                             {item.image_url ? (
-                                                <img src={item.image_url} alt="" className="h-full w-full object-cover" />
+                                                <Image src={item.image_url} alt="" fill sizes="48px" className="object-cover" />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center">
                                                     <Package className="h-5 w-5 text-gray-300" />

@@ -13,6 +13,7 @@ import { unstable_cache } from "next/cache";
 import { getAllCategories, getCategoryBySlug } from "@/lib/db/queries/categories";
 import { getAllBrands } from "@/lib/db/queries/brands";
 import { getProductsByCategory } from "@/lib/db/queries/products";
+import Image from "next/image";
 import type { Category, Brand } from "@/lib/types/database";
 
 export const revalidate = 86400;
@@ -218,11 +219,13 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                     <div className="flex flex-row items-center justify-between gap-3 pb-3 sm:flex-col sm:items-start sm:flex-row sm:items-end sm:gap-6 sm:pb-4">
                         <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
                             {activeCategory.image_url && (
-                                <div className="h-10 w-10 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-white shadow-sm p-0.5 sm:p-1">
-                                    <img
+                                <div className="relative h-10 w-10 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-white shadow-sm p-0.5 sm:p-1">
+                                    <Image
                                         src={activeCategory.image_url}
                                         alt={activeCategory.name}
-                                        className="h-full w-full object-cover rounded-lg sm:rounded-xl"
+                                        fill
+                                        sizes="(max-width: 640px) 40px, 64px"
+                                        className="object-cover rounded-lg sm:rounded-xl"
                                     />
                                 </div>
                             )}

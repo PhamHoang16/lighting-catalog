@@ -4,6 +4,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import type { Banner } from "@/lib/types/database";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { clsx } from "clsx";
@@ -59,14 +60,16 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                             <div className="relative w-full aspect-[21/9] lg:aspect-[3/1] overflow-hidden bg-gray-950">
                                 {banner.link_url ? (
                                     <Link href={banner.link_url} className="absolute inset-0 block w-full h-full cursor-pointer">
-                                        <img
+                                        <Image
                                             src={banner.image_url}
                                             alt={banner.title ?? "Banner"}
+                                            fill
+                                            sizes="100vw"
+                                            priority={index === 0}
                                             className={clsx(
-                                                "absolute inset-0 h-full w-full object-cover object-center transition-[transform,opacity] ease-out",
+                                                "object-cover object-center transition-[transform,opacity] ease-out",
                                                 isActive ? "scale-105 opacity-100 duration-[15000ms]" : "scale-100 opacity-60 duration-500"
                                             )}
-                                            loading={index === 0 ? "eager" : "lazy"}
                                         />
                                         {/* Cinematic Overlay: Vignette + Linear Fade for text */}
                                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.5)_110%)] pointer-events-none" />
@@ -74,14 +77,16 @@ export default function HeroBanners({ banners }: { banners: Banner[] }) {
                                     </Link>
                                 ) : (
                                     <div className="absolute inset-0 w-full h-full">
-                                        <img
+                                        <Image
                                             src={banner.image_url}
                                             alt={banner.title ?? "Banner"}
+                                            fill
+                                            sizes="100vw"
+                                            priority={index === 0}
                                             className={clsx(
-                                                "absolute inset-0 h-full w-full object-cover object-center transition-[transform,opacity] ease-out",
+                                                "object-cover object-center transition-[transform,opacity] ease-out",
                                                 isActive ? "scale-105 opacity-100 duration-[15000ms]" : "scale-100 opacity-60 duration-500"
                                             )}
-                                            loading={index === 0 ? "eager" : "lazy"}
                                         />
                                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.5)_110%)] pointer-events-none" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />

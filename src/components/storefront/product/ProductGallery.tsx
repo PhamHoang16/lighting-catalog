@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import {
     ImageOff,
     ZoomIn,
@@ -66,12 +67,15 @@ export default function ProductGallery({
                     className="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200 bg-white"
                     onClick={() => setLightboxOpen(true)}
                 >
-                    <div className="aspect-[4/3]">
+                    <div className="relative aspect-[4/3]">
                         {activeImage && !imgErrors.has(activeIndex) ? (
-                            <img
+                            <Image
                                 src={activeImage}
                                 alt={productName}
-                                className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                                onError={() => handleImgError(activeIndex)}
                             />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center bg-gray-50">
@@ -131,10 +135,12 @@ export default function ProductGallery({
                                     }`}
                             >
                                 {!imgErrors.has(idx) ? (
-                                    <img
+                                    <Image
                                         src={url}
                                         alt={`${productName} ${idx + 1}`}
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        sizes="80px"
+                                        className="object-cover"
                                         onError={() => handleImgError(idx)}
                                     />
                                 ) : (

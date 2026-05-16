@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Phone } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
 
@@ -15,9 +16,11 @@ export default function FloatingContact() {
                 aria-label="Chat Zalo"
             >
                 {/* Zalo SVG icon */}
-                <img 
-                    src="/Icon_of_Zalo.svg" 
-                    alt="Zalo" 
+                <Image
+                    src="/Icon_of_Zalo.svg"
+                    alt="Zalo"
+                    width={56}
+                    height={56}
                     className="h-full w-full object-contain p-1.5 sm:p-2"
                 />
 

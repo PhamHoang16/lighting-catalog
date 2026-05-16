@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Grid2X2, ImageOff, Layers } from "lucide-react";
 import type { Category } from "@/lib/types/database";
 
@@ -81,11 +82,12 @@ function CategoryGridItem({ category }: { category: Category }) {
         >
             <div className="mb-3 relative flex aspect-square w-full max-w-[70px] sm:max-w-[90px] lg:max-w-[100px] items-center justify-center overflow-hidden rounded-full bg-white shadow-inner ring-4 ring-amber-50/50 transition-all group-hover:ring-amber-200">
                 {hasImage ? (
-                    <img
+                    <Image
                         src={category.image_url!}
                         alt={category.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
+                        fill
+                        sizes="100px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
                     <ImageOff className="h-6 w-6 text-gray-300 sm:h-8 sm:w-8" />

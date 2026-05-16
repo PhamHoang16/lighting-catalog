@@ -5,6 +5,7 @@ import Link from "next/link";
 import { siteConfig } from "@/lib/config/site";
 import { formatDate } from "@/lib/utils";
 import Breadcrumbs from "@/components/storefront/Breadcrumbs";
+import Image from "next/image";
 import { getPostBySlug, getPostSlugs } from "@/lib/db/queries/posts";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
 import type { Post } from "@/lib/types/database";
@@ -111,11 +112,14 @@ export default async function PostDetailPage({ params }: PageProps) {
 
                 {/* Thumbnail */}
                 {post.thumbnail_url && (
-                    <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-                        <img
+                    <div className="relative mt-8 overflow-hidden rounded-2xl border border-gray-200 shadow-sm aspect-[16/9]">
+                        <Image
                             src={post.thumbnail_url}
                             alt={post.title}
-                            className="w-full object-cover"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 896px"
+                            className="object-cover"
+                            priority
                         />
                     </div>
                 )}

@@ -33,12 +33,21 @@ export async function generateMetadata({
 
     if (!post) return { title: "Bài viết không tồn tại" };
 
+    const url = `${siteConfig.url}/tin-tuc/${slug}`;
+
     return {
         title: `${post.title} | ${siteConfig.name}`,
         description: post.summary || `${post.title} – Tin tức từ ${siteConfig.name}`,
+        alternates: {
+            canonical: url,
+        },
         openGraph: {
             title: post.title,
             description: post.summary || undefined,
+            url,
+            siteName: siteConfig.name,
+            locale: "vi_VN",
+            type: "article",
             images: post.thumbnail_url ? [{ url: post.thumbnail_url }] : undefined,
         },
     };

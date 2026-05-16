@@ -64,9 +64,9 @@ export async function getProductById(id: string): Promise<Product | null> {
     return normalizeProduct(row);
 }
 
-export async function getProductSlugs(limit = 20): Promise<{ slug: string }[]> {
+export async function getProductSlugs(limit = 20): Promise<{ slug: string; created_at: Date }[]> {
     return db
-        .select({ slug: products.slug })
+        .select({ slug: products.slug, created_at: products.created_at })
         .from(products)
         .orderBy(desc(products.created_at))
         .limit(limit);

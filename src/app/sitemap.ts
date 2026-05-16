@@ -3,11 +3,15 @@ import { siteConfig } from "@/lib/config/site";
 import { getProductSlugs } from "@/lib/db/queries/products";
 import { getAllCategories } from "@/lib/db/queries/categories";
 
+// Revalidate sitemap every hour — avoids DB query on every crawler request
+export const revalidate = 3600;
+
+const SITE_BUILT_AT = new Date("2025-01-01").toISOString();
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = siteConfig.url;
 
-    // Static routes
-    const routes = [
+    const staticRoutes = [
         "",
         "/gioi-thieu",
         "/lien-he",
@@ -16,37 +20,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         "/tin-tuc",
     ].map((route) => ({
         url: `${baseUrl}${route}`,
-        lastModified: new Date().toISOString(),
+        lastModified: SITE_BUILT_AT,
         changeFrequency: "daily" as const,
         priority: route === "" ? 1 : 0.8,
     }));
 
     try {
-        // Fetch dynamic slugs concurrently
-        // Note: getAllPosts might not exist or might have a different signature, I should verify or remove it if not needed.
-        // I will omit posts if it fails, but I can check posts.ts first. Let's just use products and categories for now.
         const [productSlugs, categories] = await Promise.all([
-            getProductSlugs(1000), // Get up to 1000 products for sitemap
+            getProductSlugs(1000),
             getAllCategories(),
         ]);
 
         const productRoutes = productSlugs.map((p) => ({
             url: `${baseUrl}/san-pham/${p.slug}`,
-            lastModified: new Date().toISOString(),
+            lastModified: p.created_at instanceof Date ? p.created_at.toISOString() : p.created_at,
             changeFrequency: "weekly" as const,
             priority: 0.9,
         }));
 
         const categoryRoutes = categories.map((c) => ({
             url: `${baseUrl}/danh-muc/${c.slug}`,
-            lastModified: new Date().toISOString(),
+            lastModified: c.created_at,
             changeFrequency: "weekly" as const,
             priority: 0.8,
         }));
 
-        return [...routes, ...categoryRoutes, ...productRoutes];
+        return [...staticRoutes, ...categoryRoutes, ...productRoutes];
     } catch (error) {
         console.error("Error generating sitemap:", error);
-        return routes;
+        return staticRoutes;
     }
 }

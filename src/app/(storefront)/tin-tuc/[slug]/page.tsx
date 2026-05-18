@@ -14,7 +14,7 @@ import type { Post } from "@/lib/types/database";
 export const revalidate = 86400; // 1 day - max caching for egress protection
 
 export async function generateStaticParams() {
-    const slugs = await getPostSlugs(10);
+    const slugs = await getPostSlugs(50);
     return slugs.map((p) => ({ slug: p.slug }));
 }
 

@@ -15,7 +15,7 @@ import { sanitizeHtml } from "@/lib/utils/sanitize";
 import type { ProductWithRelations } from "@/lib/types/database";
 
 export async function generateStaticParams() {
-    const slugs = await getProductSlugs(20);
+    const slugs = await getProductSlugs(100);
     return slugs.map((p) => ({ slug: p.slug }));
 }
 

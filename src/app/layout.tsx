@@ -10,6 +10,7 @@ import { CartProvider } from "@/lib/cart/CartContext";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
 });
 

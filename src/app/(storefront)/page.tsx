@@ -18,15 +18,13 @@ export function generateMetadata() {
 }
 
 export default async function HomePage() {
-    // 1. Fetch all categories (flat list)
-    const allCategories = await getAllCategories();
-    const categoryMap = new Map(allCategories.map(c => [c.id, c]));
-
-    // 2. Fetch Banners, Best Sellers in parallel
-    const [banners, bestSellerProducts] = await Promise.all([
+    // Fetch categories, banners, and best-sellers in parallel
+    const [allCategories, banners, bestSellerProducts] = await Promise.all([
+        getAllCategories(),
         getActiveBanners(),
         getBestSellers(20),
     ]);
+    const categoryMap = new Map(allCategories.map(c => [c.id, c]));
 
     // Map best-seller products with category name
     const hotProducts = bestSellerProducts.map(p => ({

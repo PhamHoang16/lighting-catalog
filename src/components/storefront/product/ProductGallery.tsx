@@ -64,7 +64,7 @@ export default function ProductGallery({
             <div className="space-y-3">
                 {/* ── Main image ───────────────────────────────────── */}
                 <div
-                    className="group relative cursor-zoom-in overflow-hidden rounded-2xl bg-gray-50 shadow-md"
+                    className="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
                     onClick={() => setLightboxOpen(true)}
                 >
                     <div className="relative aspect-[4/3]">

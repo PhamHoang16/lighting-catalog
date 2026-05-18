@@ -64,35 +64,21 @@ export default function ProductGallery({
             <div className="space-y-3">
                 {/* ── Main image ───────────────────────────────────── */}
                 <div
-                    className="group relative cursor-zoom-in overflow-hidden rounded-2xl bg-stone-50 shadow-[0_1px_2px_hsl(0_0%_0%/0.04),_0_4px_16px_hsl(0_0%_0%/0.06)] transition-shadow duration-300 hover:shadow-[0_4px_8px_hsl(0_0%_0%/0.06),_0_16px_40px_hsl(0_0%_0%/0.10)]"
+                    className="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
                     onClick={() => setLightboxOpen(true)}
                 >
                     <div className="relative aspect-[4/3]">
                         {activeImage && !imgErrors.has(activeIndex) ? (
-                            <>
-                                {/* Blurred color-matched backdrop — fills letterbox areas with image's own colors */}
-                                <Image
-                                    src={activeImage}
-                                    alt=""
-                                    fill
-                                    aria-hidden
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                    className="scale-110 object-cover blur-3xl opacity-25"
-                                />
-                                {/* Main image */}
-                                <Image
-                                    src={activeImage}
-                                    alt={productName}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                    className="z-10 object-contain p-6 transition-transform duration-500 group-hover:scale-105"
-                                    onError={() => handleImgError(activeIndex)}
-                                />
-                                {/* Subtle inner vignette */}
-                                <div className="pointer-events-none absolute inset-0 z-20 rounded-2xl shadow-[inset_0_0_32px_hsl(0_0%_0%/0.04)]" />
-                            </>
+                            <Image
+                                src={activeImage}
+                                alt={productName}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                                onError={() => handleImgError(activeIndex)}
+                            />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-stone-100">
+                            <div className="flex h-full w-full items-center justify-center bg-gray-50">
                                 <ImageOff className="h-16 w-16 text-gray-300" />
                             </div>
                         )}
@@ -143,9 +129,9 @@ export default function ProductGallery({
                             <button
                                 key={idx}
                                 onClick={() => setActiveIndex(idx)}
-                                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-stone-50 transition-all ${idx === activeIndex
-                                    ? "ring-2 ring-amber-500 ring-offset-2"
-                                    : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${idx === activeIndex
+                                    ? "border-amber-500 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/10"
+                                    : "border-gray-200 hover:border-gray-300"
                                     }`}
                             >
                                 {!imgErrors.has(idx) ? (

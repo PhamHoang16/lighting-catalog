@@ -2,7 +2,7 @@ export const siteConfig = {
     name: "Led Xinh",
     description:
         "Hệ thống trưng bày sản phẩm chiếu sáng chuyên nghiệp. Đặt hàng trực tuyến và tư vấn miễn phí.",
-    url: "https://lighting-catalog.vn",
+    url: "https://ledxinh.com",
 
     // ── Thông tin liên hệ (hardcode) ──────────────────────────────
     contact: {

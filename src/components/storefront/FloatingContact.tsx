@@ -12,7 +12,7 @@ export default function FloatingContact() {
                 href={siteConfig.contact.zaloHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-white overflow-hidden shadow-lg shadow-blue-500/30 transition-all hover:scale-110 hover:shadow-xl hover:shadow-blue-500/40 sm:h-14 sm:w-14"
+                className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-[#006AF5] overflow-hidden shadow-lg shadow-blue-500/30 transition-all hover:scale-110 hover:shadow-xl hover:shadow-blue-500/40 sm:h-14 sm:w-14"
                 aria-label="Chat Zalo"
             >
                 {/* Zalo SVG icon */}

@@ -213,8 +213,8 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
 
-                <div className="relative mx-auto max-w-[1440px] px-4 py-3 sm:py-6 sm:px-6">
-                    <div className="mb-2 sm:mb-6">
+                <div className="relative mx-auto max-w-[1440px] px-4 py-2 sm:py-3 sm:px-6">
+                    <div className="mb-2 sm:mb-3">
                         <Breadcrumbs
                             items={[
                                 { label: "Danh mục", href: "/danh-muc" },
@@ -226,24 +226,24 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
                         />
                     </div>
 
-                    <div className="flex flex-row items-center justify-between gap-3 pb-3 sm:flex-col sm:items-start sm:flex-row sm:items-end sm:gap-6 sm:pb-4">
-                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                    <div className="flex flex-row items-center justify-between gap-3 pb-2 sm:flex-col sm:items-start sm:flex-row sm:items-center sm:gap-3 sm:pb-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                             {activeCategory.image_url && (
-                                <div className="relative h-10 w-10 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl sm:rounded-2xl border border-gray-100 bg-white shadow-sm p-0.5 sm:p-1">
+                                <div className="relative h-9 w-9 sm:h-11 sm:w-11 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm p-0.5">
                                     <Image
                                         src={activeCategory.image_url}
                                         alt={activeCategory.name}
                                         fill
-                                        sizes="(max-width: 640px) 40px, 64px"
-                                        className="object-cover rounded-lg sm:rounded-xl"
+                                        sizes="(max-width: 640px) 36px, 44px"
+                                        className="object-cover rounded-lg"
                                     />
                                 </div>
                             )}
                             <div className="min-w-0">
-                                <h1 className="text-xl font-black text-gray-900 tracking-tight sm:text-4xl truncate">
+                                <h1 className="text-lg font-bold text-gray-900 tracking-tight sm:text-2xl truncate">
                                     {searchQuery ? `Tìm kiếm: "${searchQuery}"` : activeCategory.name}
                                 </h1>
-                                <p className="hidden sm:block mt-1.5 text-sm sm:text-base text-gray-500 max-w-2xl font-medium">
+                                <p className="hidden sm:block mt-0.5 text-sm text-gray-500 max-w-2xl truncate">
                                     {(activeCategory as any).description
                                         ? (activeCategory as any).description
                                         : `Khám phá các sản phẩm ${activeCategory.name.toLowerCase()} chất lượng cao, đa dạng mẫu mã và bảo hành dài hạn.`}

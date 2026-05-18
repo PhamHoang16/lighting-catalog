@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import * as bannerQ from "@/lib/db/queries/banners";
 import * as categoryQ from "@/lib/db/queries/categories";
@@ -239,6 +239,7 @@ export async function toggleBestSellerAction(id: string, value: boolean): Promis
     try {
         await productQ.toggleBestSeller(id, value);
         revalidateTag("products", "server");
+        revalidatePath("/", "layout"); // homepage best-sellers section uses ISR, not tag-based
         return {};
     } catch (e) {
         return { error: errMsg(e) };

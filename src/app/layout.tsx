@@ -5,6 +5,7 @@ import "./globals.css";
 import { siteConfig } from "@/lib/config/site";
 import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo/jsonld";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { ToastProvider } from "@/components/ui/Toast";
 import { CartProvider } from "@/lib/cart/CartContext";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
             {children}
           </CartProvider>
         </ToastProvider>
+        <GoogleAnalytics gaId="G-BV3CLDSH3M" />
       </body>
     </html>
   );

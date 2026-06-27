@@ -1,12 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { Phone } from "lucide-react";
+import { Phone, MessageCircle } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
+import LeadFormModal from "@/components/storefront/LeadFormModal";
 
 export default function FloatingContact() {
+    const [formOpen, setFormOpen] = useState(false);
+
     return (
-        <div className="floating-contact-container fixed bottom-6 right-4 z-40 flex flex-col items-center gap-3 sm:right-6 lg:z-[45]">
+        <div className="floating-contact-container fixed bottom-6 right-4 z-40 flex flex-col items-end gap-3 sm:right-6 lg:z-[45]">
             {/* Zalo */}
             <a
                 href={siteConfig.contact.zaloHref}
@@ -49,6 +53,18 @@ export default function FloatingContact() {
                 {/* Pulse ring */}
                 <span className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-20" />
             </a>
+
+            {/* CTA "viên thuốc" — mở form đăng ký tư vấn */}
+            <button
+                onClick={() => setFormOpen(true)}
+                className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 py-3 pl-4 pr-5 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:scale-[1.03] hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                aria-label="Đăng ký tư vấn"
+            >
+                <MessageCircle className="h-5 w-5 shrink-0" />
+                <span className="whitespace-nowrap">Nhận tư vấn</span>
+            </button>
+
+            <LeadFormModal open={formOpen} onClose={() => setFormOpen(false)} />
         </div>
     );
 }

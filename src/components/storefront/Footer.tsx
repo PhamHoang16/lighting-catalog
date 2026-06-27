@@ -5,14 +5,11 @@ import {
     Mail,
     Clock,
     Facebook,
-    ExternalLink,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config/site";
-import type { Category } from "@/lib/types/database";
-import { getAllCategories } from "@/lib/db/queries/categories";
+import FooterContactForm from "@/components/storefront/FooterContactForm";
 
 export default async function StorefrontFooter() {
-    const categories = await getAllCategories();
     const currentYear = new Date().getFullYear();
 
     return (
@@ -72,31 +69,12 @@ export default async function StorefrontFooter() {
                         </ul>
                     </div>
 
-                    {/* ── Cột 2: Danh mục sản phẩm ──────────────────── */}
+                    {/* ── Cột 2: Đăng ký tư vấn ─────────────────────── */}
                     <div>
                         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">
-                            Danh mục sản phẩm
+                            Đăng ký tư vấn
                         </h3>
-                        <ul className="space-y-2.5">
-                            <li>
-                                <Link
-                                    href="/danh-muc"
-                                    className="text-sm transition-colors hover:text-amber-400"
-                                >
-                                    Tất cả sản phẩm
-                                </Link>
-                            </li>
-                            {categories.filter(c => !c.parent_id).map((cat) => (
-                                <li key={cat.id}>
-                                    <Link
-                                        href={`/danh-muc/${cat.slug}`}
-                                        className="text-sm transition-colors hover:text-amber-400"
-                                    >
-                                        {cat.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
+                        <FooterContactForm />
                     </div>
 
                     {/* ── Cột 3: Hỗ trợ khách hàng ──────────────────── */}

@@ -11,6 +11,7 @@ import {
     FileText,
     Images,
     Newspaper,
+    MessageSquare,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,11 @@ const navItems = [
         label: "Đơn hàng",
         href: "/admin/don-hang",
         icon: FileText,
+    },
+    {
+        label: "Đăng ký tư vấn",
+        href: "/admin/lien-he",
+        icon: MessageSquare,
     },
 ];
 

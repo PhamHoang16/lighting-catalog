@@ -8,6 +8,7 @@ import * as brandQ from "@/lib/db/queries/brands";
 import * as productQ from "@/lib/db/queries/products";
 import * as postQ from "@/lib/db/queries/posts";
 import * as orderQ from "@/lib/db/queries/orders";
+import * as leadQ from "@/lib/db/queries/leads";
 import { db } from "@/lib/db";
 import { categories, orders } from "@/lib/db/schema";
 import { eq, count, desc } from "drizzle-orm";
@@ -19,6 +20,7 @@ import type {
     PostInsert, PostUpdate,
     OrderInsert, OrderStatus,
     OrderItem,
+    LeadInsert, LeadStatus,
 } from "@/lib/types/database";
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -362,6 +364,57 @@ export async function createOrderAction(data: {
         return {};
     } catch (e) {
         return { error: e instanceof Error ? e.message : "Lỗi khi đặt hàng." };
+    }
+}
+
+// ── Leads (đăng ký tư vấn) ─────────────────────────────────────────
+
+// Storefront — không cần auth
+export async function createLeadAction(data: {
+    name: string;
+    phone: string;
+    email?: string | null;
+}): Promise<{ error?: string }> {
+    try {
+        const name = data.name?.trim();
+        const phone = data.phone?.trim();
+        if (!name || !phone) {
+            return { error: "Vui lòng nhập họ tên và số điện thoại." };
+        }
+        await leadQ.createLead({
+            name,
+            phone,
+            email: data.email?.trim() || null,
+        } as LeadInsert);
+        return {};
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : "Lỗi khi gửi thông tin." };
+    }
+}
+
+// Admin
+export async function getLeadsAction(params: Parameters<typeof leadQ.getLeads>[0] = {}) {
+    await requireAdmin();
+    return leadQ.getLeads(params);
+}
+
+export async function updateLeadStatusAction(id: string, status: LeadStatus): Promise<{ error?: string }> {
+    await requireAdmin();
+    try {
+        await leadQ.updateLeadStatus(id, status);
+        return {};
+    } catch (e) {
+        return { error: errMsg(e) };
+    }
+}
+
+export async function deleteLeadAction(id: string): Promise<{ error?: string }> {
+    await requireAdmin();
+    try {
+        await leadQ.deleteLead(id);
+        return {};
+    } catch (e) {
+        return { error: errMsg(e) };
     }
 }
 

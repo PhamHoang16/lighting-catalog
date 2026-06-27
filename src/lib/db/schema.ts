@@ -132,6 +132,20 @@ export const posts = pgTable(
     ]
 );
 
+// ── leads (đăng ký tư vấn từ footer) ────────────────────────────
+export const leads = pgTable(
+    "leads",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        name: text("name").notNull(),
+        phone: text("phone").notNull(),
+        email: text("email"),
+        status: text("status").default("new").notNull(),
+        created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    },
+    (t) => [index("idx_leads_created_at").on(t.created_at.desc())]
+);
+
 // ── admin_users (thay Supabase Auth) ────────────────────────────
 export const admin_users = pgTable("admin_users", {
     id: uuid("id").primaryKey().defaultRandom(),

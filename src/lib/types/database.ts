@@ -223,6 +223,32 @@ export interface Database {
                     created_at?: string;
                 };
             };
+            leads: {
+                Row: {
+                    id: string;
+                    name: string;
+                    phone: string;
+                    email: string | null;
+                    status: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    name: string;
+                    phone: string;
+                    email?: string | null;
+                    status?: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    name?: string;
+                    phone?: string;
+                    email?: string | null;
+                    status?: string;
+                    created_at?: string;
+                };
+            };
         };
         Views: Record<string, never>;
         Functions: Record<string, never>;
@@ -251,6 +277,22 @@ export type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 export type Order = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderInsert = Database["public"]["Tables"]["orders"]["Insert"];
 export type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"];
+
+export type Lead = Database["public"]["Tables"]["leads"]["Row"];
+export type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
+export type LeadUpdate = Database["public"]["Tables"]["leads"]["Update"];
+
+// ── Lead Status ─────────────────────────────────────────────────
+export type LeadStatus = "new" | "contacted" | "done";
+
+export const LEAD_STATUS_MAP: Record<
+    LeadStatus,
+    { label: string; bg: string; text: string }
+> = {
+    new: { label: "Mới", bg: "bg-blue-50", text: "text-blue-700" },
+    contacted: { label: "Đã liên hệ", bg: "bg-amber-50", text: "text-amber-700" },
+    done: { label: "Hoàn tất", bg: "bg-emerald-50", text: "text-emerald-700" },
+};
 
 // Product kèm thông tin category (dùng cho query join)
 export type ProductWithCategory = Product & {

@@ -10,6 +10,7 @@ import {
     products,
     orders,
     posts,
+    leads,
     admin_users,
 } from "./schema";
 
@@ -30,6 +31,9 @@ export type DBOrderInsert = InferInsertModel<typeof orders>;
 
 export type DBPost = InferSelectModel<typeof posts>;
 export type DBPostInsert = InferInsertModel<typeof posts>;
+
+export type DBLead = InferSelectModel<typeof leads>;
+export type DBLeadInsert = InferInsertModel<typeof leads>;
 
 export type DBAdminUser = InferSelectModel<typeof admin_users>;
 export type DBAdminUserInsert = InferInsertModel<typeof admin_users>;

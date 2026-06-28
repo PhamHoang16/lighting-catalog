@@ -1,6 +1,11 @@
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import sharp from "sharp";
+
+// Ảnh được nén/đổi sang WebP khi upload để giảm dung lượng & tải nhanh.
+const MAX_DIMENSION = 1600; // px — đủ cho mọi khung hiển thị của web
+const WEBP_QUALITY = 85; // chất lượng ~ không phân biệt bằng mắt (PSNR ~42dB)
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "/var/lighting-uploads";
 const UPLOAD_PATH = process.env.NEXT_PUBLIC_UPLOAD_PATH ?? "/uploads";
@@ -60,7 +65,30 @@ export async function saveUploadedFile(
         throw new Error("File không hợp lệ (magic bytes không khớp với MIME type)");
     }
 
-    const ext = MIME_TO_EXT[mime] ?? "jpg";
+    // ── Nén ảnh ─────────────────────────────────────────────────
+    // GIF giữ nguyên (tránh làm hỏng ảnh động). Còn lại chuyển sang
+    // WebP + thu nhỏ về tối đa MAX_DIMENSION để giảm dung lượng.
+    let outBuffer: Buffer = buffer;
+    let ext = MIME_TO_EXT[mime] ?? "jpg";
+
+    if (mime !== "image/gif") {
+        try {
+            outBuffer = await sharp(buffer)
+                .rotate() // tôn trọng hướng EXIF (ảnh chụp từ điện thoại)
+                .resize({
+                    width: MAX_DIMENSION,
+                    height: MAX_DIMENSION,
+                    fit: "inside",
+                    withoutEnlargement: true, // không phóng to ảnh nhỏ
+                })
+                .webp({ quality: WEBP_QUALITY })
+                .toBuffer();
+            ext = "webp";
+        } catch {
+            throw new Error("Không xử lý được ảnh (file có thể bị lỗi).");
+        }
+    }
+
     const fileName = `${randomUUID()}.${ext}`;
     const folderPath = path.join(UPLOAD_DIR, folder);
     const filePath = path.join(folderPath, fileName);
@@ -69,7 +97,7 @@ export async function saveUploadedFile(
     await mkdir(folderPath, { recursive: true });
 
     // Write file
-    await writeFile(filePath, buffer);
+    await writeFile(filePath, outBuffer);
 
     return `${UPLOAD_PATH}/${folder}/${fileName}`;
 }

@@ -54,7 +54,7 @@ export async function saveBannerAction(
         } else {
             await bannerQ.createBanner(data as BannerInsert);
         }
-        revalidateTag("banners", "server");
+        revalidateTag("banners", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -65,7 +65,7 @@ export async function deleteBannerAction(id: string): Promise<{ error?: string }
     await requireAdmin();
     try {
         await bannerQ.deleteBanner(id);
-        revalidateTag("banners", "server");
+        revalidateTag("banners", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -99,7 +99,7 @@ export async function saveCategoryAction(
             const maxSort = siblings.reduce((m, c) => Math.max(m, c.sort_order), -1);
             await categoryQ.createCategory({ ...(data as CategoryInsert), sort_order: maxSort + 1 });
         }
-        revalidateTag("categories", "server");
+        revalidateTag("categories", "max");
         return {};
     } catch (e) {
         if (isUniqueViolation(e)) return { error: "Slug đã tồn tại. Vui lòng đổi tên khác." };
@@ -111,7 +111,7 @@ export async function deleteCategoryAction(id: string): Promise<{ error?: string
     await requireAdmin();
     try {
         await categoryQ.deleteCategory(id);
-        revalidateTag("categories", "server");
+        revalidateTag("categories", "max");
         return {};
     } catch (e) {
         if (isFKViolation(e)) return { error: "Không thể xóa danh mục này vì đang có sản phẩm liên kết." };
@@ -130,7 +130,7 @@ export async function saveCategorySortOrderAction(
                 db.update(categories).set({ sort_order } as any).where(eq(categories.id, id))
             )
         );
-        revalidateTag("categories", "server");
+        revalidateTag("categories", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -155,7 +155,7 @@ export async function saveBrandAction(
         } else {
             await brandQ.createBrand(data as BrandInsert);
         }
-        revalidateTag("brands", "server");
+        revalidateTag("brands", "max");
         return {};
     } catch (e) {
         if (isUniqueViolation(e)) return { error: "Slug đã tồn tại. Vui lòng đổi tên khác." };
@@ -167,7 +167,7 @@ export async function deleteBrandAction(id: string): Promise<{ error?: string }>
     await requireAdmin();
     try {
         await brandQ.deleteBrand(id);
-        revalidateTag("brands", "server");
+        revalidateTag("brands", "max");
         return {};
     } catch (e) {
         if (isFKViolation(e)) return { error: "Không thể xóa thương hiệu này vì đang có sản phẩm liên kết." };
@@ -213,8 +213,8 @@ export async function saveProductAction(
             const created = await productQ.createProduct(data as ProductInsert);
             slug = created.slug;
         }
-        revalidateTag("products", "server");
-        if (slug) revalidateTag(`product-${slug}`, "server");
+        revalidateTag("products", "max");
+        if (slug) revalidateTag(`product-${slug}`, "max");
         return {};
     } catch (e) {
         if (isUniqueViolation(e)) return { error: "Slug đã tồn tại. Vui lòng đổi tên khác." };
@@ -227,9 +227,9 @@ export async function deleteProductAction(id: string, slug?: string): Promise<{ 
     try {
         const product = slug ? null : await productQ.getProductById(id);
         await productQ.deleteProduct(id);
-        revalidateTag("products", "server");
+        revalidateTag("products", "max");
         const productSlug = slug ?? product?.slug;
-        if (productSlug) revalidateTag(`product-${productSlug}`, "server");
+        if (productSlug) revalidateTag(`product-${productSlug}`, "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -240,7 +240,7 @@ export async function toggleBestSellerAction(id: string, value: boolean): Promis
     await requireAdmin();
     try {
         await productQ.toggleBestSeller(id, value);
-        revalidateTag("products", "server");
+        revalidateTag("products", "max");
         revalidatePath("/", "layout"); // homepage best-sellers section uses ISR, not tag-based
         return {};
     } catch (e) {
@@ -252,7 +252,7 @@ export async function updateProductSortOrderAction(id: string, sortOrder: number
     await requireAdmin();
     try {
         await productQ.updateSortOrder(id, sortOrder);
-        revalidateTag("products", "server");
+        revalidateTag("products", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -263,7 +263,7 @@ export async function bulkImportProductsAction(rows: ProductInsert[]): Promise<{
     await requireAdmin();
     try {
         await productQ.bulkInsertProducts(rows);
-        revalidateTag("products", "server");
+        revalidateTag("products", "max");
         return { count: rows.length };
     } catch (e) {
         return { error: errMsg(e) };
@@ -291,8 +291,8 @@ export async function savePostAction(
             const created = await postQ.createPost(data as PostInsert);
             slug = created.slug;
         }
-        revalidateTag("posts", "server");
-        if (slug) revalidateTag(`post-${slug}`, "server");
+        revalidateTag("posts", "max");
+        if (slug) revalidateTag(`post-${slug}`, "max");
         return { slug };
     } catch (e) {
         return { error: errMsg(e) };
@@ -303,8 +303,8 @@ export async function deletePostAction(id: string, slug?: string): Promise<{ err
     await requireAdmin();
     try {
         await postQ.deletePost(id);
-        revalidateTag("posts", "server");
-        if (slug) revalidateTag(`post-${slug}`, "server");
+        revalidateTag("posts", "max");
+        if (slug) revalidateTag(`post-${slug}`, "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -327,7 +327,7 @@ export async function updateOrderStatusAction(id: string, status: OrderStatus): 
     await requireAdmin();
     try {
         await orderQ.updateOrderStatus(id, status);
-        revalidateTag("orders", "server");
+        revalidateTag("orders", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };
@@ -338,7 +338,7 @@ export async function deleteOrderAction(id: string): Promise<{ error?: string }>
     await requireAdmin();
     try {
         await db.delete(orders).where(eq(orders.id, id));
-        revalidateTag("orders", "server");
+        revalidateTag("orders", "max");
         return {};
     } catch (e) {
         return { error: errMsg(e) };

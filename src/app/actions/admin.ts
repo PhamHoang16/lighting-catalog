@@ -293,6 +293,10 @@ export async function savePostAction(
         }
         revalidateTag("posts", "max");
         if (slug) revalidateTag(`post-${slug}`, "max");
+        // Trang tin tức dùng ISR theo thời gian (không theo tag) nên phải
+        // revalidate path để bài mới/sửa hiện ngay trên storefront.
+        revalidatePath("/tin-tuc");
+        if (slug) revalidatePath(`/tin-tuc/${slug}`);
         return { slug };
     } catch (e) {
         return { error: errMsg(e) };
@@ -305,6 +309,8 @@ export async function deletePostAction(id: string, slug?: string): Promise<{ err
         await postQ.deletePost(id);
         revalidateTag("posts", "max");
         if (slug) revalidateTag(`post-${slug}`, "max");
+        revalidatePath("/tin-tuc");
+        if (slug) revalidatePath(`/tin-tuc/${slug}`);
         return {};
     } catch (e) {
         return { error: errMsg(e) };

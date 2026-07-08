@@ -1,13 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Newspaper, Library } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Post } from "@/lib/types/database";
 
+const PAGE_SIZE = 6;
+
 export default function NewsListBlock({ posts }: { posts: Post[] }) {
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
     if (posts.length === 0) return null;
+
+    const visiblePosts = posts.slice(0, visibleCount);
+    const hasMore = visibleCount < posts.length;
 
     return (
         <div className="w-full">
@@ -24,7 +32,7 @@ export default function NewsListBlock({ posts }: { posts: Post[] }) {
 
             {/* Dạng List đổ dọc */}
             <div className="flex flex-col gap-8 divide-y divide-gray-100">
-                {posts.map((post, i) => (
+                {visiblePosts.map((post, i) => (
                     <article
                         key={post.id}
                         className={`group flex flex-col md:flex-row gap-5 lg:gap-8 ${i > 0 && "pt-8"}`}
@@ -77,15 +85,17 @@ export default function NewsListBlock({ posts }: { posts: Post[] }) {
                 ))}
             </div>
 
-            {/* Nút Xem thêm (Mock Pagination) */}
-            <div className="mt-12 flex justify-center">
-                <button
-                    className="rounded-xl border border-gray-300 bg-white px-8 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-amber-300"
-                    onClick={() => alert("Chức năng tải thêm bài chưa nối API")}
-                >
-                    Tải thêm tin khác
-                </button>
-            </div>
+            {/* Nút Xem thêm — hiện dần các bài đã tải, ẩn khi hết */}
+            {hasMore && (
+                <div className="mt-12 flex justify-center">
+                    <button
+                        className="rounded-xl border border-gray-300 bg-white px-8 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-amber-300"
+                        onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    >
+                        Tải thêm tin khác
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
